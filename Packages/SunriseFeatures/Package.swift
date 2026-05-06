@@ -6,7 +6,7 @@ let package = Package(
     defaultLocalization: "en",
     platforms: [.iOS(.v17), .macOS(.v14)],
     products: [
-        .library(name: "SunriseFeatures", targets: ["RootFeature"]),
+        .library(name: "RootFeature", targets: ["RootFeature"]),
         .library(name: "TodayFeature", targets: ["TodayFeature"]),
         .library(name: "ForecastFeature", targets: ["ForecastFeature"]),
         .library(name: "CharacterFeature", targets: ["CharacterFeature"]),
