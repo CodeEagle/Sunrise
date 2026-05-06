@@ -426,6 +426,13 @@
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "バージョン" } }
       }
     },
+    "profile.friend_name" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunny's friend" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小晴的朋友" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ハルのなかま" } }
+      }
+    },
     "common.cancel" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } },
