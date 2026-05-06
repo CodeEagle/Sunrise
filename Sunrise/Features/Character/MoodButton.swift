@@ -19,9 +19,9 @@ final class MoodButton: UIControl {
         layer.cornerRadius = Radius.medium
         layer.cornerCurve = .continuous
 
-        imageView.contentMode = .scaleAspectFit
+        imageView.contentMode = .scaleAspectFill
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.layer.cornerRadius = 24
+        imageView.layer.cornerRadius = 28
         imageView.clipsToBounds = true
         imageView.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.4)
         imageView.image = image ?? UIImage(systemName: "face.smiling")
@@ -41,15 +41,15 @@ final class MoodButton: UIControl {
         NSLayoutConstraint.activate([
             imageView.topAnchor.constraint(equalTo: topAnchor, constant: Spacing.xs),
             imageView.centerXAnchor.constraint(equalTo: centerXAnchor),
-            imageView.widthAnchor.constraint(equalToConstant: 48),
-            imageView.heightAnchor.constraint(equalToConstant: 48),
+            imageView.widthAnchor.constraint(equalToConstant: 56),
+            imageView.heightAnchor.constraint(equalToConstant: 56),
 
             label.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 4),
             label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Spacing.xxs),
             label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Spacing.xxs),
             label.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -Spacing.xs),
 
-            heightAnchor.constraint(greaterThanOrEqualToConstant: 88)
+            heightAnchor.constraint(greaterThanOrEqualToConstant: 96)
         ])
 
         applySelectionStyling()
