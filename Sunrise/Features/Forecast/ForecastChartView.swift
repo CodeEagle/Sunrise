@@ -94,9 +94,13 @@ struct ForecastChartView: View {
         }
         .frame(height: 140)
         .chartYAxis {
-            AxisMarks(values: [0, 50, 100]) {
+            AxisMarks(values: [0, 50, 100]) { value in
                 AxisGridLine()
-                AxisValueLabel(format: .percent.scale(0.01))
+                AxisValueLabel {
+                    if let v = value.as(Int.self) {
+                        Text("\(v)%")
+                    }
+                }
             }
         }
         .chartXAxis {
