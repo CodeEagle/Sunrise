@@ -98,8 +98,8 @@ final class TodayViewController: UIViewController {
         NSLayoutConstraint.activate([
             contentStack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: Spacing.m),
             contentStack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -Spacing.l),
-            contentStack.leadingAnchor.constraint(equalTo: view.frameLayoutGuide.leadingAnchor, constant: Spacing.m),
-            contentStack.trailingAnchor.constraint(equalTo: view.frameLayoutGuide.trailingAnchor, constant: -Spacing.m)
+            contentStack.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: Spacing.m),
+            contentStack.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -Spacing.m)
         ])
 
         contentStack.addArrangedSubview(buildHeroCard())

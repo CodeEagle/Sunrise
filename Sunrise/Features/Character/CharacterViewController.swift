@@ -61,8 +61,8 @@ final class CharacterViewController: UIViewController {
         NSLayoutConstraint.activate([
             stack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: Spacing.m),
             stack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -Spacing.l),
-            stack.leadingAnchor.constraint(equalTo: view.frameLayoutGuide.leadingAnchor, constant: Spacing.m),
-            stack.trailingAnchor.constraint(equalTo: view.frameLayoutGuide.trailingAnchor, constant: -Spacing.m)
+            stack.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: Spacing.m),
+            stack.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -Spacing.m)
         ])
 
         sunshineLabel.font = Typography.title(18)
