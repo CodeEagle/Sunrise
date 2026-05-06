@@ -236,6 +236,34 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "搜索城市" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "都市を検索" } }
       }
+    },
+    "forecast.empty" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pick a city on the Weather tab to see the 15-day outlook." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在「天气」标签页选择城市,即可查看 15 天天气趋势。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "天気タブで都市を選ぶと、15日間の予報が表示されます。" } }
+      }
+    },
+    "forecast.temp_trend" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Temperature trend" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "温度趋势" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "気温の推移" } }
+      }
+    },
+    "forecast.precip" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Precipitation chance" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "降水概率" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "降水確率" } }
+      }
+    },
+    "forecast.daily" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Daily details" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每日详情" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "日別の詳細" } }
+      }
     }
   }
 }
