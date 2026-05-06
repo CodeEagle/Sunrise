@@ -66,7 +66,7 @@ final class ForecastViewController: UIViewController {
             host.view.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
             host.view.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
             host.view.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-            host.view.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+            host.view.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor)
         ])
         host.didMove(toParent: self)
         hostingController = host
