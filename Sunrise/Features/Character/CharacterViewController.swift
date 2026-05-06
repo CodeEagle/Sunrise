@@ -105,19 +105,18 @@ final class CharacterViewController: UIViewController {
         [sunshineLabel, characterView, bubble, moodTitle, moodStack].forEach(stack.addArrangedSubview)
     }
 
-    private func makeMoodButton(_ mood: CharacterMood) -> UIButton {
-        var config = UIButton.Configuration.tinted()
-        config.baseBackgroundColor = Palette.cloudWhite.withAlphaComponent(0.6)
-        config.baseForegroundColor = Palette.inkPrimary
-        config.cornerStyle = .medium
-        config.title = localizedMood(mood)
-        let button = UIButton(configuration: config)
+    private func makeMoodButton(_ mood: CharacterMood) -> UIControl {
+        let button = MoodButton(
+            mood: mood,
+            title: localizedMood(mood),
+            image: MoodArt.image(forMoodRawValue: mood.rawValue)
+        )
         button.tag = CharacterMood.allCases.firstIndex(of: mood) ?? 0
         button.addTarget(self, action: #selector(handleMoodTap(_:)), for: .touchUpInside)
         return button
     }
 
-    @objc private func handleMoodTap(_ sender: UIButton) {
+    @objc private func handleMoodTap(_ sender: UIControl) {
         let mood = CharacterMood.allCases[sender.tag]
         store.send(.moodSelected(mood))
         store.send(.awardSunshine(2))
@@ -147,17 +146,8 @@ final class CharacterViewController: UIViewController {
 
         for row in moodStack.arrangedSubviews {
             guard let row = row as? UIStackView else { continue }
-            for case let button as UIButton in row.arrangedSubviews {
-                let mood = CharacterMood.allCases[button.tag]
-                var config = button.configuration
-                if mood == store.mood {
-                    config?.baseBackgroundColor = Palette.sunYellow
-                    config?.baseForegroundColor = Palette.inkPrimary
-                } else {
-                    config?.baseBackgroundColor = Palette.cloudWhite.withAlphaComponent(0.6)
-                    config?.baseForegroundColor = Palette.inkSecondary
-                }
-                button.configuration = config
+            for case let button as MoodButton in row.arrangedSubviews {
+                button.isSelected = (button.mood == store.mood)
             }
         }
     }

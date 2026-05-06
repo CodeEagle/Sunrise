@@ -34,8 +34,8 @@ final class RootTabBarController: UITabBarController {
         }
         today.tabBarItem = UITabBarItem(
             title: String(localized: "tab.today", defaultValue: "Weather"),
-            image: UIImage(systemName: "cloud.sun"),
-            selectedImage: UIImage(systemName: "cloud.sun.fill")
+            image: TabIcon.image(named: "tab_weather", fallbackSF: "cloud.sun"),
+            selectedImage: TabIcon.image(named: "tab_weather", fallbackSF: "cloud.sun.fill")
         )
 
         let forecast = ForecastViewController(
@@ -43,8 +43,8 @@ final class RootTabBarController: UITabBarController {
         )
         forecast.tabBarItem = UITabBarItem(
             title: String(localized: "tab.forecast", defaultValue: "Forecast"),
-            image: UIImage(systemName: "calendar"),
-            selectedImage: UIImage(systemName: "calendar.circle.fill")
+            image: TabIcon.image(named: "tab_forecast", fallbackSF: "calendar"),
+            selectedImage: TabIcon.image(named: "tab_forecast", fallbackSF: "calendar.circle.fill")
         )
 
         let character = CharacterViewController(
@@ -52,8 +52,8 @@ final class RootTabBarController: UITabBarController {
         )
         character.tabBarItem = UITabBarItem(
             title: String(localized: "tab.character", defaultValue: "Sunny"),
-            image: UIImage(systemName: "face.smiling"),
-            selectedImage: UIImage(systemName: "face.smiling.inverse")
+            image: TabIcon.image(named: "tab_character", fallbackSF: "face.smiling"),
+            selectedImage: TabIcon.image(named: "tab_character", fallbackSF: "face.smiling.inverse")
         )
 
         let profile = ProfileViewController(
@@ -64,8 +64,8 @@ final class RootTabBarController: UITabBarController {
         }
         profile.tabBarItem = UITabBarItem(
             title: String(localized: "tab.profile", defaultValue: "Me"),
-            image: UIImage(systemName: "person"),
-            selectedImage: UIImage(systemName: "person.fill")
+            image: TabIcon.image(named: "tab_profile", fallbackSF: "person"),
+            selectedImage: TabIcon.image(named: "tab_profile", fallbackSF: "person.fill")
         )
 
         viewControllers = [today, forecast, character, profile].map {
