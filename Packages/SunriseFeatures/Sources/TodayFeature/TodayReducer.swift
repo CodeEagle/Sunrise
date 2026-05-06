@@ -1,6 +1,9 @@
 import Foundation
 import ComposableArchitecture
 import SunriseCore
+#if canImport(WidgetKit)
+import WidgetKit
+#endif
 
 @Reducer
 public struct TodayReducer: Sendable {
@@ -101,7 +104,15 @@ public struct TodayReducer: Sendable {
                 state.isLoading = false
                 state.snapshot = snapshot
                 state.error = nil
-                return .none
+                let city = state.selectedCity
+                return .run { _ in
+                    if let city {
+                        SharedStorage.saveSnapshot(snapshot, city: city)
+                    }
+                    #if canImport(WidgetKit)
+                    WidgetCenter.shared.reloadAllTimelines()
+                    #endif
+                }
 
             case let .weatherResponse(.failure(error)):
                 state.isLoading = false

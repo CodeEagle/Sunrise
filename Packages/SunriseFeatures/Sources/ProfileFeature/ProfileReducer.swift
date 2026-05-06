@@ -20,10 +20,11 @@ public struct ProfileReducer: Sendable {
         case citiesLoaded([City])
         case temperatureUnitChanged(TemperatureUnit)
         case windUnitChanged(WindSpeedUnit)
-        case notificationsToggled(Bool)
+        case notificationsToggled(Bool, dailyTitle: String, dailyBody: String)
     }
 
     @Dependency(\.persistenceClient) var persistence
+    @Dependency(\.notificationsClient) var notifications
 
     public init() {}
 
@@ -54,9 +55,17 @@ public struct ProfileReducer: Sendable {
                 state.settings.windSpeedUnit = unit
                 return persist(state.settings)
 
-            case let .notificationsToggled(enabled):
+            case let .notificationsToggled(enabled, title, body):
                 state.settings.notificationsEnabled = enabled
-                return persist(state.settings)
+                let scheduling: Effect<Action> = .run { _ in
+                    if enabled {
+                        _ = try? await notifications.requestAuthorization()
+                        try? await notifications.scheduleDailyBriefing(hour: 8, minute: 0, title: title, body: body)
+                    } else {
+                        await notifications.cancelDailyBriefing()
+                    }
+                }
+                return .merge(persist(state.settings), scheduling)
             }
         }
     }

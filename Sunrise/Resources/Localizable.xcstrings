@@ -432,6 +432,20 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャンセル" } }
       }
+    },
+    "notif.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Good morning" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "早安!" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "おはよう!" } }
+      }
+    },
+    "notif.body" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunny is checking the weather for you. Have a great day!" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小晴帮你看好今天的天气啦,出门顺利哦!" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "今日の天気を見てきたよ。いってらっしゃい!" } }
+      }
     }
   }
 }

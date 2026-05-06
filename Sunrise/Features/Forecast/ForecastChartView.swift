@@ -8,7 +8,6 @@ struct ForecastChartView: View {
     let settings: UserSettings
 
     private var formatter: WeatherFormatter { WeatherFormatter(settings: settings) }
-    private var calendar: Calendar { .current }
 
     private let dayFormatter: DateFormatter = {
         let df = DateFormatter()
@@ -19,9 +18,15 @@ struct ForecastChartView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                temperatureChart
-                precipitationChart
-                dailyList
+                section(title: String(localized: "forecast.temp_trend", defaultValue: "Temperature trend")) {
+                    temperatureChart
+                }
+                section(title: String(localized: "forecast.precip", defaultValue: "Precipitation chance")) {
+                    precipitationChart
+                }
+                section(title: String(localized: "forecast.daily", defaultValue: "Daily details")) {
+                    dailyList
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 24)
@@ -29,86 +34,81 @@ struct ForecastChartView: View {
         .background(Color(Palette.canvas))
     }
 
-    private var temperatureChart: some View {
-        Section {
-            Chart(snapshot.daily) { day in
-                AreaMark(
-                    x: .value("day", day.date),
-                    yStart: .value("low", tempValue(day.lowTemperature)),
-                    yEnd: .value("high", tempValue(day.highTemperature))
-                )
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Color(Palette.sunYellow).opacity(0.6), Color(Palette.skyBlue).opacity(0.4)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .interpolationMethod(.catmullRom)
-
-                LineMark(
-                    x: .value("day", day.date),
-                    y: .value("high", tempValue(day.highTemperature))
-                )
-                .foregroundStyle(Color(Palette.blossomPink))
-                .interpolationMethod(.catmullRom)
-
-                LineMark(
-                    x: .value("day", day.date),
-                    y: .value("low", tempValue(day.lowTemperature))
-                )
-                .foregroundStyle(Color(Palette.skyBlue))
-                .interpolationMethod(.catmullRom)
-            }
-            .frame(height: 200)
-            .chartXAxis {
-                AxisMarks(values: .stride(by: .day, count: 2)) { value in
-                    AxisGridLine()
-                    AxisValueLabel(format: .dateTime.weekday(.abbreviated))
-                }
-            }
-        } header: {
-            Text(String(localized: "forecast.temp_trend", defaultValue: "Temperature trend"))
+    @ViewBuilder
+    private func section<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
                 .font(.headline)
                 .foregroundStyle(Color(Palette.inkPrimary))
+            content()
+        }
+    }
+
+    private var temperatureChart: some View {
+        Chart(snapshot.daily) { day in
+            AreaMark(
+                x: .value("day", day.date),
+                yStart: .value("low", tempValue(day.lowTemperature)),
+                yEnd: .value("high", tempValue(day.highTemperature))
+            )
+            .foregroundStyle(
+                LinearGradient(
+                    colors: [Color(Palette.sunYellow).opacity(0.6), Color(Palette.skyBlue).opacity(0.4)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .interpolationMethod(.catmullRom)
+
+            LineMark(
+                x: .value("day", day.date),
+                y: .value("high", tempValue(day.highTemperature))
+            )
+            .foregroundStyle(Color(Palette.blossomPink))
+            .interpolationMethod(.catmullRom)
+
+            LineMark(
+                x: .value("day", day.date),
+                y: .value("low", tempValue(day.lowTemperature))
+            )
+            .foregroundStyle(Color(Palette.skyBlue))
+            .interpolationMethod(.catmullRom)
+        }
+        .frame(height: 200)
+        .chartXAxis {
+            AxisMarks(values: .stride(by: .day, count: 2)) { _ in
+                AxisGridLine()
+                AxisValueLabel(format: .dateTime.weekday(.abbreviated))
+            }
         }
     }
 
     private var precipitationChart: some View {
-        Section {
-            Chart(snapshot.daily) { day in
-                BarMark(
-                    x: .value("day", day.date, unit: .day),
-                    y: .value("precip", day.precipitationChance.value * 100)
-                )
-                .foregroundStyle(Color(Palette.skyBlue))
-                .cornerRadius(4)
+        Chart(snapshot.daily) { day in
+            BarMark(
+                x: .value("day", day.date, unit: .day),
+                y: .value("precip", day.precipitationChance.value * 100)
+            )
+            .foregroundStyle(Color(Palette.skyBlue))
+            .cornerRadius(4)
+        }
+        .frame(height: 140)
+        .chartYAxis {
+            AxisMarks(values: [0, 50, 100]) {
+                AxisGridLine()
+                AxisValueLabel(format: .percent.scale(0.01))
             }
-            .frame(height: 140)
-            .chartYAxis {
-                AxisMarks(values: [0, 50, 100]) {
-                    AxisGridLine()
-                    AxisValueLabel(format: .percent.scale(0.01))
-                }
+        }
+        .chartXAxis {
+            AxisMarks(values: .stride(by: .day, count: 2)) { _ in
+                AxisGridLine()
+                AxisValueLabel(format: .dateTime.weekday(.abbreviated))
             }
-            .chartXAxis {
-                AxisMarks(values: .stride(by: .day, count: 2)) { _ in
-                    AxisGridLine()
-                    AxisValueLabel(format: .dateTime.weekday(.abbreviated))
-                }
-            }
-        } header: {
-            Text(String(localized: "forecast.precip", defaultValue: "Precipitation chance"))
-                .font(.headline)
-                .foregroundStyle(Color(Palette.inkPrimary))
         }
     }
 
     private var dailyList: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(String(localized: "forecast.daily", defaultValue: "Daily details"))
-                .font(.headline)
-                .foregroundStyle(Color(Palette.inkPrimary))
             ForEach(snapshot.daily) { day in
                 HStack {
                     Text(dayFormatter.string(from: day.date))

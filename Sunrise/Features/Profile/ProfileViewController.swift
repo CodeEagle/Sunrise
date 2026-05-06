@@ -131,7 +131,9 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
     }
 
     @objc private func handleNotifToggle(_ sender: UISwitch) {
-        store.send(.notificationsToggled(sender.isOn))
+        let title = String(localized: "notif.title", defaultValue: "Good morning")
+        let body = String(localized: "notif.body", defaultValue: "Sunny is checking the weather for you. Have a great day!")
+        store.send(.notificationsToggled(sender.isOn, dailyTitle: title, dailyBody: body))
     }
 
     private func presentTemperaturePicker() {

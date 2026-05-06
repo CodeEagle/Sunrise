@@ -85,6 +85,32 @@ targets:
         product: CityFeature
       - package: SunriseDesignSystem
       - package: SunriseAnimation
+      - target: SunriseWidget
+
+  SunriseWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: SunriseWidget
+        excludes:
+          - Info.plist
+          - SunriseWidget.entitlements
+    info:
+      path: SunriseWidget/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.sunrise.Sunrise.Widget
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: SunriseWidget/SunriseWidget.entitlements
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1"
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+      - package: SunriseCore
+      - package: SunriseDesignSystem
 
   SunriseTests:
     type: bundle.unit-test
