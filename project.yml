@@ -85,7 +85,11 @@ targets:
         product: CityFeature
       - package: SunriseDesignSystem
       - package: SunriseAnimation
-      - target: SunriseWidget
+      # NOTE: widget extension is built as a standalone target. Re-add this
+      # dependency (or copy the .appex into Sunrise.app/PlugIns) once you
+      # have a signing identity that can grant WeatherKit + App Group
+      # entitlements; CI runs unsigned and rejects the embed.
+      # - target: SunriseWidget
 
   SunriseWidget:
     type: app-extension
