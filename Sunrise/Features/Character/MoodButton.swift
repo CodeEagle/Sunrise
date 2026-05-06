@@ -1,0 +1,70 @@
+import UIKit
+import CharacterFeature
+import SunriseDesignSystem
+
+/// Selectable mood pill — circular portrait on top, label below.
+final class MoodButton: UIControl {
+    let mood: CharacterMood
+    private let imageView = UIImageView()
+    private let label = UILabel()
+
+    override var isSelected: Bool {
+        didSet { applySelectionStyling() }
+    }
+
+    init(mood: CharacterMood, title: String, image: UIImage?) {
+        self.mood = mood
+        super.init(frame: .zero)
+
+        layer.cornerRadius = Radius.medium
+        layer.cornerCurve = .continuous
+
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.layer.cornerRadius = 24
+        imageView.clipsToBounds = true
+        imageView.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.4)
+        imageView.image = image ?? UIImage(systemName: "face.smiling")
+        imageView.tintColor = Palette.inkSecondary
+
+        label.text = title
+        label.font = Typography.caption(13)
+        label.textColor = Palette.inkPrimary
+        label.textAlignment = .center
+        label.adjustsFontSizeToFitWidth = true
+        label.minimumScaleFactor = 0.8
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        addSubview(imageView)
+        addSubview(label)
+
+        NSLayoutConstraint.activate([
+            imageView.topAnchor.constraint(equalTo: topAnchor, constant: Spacing.xs),
+            imageView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            imageView.widthAnchor.constraint(equalToConstant: 48),
+            imageView.heightAnchor.constraint(equalToConstant: 48),
+
+            label.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 4),
+            label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Spacing.xxs),
+            label.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Spacing.xxs),
+            label.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -Spacing.xs),
+
+            heightAnchor.constraint(greaterThanOrEqualToConstant: 88)
+        ])
+
+        applySelectionStyling()
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    private func applySelectionStyling() {
+        if isSelected {
+            backgroundColor = Palette.sunYellow.withAlphaComponent(0.85)
+            label.textColor = Palette.inkPrimary
+        } else {
+            backgroundColor = Palette.cloudWhite.withAlphaComponent(0.55)
+            label.textColor = Palette.inkSecondary
+        }
+    }
+}
