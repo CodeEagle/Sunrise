@@ -11,10 +11,6 @@ let package = Package(
     targets: [
         .target(
             name: "SunriseDesignSystem"
-        ),
-        .testTarget(
-            name: "SunriseDesignSystemTests",
-            dependencies: ["SunriseDesignSystem"]
         )
     ],
     swiftLanguageVersions: [.v5]

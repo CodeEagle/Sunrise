@@ -17,10 +17,6 @@ let package = Package(
             dependencies: [
                 .product(name: "Lottie", package: "lottie-spm")
             ]
-        ),
-        .testTarget(
-            name: "SunriseAnimationTests",
-            dependencies: ["SunriseAnimation"]
         )
     ],
     swiftLanguageVersions: [.v5]
