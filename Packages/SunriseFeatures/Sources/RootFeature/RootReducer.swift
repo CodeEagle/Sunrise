@@ -71,6 +71,13 @@ public struct RootReducer: Sendable {
                 state.isPresentingCityList = false
                 return .send(.today(.citySelected(city)))
 
+            case let .cityList(.citiesLoaded(cities)):
+                guard state.today.selectedCity == nil else { return .none }
+                if let first = cities.first {
+                    return .send(.today(.citySelected(first)))
+                }
+                return .send(.today(.useCurrentLocationTapped))
+
             case let .today(.weatherResponse(.success(snapshot))):
                 state.forecast.snapshot = snapshot
                 state.character.condition = snapshot.current.condition

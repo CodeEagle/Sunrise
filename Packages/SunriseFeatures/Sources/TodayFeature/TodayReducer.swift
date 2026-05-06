@@ -57,15 +57,10 @@ public struct TodayReducer: Sendable {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .merge(
-                    .run { send in
-                        let settings = (try? await persistenceClient.loadSettings()) ?? .default
-                        await send(.settingsLoaded(settings))
-                    },
-                    state.selectedCity == nil
-                        ? .send(.useCurrentLocationTapped)
-                        : refresh(for: state.selectedCity)
-                )
+                return .run { send in
+                    let settings = (try? await persistenceClient.loadSettings()) ?? .default
+                    await send(.settingsLoaded(settings))
+                }
 
             case .refreshTapped:
                 return refresh(for: state.selectedCity)
