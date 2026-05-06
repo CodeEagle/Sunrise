@@ -10,7 +10,8 @@ let package = Package(
         .library(name: "TodayFeature", targets: ["TodayFeature"]),
         .library(name: "ForecastFeature", targets: ["ForecastFeature"]),
         .library(name: "CharacterFeature", targets: ["CharacterFeature"]),
-        .library(name: "ProfileFeature", targets: ["ProfileFeature"])
+        .library(name: "ProfileFeature", targets: ["ProfileFeature"]),
+        .library(name: "CityFeature", targets: ["CityFeature"])
     ],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.15.0"),
@@ -25,6 +26,7 @@ let package = Package(
                 "ForecastFeature",
                 "CharacterFeature",
                 "ProfileFeature",
+                "CityFeature",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
             ]
         ),
@@ -60,9 +62,21 @@ let package = Package(
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
             ]
         ),
+        .target(
+            name: "CityFeature",
+            dependencies: [
+                "SunriseCore",
+                "SunriseDesignSystem",
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture")
+            ]
+        ),
         .testTarget(
             name: "TodayFeatureTests",
             dependencies: ["TodayFeature"]
+        ),
+        .testTarget(
+            name: "CityFeatureTests",
+            dependencies: ["CityFeature"]
         )
     ],
     swiftLanguageVersions: [.v5]

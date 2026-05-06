@@ -81,6 +81,8 @@ targets:
         product: CharacterFeature
       - package: SunriseFeatures
         product: ProfileFeature
+      - package: SunriseFeatures
+        product: CityFeature
       - package: SunriseDesignSystem
       - package: SunriseAnimation
 

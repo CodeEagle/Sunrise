@@ -1,12 +1,15 @@
 import UIKit
+import ComposableArchitecture
+import ForecastFeature
+import SunriseCore
 import SunriseDesignSystem
 
-/// Used for tabs we haven't built yet (Forecast, Character, Profile).
-/// Replaced as each Feature lands its own view controller.
-final class PlaceholderViewController: UIViewController {
-    init(title: String) {
+final class ForecastViewController: UIViewController {
+    private let store: StoreOf<ForecastReducer>
+
+    init(store: StoreOf<ForecastReducer>) {
+        self.store = store
         super.init(nibName: nil, bundle: nil)
-        self.title = title
     }
 
     @available(*, unavailable)
@@ -14,6 +17,7 @@ final class PlaceholderViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        title = String(localized: "tab.forecast", defaultValue: "Forecast")
         view.backgroundColor = Palette.canvas
 
         let label = UILabel()

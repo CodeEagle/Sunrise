@@ -5,10 +5,12 @@ import TodayFeature
 import ForecastFeature
 import CharacterFeature
 import ProfileFeature
+import CityFeature
 import SunriseDesignSystem
 
 final class RootTabBarController: UITabBarController {
     private let store: StoreOf<RootReducer>
+    private var presentedCityList: UIViewController?
 
     init(store: StoreOf<RootReducer>) {
         self.store = store
@@ -27,27 +29,39 @@ final class RootTabBarController: UITabBarController {
         let today = TodayViewController(
             store: store.scope(state: \.today, action: \.today)
         )
+        today.onMenuTapped = { [weak self] in
+            self?.store.send(.presentCityList)
+        }
         today.tabBarItem = UITabBarItem(
             title: String(localized: "tab.today", defaultValue: "Weather"),
             image: UIImage(systemName: "cloud.sun"),
             selectedImage: UIImage(systemName: "cloud.sun.fill")
         )
 
-        let forecast = PlaceholderViewController(title: String(localized: "tab.forecast", defaultValue: "Forecast"))
+        let forecast = ForecastViewController(
+            store: store.scope(state: \.forecast, action: \.forecast)
+        )
         forecast.tabBarItem = UITabBarItem(
             title: String(localized: "tab.forecast", defaultValue: "Forecast"),
             image: UIImage(systemName: "calendar"),
             selectedImage: UIImage(systemName: "calendar.circle.fill")
         )
 
-        let character = PlaceholderViewController(title: String(localized: "tab.character", defaultValue: "Sunny"))
+        let character = CharacterViewController(
+            store: store.scope(state: \.character, action: \.character)
+        )
         character.tabBarItem = UITabBarItem(
             title: String(localized: "tab.character", defaultValue: "Sunny"),
             image: UIImage(systemName: "face.smiling"),
             selectedImage: UIImage(systemName: "face.smiling.inverse")
         )
 
-        let profile = PlaceholderViewController(title: String(localized: "tab.profile", defaultValue: "Me"))
+        let profile = ProfileViewController(
+            store: store.scope(state: \.profile, action: \.profile)
+        )
+        profile.onManageCitiesTapped = { [weak self] in
+            self?.store.send(.presentCityList)
+        }
         profile.tabBarItem = UITabBarItem(
             title: String(localized: "tab.profile", defaultValue: "Me"),
             image: UIImage(systemName: "person"),
@@ -62,7 +76,33 @@ final class RootTabBarController: UITabBarController {
             guard let self else { return }
             let index = RootTab.allCases.firstIndex(of: self.store.selectedTab) ?? 0
             if self.selectedIndex != index { self.selectedIndex = index }
+            self.syncCityListPresentation()
         }
+
+        store.send(.appLaunched)
+    }
+
+    private func syncCityListPresentation() {
+        if store.isPresentingCityList, presentedCityList == nil {
+            let cityListVC = CityListViewController(
+                store: store.scope(state: \.cityList, action: \.cityList)
+            )
+            cityListVC.navigationItem.leftBarButtonItem = UIBarButtonItem(
+                barButtonSystemItem: .done,
+                target: self,
+                action: #selector(handleCityListDone)
+            )
+            let nav = UINavigationController(rootViewController: cityListVC)
+            present(nav, animated: true)
+            presentedCityList = nav
+        } else if !store.isPresentingCityList, let presented = presentedCityList {
+            presented.dismiss(animated: true)
+            presentedCityList = nil
+        }
+    }
+
+    @objc private func handleCityListDone() {
+        store.send(.dismissCityList)
     }
 
     override func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {

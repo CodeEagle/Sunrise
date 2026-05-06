@@ -208,6 +208,34 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "敬请期待" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "近日公開" } }
       }
+    },
+    "cities.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cities" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "城市管理" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "都市" } }
+      }
+    },
+    "cities.empty" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap + to add your first city" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "点击 + 添加你的第一个城市" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "+ をタップして都市を追加" } }
+      }
+    },
+    "search.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add City" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加城市" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "都市を追加" } }
+      }
+    },
+    "search.placeholder" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search city" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "搜索城市" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "都市を検索" } }
+      }
     }
   }
 }
