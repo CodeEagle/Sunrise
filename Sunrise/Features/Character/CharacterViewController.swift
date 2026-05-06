@@ -8,7 +8,7 @@ import SunriseAnimation
 final class CharacterViewController: UIViewController {
     private let store: StoreOf<CharacterReducer>
 
-    private let gradient = GradientBackgroundView(palette: .clearDay)
+    private let backdrop = SceneBackgroundView()
     private let scrollView = UIScrollView()
     private let stack = UIStackView()
     private let portraitFallback = UIImageView()
@@ -35,13 +35,13 @@ final class CharacterViewController: UIViewController {
     }
 
     private func configureLayout() {
-        gradient.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(gradient)
+        backdrop.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(backdrop)
         NSLayoutConstraint.activate([
-            gradient.topAnchor.constraint(equalTo: view.topAnchor),
-            gradient.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            gradient.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            gradient.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            backdrop.topAnchor.constraint(equalTo: view.topAnchor),
+            backdrop.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            backdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
 
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -124,7 +124,7 @@ final class CharacterViewController: UIViewController {
     }
 
     private func render() {
-        gradient.palette = palette(for: store.condition)
+        backdrop.update(conditionRawValue: store.condition.rawValue, palette: palette(for: store.condition))
 
         if let art = CharacterArt.image(forConditionRawValue: store.condition.rawValue) {
             portraitFallback.image = art

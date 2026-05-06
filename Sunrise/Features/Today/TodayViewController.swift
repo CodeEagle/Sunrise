@@ -9,7 +9,7 @@ final class TodayViewController: UIViewController {
 
     private let scrollView = UIScrollView()
     private let contentStack = UIStackView()
-    private let gradient = GradientBackgroundView(palette: .clearDay)
+    private let backdrop = SceneBackgroundView()
 
     private let cityLabel = UILabel()
     private let updatedLabel = UILabel()
@@ -71,13 +71,13 @@ final class TodayViewController: UIViewController {
     }
 
     private func configureLayout() {
-        gradient.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(gradient)
+        backdrop.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(backdrop)
         NSLayoutConstraint.activate([
-            gradient.topAnchor.constraint(equalTo: view.topAnchor),
-            gradient.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            gradient.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            gradient.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            backdrop.topAnchor.constraint(equalTo: view.topAnchor),
+            backdrop.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            backdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
 
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -202,7 +202,10 @@ final class TodayViewController: UIViewController {
             ?? String(localized: "today.locating", defaultValue: "Locating…")
 
         if let snapshot {
-            gradient.palette = palette(for: snapshot.current.condition, period: snapshot.current.dayPeriod)
+            backdrop.update(
+                conditionRawValue: snapshot.current.condition.rawValue,
+                palette: palette(for: snapshot.current.condition, period: snapshot.current.dayPeriod)
+            )
             heroCharacterImage.image = CharacterArt.image(forConditionRawValue: snapshot.current.condition.rawValue)
             temperatureLabel.text = formatter.temperature(snapshot.current.temperature) + "°"
             conditionLabel.text = localizedCondition(snapshot.current.condition)
