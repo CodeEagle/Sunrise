@@ -88,11 +88,18 @@ final class CharacterViewController: UIViewController {
         moodTitle.textColor = Palette.inkSecondary
         moodTitle.textAlignment = .center
 
-        moodStack.axis = .horizontal
-        moodStack.distribution = .fillEqually
+        moodStack.axis = .vertical
         moodStack.spacing = Spacing.xs
-        for mood in CharacterMood.allCases {
-            moodStack.addArrangedSubview(makeMoodButton(mood))
+        let allMoods = CharacterMood.allCases
+        for chunk in stride(from: 0, to: allMoods.count, by: 3) {
+            let row = UIStackView()
+            row.axis = .horizontal
+            row.distribution = .fillEqually
+            row.spacing = Spacing.xs
+            for mood in allMoods[chunk..<min(chunk + 3, allMoods.count)] {
+                row.addArrangedSubview(makeMoodButton(mood))
+            }
+            moodStack.addArrangedSubview(row)
         }
 
         [sunshineLabel, characterView, bubble, moodTitle, moodStack].forEach(stack.addArrangedSubview)
@@ -133,17 +140,20 @@ final class CharacterViewController: UIViewController {
             store.sunshinePoints
         )
 
-        for case let button as UIButton in moodStack.arrangedSubviews {
-            let mood = CharacterMood.allCases[button.tag]
-            var config = button.configuration
-            if mood == store.mood {
-                config?.baseBackgroundColor = Palette.sunYellow
-                config?.baseForegroundColor = Palette.inkPrimary
-            } else {
-                config?.baseBackgroundColor = Palette.cloudWhite.withAlphaComponent(0.6)
-                config?.baseForegroundColor = Palette.inkSecondary
+        for row in moodStack.arrangedSubviews {
+            guard let row = row as? UIStackView else { continue }
+            for case let button as UIButton in row.arrangedSubviews {
+                let mood = CharacterMood.allCases[button.tag]
+                var config = button.configuration
+                if mood == store.mood {
+                    config?.baseBackgroundColor = Palette.sunYellow
+                    config?.baseForegroundColor = Palette.inkPrimary
+                } else {
+                    config?.baseBackgroundColor = Palette.cloudWhite.withAlphaComponent(0.6)
+                    config?.baseForegroundColor = Palette.inkSecondary
+                }
+                button.configuration = config
             }
-            button.configuration = config
         }
     }
 

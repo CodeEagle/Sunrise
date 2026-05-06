@@ -9,19 +9,20 @@ public struct WeatherFormatter: Sendable {
         self.locale = locale
     }
 
+    /// Returns the temperature value as digits only — call sites append the
+    /// degree symbol so we don't double up (MeasurementFormatter already
+    /// inserts one).
     public func temperature(_ value: Temperature, fractionDigits: Int = 0) -> String {
-        let measurement: Measurement<UnitTemperature>
+        let raw: Double
         switch settings.temperatureUnit {
-        case .celsius:
-            measurement = Measurement(value: value.celsius, unit: .celsius)
-        case .fahrenheit:
-            measurement = Measurement(value: value.fahrenheit, unit: .fahrenheit)
+        case .celsius: raw = value.celsius
+        case .fahrenheit: raw = value.fahrenheit
         }
-        let formatter = MeasurementFormatter()
+        let formatter = NumberFormatter()
         formatter.locale = locale
-        formatter.unitOptions = .temperatureWithoutUnit
-        formatter.numberFormatter.maximumFractionDigits = fractionDigits
-        return formatter.string(from: measurement)
+        formatter.maximumFractionDigits = fractionDigits
+        formatter.minimumFractionDigits = 0
+        return formatter.string(from: NSNumber(value: raw)) ?? "\(Int(raw.rounded()))"
     }
 
     public func windSpeed(_ wind: Wind) -> String {
