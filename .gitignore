@@ -40,6 +40,11 @@ Sunrise.xcworkspace/
 # macOS
 .DS_Store
 
+# CI artifacts (screenshots, build/test logs) — pulled from workflow runs
+docs/screenshots/
+artifacts/
+logs/
+
 # CocoaPods
 #
 # We recommend against adding the Pods directory to your .gitignore. However
