@@ -119,9 +119,15 @@ struct ForecastChartView: View {
                         .font(.body)
                         .foregroundStyle(Color(Palette.inkPrimary))
                         .frame(width: 56, alignment: .leading)
-                    Image(systemName: ConditionGlyph.symbolName(forConditionRawValue: day.condition.rawValue))
-                        .foregroundStyle(Color(ConditionGlyph.tint(forConditionRawValue: day.condition.rawValue)))
-                        .frame(width: 28)
+                    Group {
+                        if let watercolor = WeatherIconArt.image(forConditionRawValue: day.condition.rawValue) {
+                            Image(uiImage: watercolor).resizable().scaledToFit()
+                        } else {
+                            Image(systemName: ConditionGlyph.symbolName(forConditionRawValue: day.condition.rawValue))
+                                .foregroundStyle(Color(ConditionGlyph.tint(forConditionRawValue: day.condition.rawValue)))
+                        }
+                    }
+                    .frame(width: 28, height: 28)
                     Text(formatter.percent(day.precipitationChance))
                         .font(.caption)
                         .foregroundStyle(Color(Palette.skyBlue))

@@ -23,10 +23,15 @@ final class HourlyCollectionCell: UICollectionViewCell {
         df.dateFormat = "HH"
         timeLabel.text = df.string(from: hourly.date)
 
-        let symbolName = ConditionGlyph.symbolName(forConditionRawValue: hourly.condition.rawValue)
-        let config = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
-        iconView.image = UIImage(systemName: symbolName, withConfiguration: config)
-        iconView.tintColor = ConditionGlyph.tint(forConditionRawValue: hourly.condition.rawValue)
+        if let watercolor = WeatherIconArt.image(forConditionRawValue: hourly.condition.rawValue) {
+            iconView.image = watercolor
+            iconView.tintColor = nil
+        } else {
+            let symbolName = ConditionGlyph.symbolName(forConditionRawValue: hourly.condition.rawValue)
+            let config = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
+            iconView.image = UIImage(systemName: symbolName, withConfiguration: config)
+            iconView.tintColor = ConditionGlyph.tint(forConditionRawValue: hourly.condition.rawValue)
+        }
         tempLabel.text = formatter.temperature(hourly.temperature) + "°"
     }
 

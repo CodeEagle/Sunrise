@@ -37,6 +37,7 @@ final class ProfileViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
+        tableView.tableHeaderView = makeHeader(width: UIScreen.main.bounds.width)
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -47,6 +48,47 @@ final class ProfileViewController: UIViewController {
 
         observeState { [weak self] in self?.tableView.reloadData() }
         store.send(.onAppear)
+    }
+
+    private func makeHeader(width: CGFloat) -> UIView {
+        let header = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 132))
+
+        let avatar = UIImageView()
+        avatar.contentMode = .scaleAspectFill
+        avatar.image = CharacterArt.image(forConditionRawValue: "clear")
+        avatar.layer.cornerRadius = 36
+        avatar.clipsToBounds = true
+        avatar.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.5)
+        avatar.translatesAutoresizingMaskIntoConstraints = false
+
+        let name = UILabel()
+        name.text = String(localized: "profile.friend_name", defaultValue: "Sunny's friend")
+        name.font = Typography.title(20)
+        name.textColor = Palette.inkPrimary
+
+        let id = UILabel()
+        id.text = "ID: 20240520"
+        id.font = Typography.caption(13)
+        id.textColor = Palette.inkSecondary
+
+        let textStack = UIStackView(arrangedSubviews: [name, id])
+        textStack.axis = .vertical
+        textStack.spacing = 4
+        textStack.translatesAutoresizingMaskIntoConstraints = false
+
+        header.addSubview(avatar)
+        header.addSubview(textStack)
+        NSLayoutConstraint.activate([
+            avatar.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: Spacing.l),
+            avatar.centerYAnchor.constraint(equalTo: header.centerYAnchor),
+            avatar.widthAnchor.constraint(equalToConstant: 72),
+            avatar.heightAnchor.constraint(equalToConstant: 72),
+
+            textStack.leadingAnchor.constraint(equalTo: avatar.trailingAnchor, constant: Spacing.m),
+            textStack.trailingAnchor.constraint(lessThanOrEqualTo: header.trailingAnchor, constant: -Spacing.l),
+            textStack.centerYAnchor.constraint(equalTo: header.centerYAnchor)
+        ])
+        return header
     }
 }
 
