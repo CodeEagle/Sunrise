@@ -141,18 +141,24 @@ final class TodayViewController: UIViewController {
 
         heroCharacterImage.contentMode = .scaleAspectFit
         heroCharacterImage.translatesAutoresizingMaskIntoConstraints = false
+        // 1024×1024 PNG would otherwise drag the card to 1000pt+; force a 1:1
+        // box at 45% of the card width and let the card size to text height.
+        heroCharacterImage.setContentHuggingPriority(.defaultLow, for: .vertical)
+        heroCharacterImage.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         card.addSubview(heroCharacterImage)
 
         NSLayoutConstraint.activate([
             textColumn.topAnchor.constraint(equalTo: card.topAnchor, constant: Spacing.l),
-            textColumn.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -Spacing.l),
             textColumn.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: Spacing.l),
-            textColumn.trailingAnchor.constraint(lessThanOrEqualTo: heroCharacterImage.leadingAnchor, constant: -Spacing.s),
+            textColumn.trailingAnchor.constraint(lessThanOrEqualTo: heroCharacterImage.leadingAnchor, constant: -Spacing.xs),
 
             heroCharacterImage.topAnchor.constraint(equalTo: card.topAnchor, constant: Spacing.s),
-            heroCharacterImage.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -Spacing.s),
             heroCharacterImage.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -Spacing.s),
-            heroCharacterImage.widthAnchor.constraint(equalTo: card.widthAnchor, multiplier: 0.45)
+            heroCharacterImage.widthAnchor.constraint(equalTo: card.widthAnchor, multiplier: 0.45),
+            heroCharacterImage.heightAnchor.constraint(equalTo: heroCharacterImage.widthAnchor),
+
+            card.bottomAnchor.constraint(greaterThanOrEqualTo: textColumn.bottomAnchor, constant: Spacing.l),
+            card.bottomAnchor.constraint(greaterThanOrEqualTo: heroCharacterImage.bottomAnchor, constant: Spacing.s)
         ])
 
         return card
