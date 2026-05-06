@@ -1,0 +1,22 @@
+{
+  "sourceLanguage" : "en",
+  "version" : "1.0",
+  "strings" : {
+    "NSLocationWhenInUseUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunrise uses your location to show local weather." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Sunrise 需要使用您的位置来显示本地天气。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "現在地の天気を表示するために位置情報を使用します。" } }
+      }
+    },
+    "CFBundleDisplayName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunrise" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小晴天气" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ハル天気" } }
+      }
+    }
+  }
+}

@@ -30,6 +30,15 @@ playground.xcworkspace
 # .swiftpm
 
 .build/
+DerivedData/
+.swiftpm/
+
+# XcodeGen-generated project (regenerate via `xcodegen generate`)
+Sunrise.xcodeproj/
+Sunrise.xcworkspace/
+
+# macOS
+.DS_Store
 
 # CocoaPods
 #
