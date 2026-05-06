@@ -264,6 +264,97 @@
         "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每日详情" } },
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "日別の詳細" } }
       }
+    },
+    "character.sunshine" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunshine points: %d" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "阳光值:%d" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ひだまりポイント:%d" } }
+      }
+    },
+    "character.mood_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "How does Sunny feel today?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "今天小晴是什么心情?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "今日のハルの気分は?" } }
+      }
+    },
+    "character.calm" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Take a deep breath. The world will wait." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "深呼吸,世界会等等你的。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "深呼吸して。世界はちゃんと待ってる。" } }
+      }
+    },
+    "character.tender" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunny is sending you warm wishes today." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小晴今天悄悄给你一份温柔。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ハルから優しい気持ちを届けるね。" } }
+      }
+    },
+    "character.worried" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunny is a little nervous. Stay close, okay?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小晴有点点担心,陪着我好不好?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ちょっとドキドキしてる。そばにいてね。" } }
+      }
+    },
+    "character.excited" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunny found something fun! Want to play?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小晴发现了好玩的!一起玩吗?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "面白いものを見つけたよ!一緒に遊ぼ!" } }
+      }
+    },
+    "character.shy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunny is hiding behind a cloud, peeking shyly." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小晴躲在云后面,偷偷看你。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "雲の陰からこっそり覗いてるよ。" } }
+      }
+    },
+    "mood.happy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Happy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开心" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "うれしい" } }
+      }
+    },
+    "mood.calm" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Calm" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "安静" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "おだやか" } }
+      }
+    },
+    "mood.tender" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tender" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "温柔" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "やさしい" } }
+      }
+    },
+    "mood.worried" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Worried" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "担心" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "しんぱい" } }
+      }
+    },
+    "mood.excited" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Excited" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "兴奋" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "わくわく" } }
+      }
+    },
+    "mood.shy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "害羞" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "はずかしい" } }
+      }
     }
   }
 }
