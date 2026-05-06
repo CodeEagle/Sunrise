@@ -125,17 +125,33 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: app.sunrise.SunriseTests
         GENERATE_INFOPLIST_FILE: YES
 
+  SunriseUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: SunriseUITests
+    dependencies:
+      - target: Sunrise
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.sunrise.SunriseUITests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Sunrise
+
 schemes:
   Sunrise:
     build:
       targets:
         Sunrise: all
         SunriseTests: [test]
+        SunriseUITests: [test]
     run:
       config: Debug
     test:
       config: Debug
       targets:
         - SunriseTests
+        - SunriseUITests
     archive:
       config: Release

@@ -1,0 +1,98 @@
+name: iOS
+
+on:
+  push:
+    branches:
+      - main
+      - "claude/**"
+  pull_request:
+  workflow_dispatch:
+
+env:
+  XCODE_PROJECT: Sunrise.xcodeproj
+  SCHEME: Sunrise
+  IOS_SIMULATOR: iPhone 15
+
+jobs:
+  build-test-screenshot:
+    runs-on: macos-14
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Install xcparse (screenshot extractor)
+        run: brew install chargepoint/xcparse/xcparse
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Resolve SPM dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project "$XCODE_PROJECT" \
+            -scheme "$SCHEME"
+
+      - name: Build for iOS Simulator
+        run: |
+          set -o pipefail
+          mkdir -p logs
+          xcodebuild build \
+            -project "$XCODE_PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_ENTITLEMENTS= \
+            ENTITLEMENTS_REQUIRED=NO \
+            DEVELOPMENT_TEAM= \
+            PROVISIONING_PROFILE_SPECIFIER= \
+            2>&1 | tee logs/build.log
+
+      - name: Run tests + capture screenshots
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project "$XCODE_PROJECT" \
+            -scheme "$SCHEME" \
+            -destination "platform=iOS Simulator,name=$IOS_SIMULATOR,OS=latest" \
+            -resultBundlePath logs/TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_ENTITLEMENTS= \
+            ENTITLEMENTS_REQUIRED=NO \
+            DEVELOPMENT_TEAM= \
+            PROVISIONING_PROFILE_SPECIFIER= \
+            2>&1 | tee logs/test.log
+
+      - name: Extract screenshots from xcresult
+        if: always()
+        run: |
+          mkdir -p screenshots
+          if [ -d logs/TestResults.xcresult ]; then
+            xcparse screenshots logs/TestResults.xcresult screenshots/ || echo "(no screenshots)"
+            ls -la screenshots/ || true
+          fi
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/
+          if-no-files-found: warn
+
+      - name: Upload build + test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs
+          path: logs/
+          if-no-files-found: warn
