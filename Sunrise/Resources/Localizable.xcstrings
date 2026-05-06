@@ -1,0 +1,451 @@
+{
+  "sourceLanguage" : "en",
+  "version" : "1.0",
+  "strings" : {
+    "tab.today" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weather" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "天气" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "天気" } }
+      }
+    },
+    "tab.forecast" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Forecast" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "15天预报" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "15日間予報" } }
+      }
+    },
+    "tab.character" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunny" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小晴" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ハル" } }
+      }
+    },
+    "tab.profile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Me" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "我的" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "マイページ" } }
+      }
+    },
+    "today.locating" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Locating…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "定位中…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "位置情報を取得中…" } }
+      }
+    },
+    "today.loading" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fetching the latest forecast…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "正在获取最新天气…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最新の予報を取得中…" } }
+      }
+    },
+    "today.error" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn't fetch weather" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无法获取天气" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "天気を取得できませんでした" } }
+      }
+    },
+    "today.feels_like" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Feels like %@°" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "体感 %@°" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "体感 %@°" } }
+      }
+    },
+    "today.humidity" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Humidity %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "湿度 %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "湿度 %@" } }
+      }
+    },
+    "today.wind" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wind %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "风速 %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "風速 %@" } }
+      }
+    },
+    "today.humidity_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Humidity" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "湿度" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "湿度" } }
+      }
+    },
+    "today.wind_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wind" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "风速" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "風速" } }
+      }
+    },
+    "today.uv_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "UV Index" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "紫外线" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "紫外線指数" } }
+      }
+    },
+    "today.updated_at" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Updated %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新于 %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新 %@" } }
+      }
+    },
+    "condition.clear" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "晴" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "晴れ" } }
+      }
+    },
+    "condition.cloudy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cloudy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "多云" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "曇り" } }
+      }
+    },
+    "condition.rain" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rain" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小雨" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "雨" } }
+      }
+    },
+    "condition.thunderstorm" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Thunderstorms" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "雷阵雨" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "雷雨" } }
+      }
+    },
+    "condition.snow" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Snow" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小雪" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "雪" } }
+      }
+    },
+    "condition.windy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Windy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "大风" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "強風" } }
+      }
+    },
+    "condition.fog" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Foggy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "雾" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "霧" } }
+      }
+    },
+    "bubble.clear" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Beautiful day — let's go outside!" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "今天天气真好,一起去外面走走吧!" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "いい天気だね、お散歩に行こう!" } }
+      }
+    },
+    "bubble.cloudy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clouds drifting by — what shape will they make next?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "云朵在变换形状,你猜像什么呢?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "雲が形を変えていくよ。次は何に見えるかな?" } }
+      }
+    },
+    "bubble.rain" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Don't forget your umbrella!" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "记得带上伞,别让雨水打湿你哦~" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "傘を忘れずに持って行ってね!" } }
+      }
+    },
+    "bubble.thunderstorm" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Storms incoming — stay safe indoors." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "雷雨来啦,注意安全,待在室内哦!" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "雷雨が来るよ。お家で安全にね。" } }
+      }
+    },
+    "bubble.snow" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Snowflakes! Let's build a snowman." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "雪花好美呀!一起堆个雪人吧~" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "雪だ!雪だるまを作ろう。" } }
+      }
+    },
+    "bubble.windy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hold onto your hat — it's blustery out there!" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "风儿在唱歌,抓紧帽子别被吹跑啦!" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "帽子が飛ばされないように気をつけて!" } }
+      }
+    },
+    "bubble.fog" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Misty morning — drive carefully." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "雾蒙蒙的清晨,出门小心哦。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "霧が出ているよ、運転は気をつけてね。" } }
+      }
+    },
+    "placeholder.coming_soon" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Coming soon" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "敬请期待" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "近日公開" } }
+      }
+    },
+    "cities.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cities" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "城市管理" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "都市" } }
+      }
+    },
+    "cities.empty" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap + to add your first city" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "点击 + 添加你的第一个城市" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "+ をタップして都市を追加" } }
+      }
+    },
+    "search.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add City" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加城市" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "都市を追加" } }
+      }
+    },
+    "search.placeholder" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search city" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "搜索城市" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "都市を検索" } }
+      }
+    },
+    "forecast.empty" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pick a city on the Weather tab to see the 15-day outlook." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "在「天气」标签页选择城市,即可查看 15 天天气趋势。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "天気タブで都市を選ぶと、15日間の予報が表示されます。" } }
+      }
+    },
+    "forecast.temp_trend" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Temperature trend" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "温度趋势" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "気温の推移" } }
+      }
+    },
+    "forecast.precip" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Precipitation chance" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "降水概率" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "降水確率" } }
+      }
+    },
+    "forecast.daily" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Daily details" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每日详情" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "日別の詳細" } }
+      }
+    },
+    "character.sunshine" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunshine points: %d" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "阳光值:%d" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ひだまりポイント:%d" } }
+      }
+    },
+    "character.mood_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "How does Sunny feel today?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "今天小晴是什么心情?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "今日のハルの気分は?" } }
+      }
+    },
+    "character.calm" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Take a deep breath. The world will wait." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "深呼吸,世界会等等你的。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "深呼吸して。世界はちゃんと待ってる。" } }
+      }
+    },
+    "character.tender" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunny is sending you warm wishes today." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小晴今天悄悄给你一份温柔。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ハルから優しい気持ちを届けるね。" } }
+      }
+    },
+    "character.worried" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunny is a little nervous. Stay close, okay?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小晴有点点担心,陪着我好不好?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ちょっとドキドキしてる。そばにいてね。" } }
+      }
+    },
+    "character.excited" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunny found something fun! Want to play?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小晴发现了好玩的!一起玩吗?" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "面白いものを見つけたよ!一緒に遊ぼ!" } }
+      }
+    },
+    "character.shy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunny is hiding behind a cloud, peeking shyly." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小晴躲在云后面,偷偷看你。" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "雲の陰からこっそり覗いてるよ。" } }
+      }
+    },
+    "mood.happy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Happy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开心" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "うれしい" } }
+      }
+    },
+    "mood.calm" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Calm" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "安静" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "おだやか" } }
+      }
+    },
+    "mood.tender" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tender" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "温柔" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "やさしい" } }
+      }
+    },
+    "mood.worried" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Worried" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "担心" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "しんぱい" } }
+      }
+    },
+    "mood.excited" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Excited" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "兴奋" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "わくわく" } }
+      }
+    },
+    "mood.shy" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shy" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "害羞" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "はずかしい" } }
+      }
+    },
+    "profile.units" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Units" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "单位设置" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "単位" } }
+      }
+    },
+    "profile.temp_unit" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Temperature" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "温度" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "気温" } }
+      }
+    },
+    "profile.wind_unit" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wind speed" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "风速" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "風速" } }
+      }
+    },
+    "profile.notifications" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "通知设置" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "通知" } }
+      }
+    },
+    "profile.daily_brief" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Daily morning briefing" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每日早安播报" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "朝のおしらせ" } }
+      }
+    },
+    "profile.cities" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cities" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "城市管理" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "都市の管理" } }
+      }
+    },
+    "profile.manage_cities" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Manage cities" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "管理城市列表" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "都市リスト" } }
+      }
+    },
+    "profile.city_count" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%d saved" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "已保存 %d 个" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "%d件登録済み" } }
+      }
+    },
+    "profile.about" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "关于" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "アプリについて" } }
+      }
+    },
+    "profile.version" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Version" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "版本" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "バージョン" } }
+      }
+    },
+    "common.cancel" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャンセル" } }
+      }
+    },
+    "notif.title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Good morning" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "早安!" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "おはよう!" } }
+      }
+    },
+    "notif.body" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunny is checking the weather for you. Have a great day!" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "小晴帮你看好今天的天气啦,出门顺利哦!" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "今日の天気を見てきたよ。いってらっしゃい!" } }
+      }
+    }
+  }
+}

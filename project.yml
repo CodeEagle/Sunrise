@@ -1,0 +1,157 @@
+name: Sunrise
+options:
+  bundleIdPrefix: app.sunrise
+  deploymentTarget:
+    iOS: "17.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
+    CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER: YES
+
+packages:
+  SunriseCore:
+    path: Packages/SunriseCore
+  SunriseFeatures:
+    path: Packages/SunriseFeatures
+  SunriseDesignSystem:
+    path: Packages/SunriseDesignSystem
+  SunriseAnimation:
+    path: Packages/SunriseAnimation
+
+targets:
+  Sunrise:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Sunrise
+        excludes:
+          - "**/.DS_Store"
+    resources:
+      - path: Sunrise/Resources
+    info:
+      path: Sunrise/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Sunrise
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        UILaunchStoryboardName: LaunchScreen
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default Configuration
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+        NSLocationWhenInUseUsageDescription: "Sunrise uses your location to show local weather."
+        ITSAppUsesNonExemptEncryption: false
+        CFBundleLocalizations:
+          - en
+          - zh-Hans
+          - ja
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.sunrise.Sunrise
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: "0.1.0"
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: Sunrise/Resources/Sunrise.entitlements
+    dependencies:
+      - package: SunriseCore
+      - package: SunriseFeatures
+        product: RootFeature
+      - package: SunriseFeatures
+        product: TodayFeature
+      - package: SunriseFeatures
+        product: ForecastFeature
+      - package: SunriseFeatures
+        product: CharacterFeature
+      - package: SunriseFeatures
+        product: ProfileFeature
+      - package: SunriseFeatures
+        product: CityFeature
+      - package: SunriseDesignSystem
+      - package: SunriseAnimation
+      - target: SunriseWidget
+
+  SunriseWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: SunriseWidget
+        excludes:
+          - Info.plist
+          - SunriseWidget.entitlements
+    info:
+      path: SunriseWidget/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.sunrise.Sunrise.Widget
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: SunriseWidget/SunriseWidget.entitlements
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1"
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+      - package: SunriseCore
+      - package: SunriseDesignSystem
+
+  SunriseTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: SunriseTests
+    dependencies:
+      - target: Sunrise
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.sunrise.SunriseTests
+        GENERATE_INFOPLIST_FILE: YES
+
+  SunriseUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: SunriseUITests
+    dependencies:
+      - target: Sunrise
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.sunrise.SunriseUITests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Sunrise
+
+schemes:
+  Sunrise:
+    build:
+      targets:
+        Sunrise: all
+        SunriseTests: [test]
+        SunriseUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - SunriseTests
+        - SunriseUITests
+    archive:
+      config: Release
