@@ -8,8 +8,16 @@ let package = Package(
     products: [
         .library(name: "SunriseAnimation", targets: ["SunriseAnimation"])
     ],
+    dependencies: [
+        .package(url: "https://github.com/airbnb/lottie-spm", from: "4.5.0")
+    ],
     targets: [
-        .target(name: "SunriseAnimation"),
+        .target(
+            name: "SunriseAnimation",
+            dependencies: [
+                .product(name: "Lottie", package: "lottie-spm")
+            ]
+        ),
         .testTarget(
             name: "SunriseAnimationTests",
             dependencies: ["SunriseAnimation"]

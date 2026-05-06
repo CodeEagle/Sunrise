@@ -3,6 +3,7 @@ import ComposableArchitecture
 import CharacterFeature
 import SunriseCore
 import SunriseDesignSystem
+import SunriseAnimation
 
 final class CharacterViewController: UIViewController {
     private let store: StoreOf<CharacterReducer>
@@ -10,7 +11,8 @@ final class CharacterViewController: UIViewController {
     private let gradient = GradientBackgroundView(palette: .clearDay)
     private let scrollView = UIScrollView()
     private let stack = UIStackView()
-    private let portrait = UIImageView()
+    private let portraitFallback = UIImageView()
+    private lazy var characterView = LottieCharacterView(fallbackView: portraitFallback)
     private let bubble = UILabel()
     private let sunshineLabel = UILabel()
     private let moodTitle = UILabel()
@@ -67,9 +69,9 @@ final class CharacterViewController: UIViewController {
         sunshineLabel.textColor = Palette.inkPrimary
         sunshineLabel.textAlignment = .center
 
-        portrait.contentMode = .scaleAspectFit
-        portrait.translatesAutoresizingMaskIntoConstraints = false
-        portrait.heightAnchor.constraint(equalToConstant: 220).isActive = true
+        portraitFallback.contentMode = .scaleAspectFit
+        characterView.translatesAutoresizingMaskIntoConstraints = false
+        characterView.heightAnchor.constraint(equalToConstant: 240).isActive = true
 
         bubble.font = Typography.body(15)
         bubble.textColor = Palette.inkPrimary
@@ -93,15 +95,7 @@ final class CharacterViewController: UIViewController {
             moodStack.addArrangedSubview(makeMoodButton(mood))
         }
 
-        let portraitContainer = UIView()
-        portraitContainer.addSubview(portrait)
-        NSLayoutConstraint.activate([
-            portrait.centerXAnchor.constraint(equalTo: portraitContainer.centerXAnchor),
-            portrait.topAnchor.constraint(equalTo: portraitContainer.topAnchor),
-            portrait.bottomAnchor.constraint(equalTo: portraitContainer.bottomAnchor)
-        ])
-
-        [sunshineLabel, portraitContainer, bubble, moodTitle, moodStack].forEach(stack.addArrangedSubview)
+        [sunshineLabel, characterView, bubble, moodTitle, moodStack].forEach(stack.addArrangedSubview)
     }
 
     private func makeMoodButton(_ mood: CharacterMood) -> UIButton {
@@ -124,10 +118,14 @@ final class CharacterViewController: UIViewController {
 
     private func render() {
         gradient.palette = palette(for: store.condition)
-        let symbolName = symbolName(for: store.condition, mood: store.mood)
+
+        let symbolName = symbolName(for: store.mood)
         let config = UIImage.SymbolConfiguration(pointSize: 160, weight: .regular)
-        portrait.image = UIImage(systemName: symbolName, withConfiguration: config)
-        portrait.tintColor = ConditionGlyph.tint(forConditionRawValue: store.condition.rawValue)
+        portraitFallback.image = UIImage(systemName: symbolName, withConfiguration: config)
+        portraitFallback.tintColor = ConditionGlyph.tint(forConditionRawValue: store.condition.rawValue)
+
+        let animated = AnimatedCondition(rawValue: store.condition.rawValue) ?? .clear
+        characterView.update(condition: animated, dayPeriod: .day)
 
         bubble.text = encouragement(for: store.condition, mood: store.mood)
         sunshineLabel.text = String.localizedStringWithFormat(
@@ -161,9 +159,7 @@ final class CharacterViewController: UIViewController {
         }
     }
 
-    /// MVP: SF Symbols stand-in for the character art. Replaced by
-    /// real illustrations once they're available; M6 swaps in Lottie.
-    private func symbolName(for condition: WeatherCondition, mood: CharacterMood) -> String {
+    private func symbolName(for mood: CharacterMood) -> String {
         switch mood {
         case .happy: return "face.smiling.inverse"
         case .calm: return "moon.stars.fill"
