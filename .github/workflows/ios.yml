@@ -11,17 +11,20 @@ on:
 env:
   XCODE_PROJECT: Sunrise.xcodeproj
   SCHEME: Sunrise
-  IOS_SIMULATOR: iPhone 15
+  IOS_SIMULATOR: iPhone 16
 
 jobs:
   build-test-screenshot:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
-      - name: Show Xcode version
-        run: xcodebuild -version
+      - name: Select latest Xcode
+        run: |
+          ls /Applications/ | grep Xcode || true
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)" || true
+          xcodebuild -version
 
       - name: Install XcodeGen
         run: brew install xcodegen
