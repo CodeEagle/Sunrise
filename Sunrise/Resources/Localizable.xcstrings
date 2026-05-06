@@ -76,6 +76,34 @@
         "ja" : { "stringUnit" : { "state" : "translated", "value" : "風速 %@" } }
       }
     },
+    "today.humidity_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Humidity" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "湿度" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "湿度" } }
+      }
+    },
+    "today.wind_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wind" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "风速" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "風速" } }
+      }
+    },
+    "today.uv_title" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "UV Index" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "紫外线" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "紫外線指数" } }
+      }
+    },
+    "today.updated_at" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Updated %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "更新于 %@" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "更新 %@" } }
+      }
+    },
     "condition.clear" : {
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear" } },
