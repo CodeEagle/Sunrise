@@ -16,6 +16,7 @@ final class TodayViewController: UIViewController {
     private let temperatureLabel = UILabel()
     private let conditionLabel = UILabel()
     private let feelsLabel = UILabel()
+    private let heroCharacterImage = UIImageView()
 
     private let hourlyCollection: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -131,18 +132,27 @@ final class TodayViewController: UIViewController {
         titleStack.axis = .vertical
         titleStack.spacing = 2
 
-        let inner = UIStackView(arrangedSubviews: [titleStack, temperatureLabel, conditionLabel, feelsLabel])
-        inner.axis = .vertical
-        inner.spacing = Spacing.xs
-        inner.alignment = .leading
-        inner.translatesAutoresizingMaskIntoConstraints = false
-        card.addSubview(inner)
+        let textColumn = UIStackView(arrangedSubviews: [titleStack, temperatureLabel, conditionLabel, feelsLabel])
+        textColumn.axis = .vertical
+        textColumn.spacing = Spacing.xs
+        textColumn.alignment = .leading
+        textColumn.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(textColumn)
+
+        heroCharacterImage.contentMode = .scaleAspectFit
+        heroCharacterImage.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(heroCharacterImage)
 
         NSLayoutConstraint.activate([
-            inner.topAnchor.constraint(equalTo: card.topAnchor, constant: Spacing.l),
-            inner.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -Spacing.l),
-            inner.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: Spacing.l),
-            inner.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -Spacing.l)
+            textColumn.topAnchor.constraint(equalTo: card.topAnchor, constant: Spacing.l),
+            textColumn.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -Spacing.l),
+            textColumn.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: Spacing.l),
+            textColumn.trailingAnchor.constraint(lessThanOrEqualTo: heroCharacterImage.leadingAnchor, constant: -Spacing.s),
+
+            heroCharacterImage.topAnchor.constraint(equalTo: card.topAnchor, constant: Spacing.s),
+            heroCharacterImage.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -Spacing.s),
+            heroCharacterImage.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -Spacing.s),
+            heroCharacterImage.widthAnchor.constraint(equalTo: card.widthAnchor, multiplier: 0.45)
         ])
 
         return card
@@ -187,6 +197,7 @@ final class TodayViewController: UIViewController {
 
         if let snapshot {
             gradient.palette = palette(for: snapshot.current.condition, period: snapshot.current.dayPeriod)
+            heroCharacterImage.image = CharacterArt.image(forConditionRawValue: snapshot.current.condition.rawValue)
             temperatureLabel.text = formatter.temperature(snapshot.current.temperature) + "°"
             conditionLabel.text = localizedCondition(snapshot.current.condition)
             feelsLabel.text = String.localizedStringWithFormat(

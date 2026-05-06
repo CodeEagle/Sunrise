@@ -126,10 +126,15 @@ final class CharacterViewController: UIViewController {
     private func render() {
         gradient.palette = palette(for: store.condition)
 
-        let symbolName = symbolName(for: store.mood)
-        let config = UIImage.SymbolConfiguration(pointSize: 160, weight: .regular)
-        portraitFallback.image = UIImage(systemName: symbolName, withConfiguration: config)
-        portraitFallback.tintColor = ConditionGlyph.tint(forConditionRawValue: store.condition.rawValue)
+        if let art = CharacterArt.image(forConditionRawValue: store.condition.rawValue) {
+            portraitFallback.image = art
+            portraitFallback.tintColor = nil
+        } else {
+            let symbolName = symbolName(for: store.mood)
+            let config = UIImage.SymbolConfiguration(pointSize: 160, weight: .regular)
+            portraitFallback.image = UIImage(systemName: symbolName, withConfiguration: config)
+            portraitFallback.tintColor = ConditionGlyph.tint(forConditionRawValue: store.condition.rawValue)
+        }
 
         let animated = AnimatedCondition(rawValue: store.condition.rawValue) ?? .clear
         characterView.update(condition: animated, dayPeriod: .day)
