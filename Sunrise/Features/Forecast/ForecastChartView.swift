@@ -133,7 +133,7 @@ struct ForecastChartView: View {
         }
         .frame(height: 180)
         .chartXAxis {
-            AxisMarks(values: fiveDay.map(\.date)) { _ in
+            AxisMarks(values: .stride(by: .day)) { _ in
                 AxisGridLine()
                 AxisValueLabel(format: .dateTime.weekday(.abbreviated))
             }
@@ -157,7 +157,7 @@ struct ForecastChartView: View {
         .frame(height: 140)
         .chartYAxis(.hidden)
         .chartXAxis {
-            AxisMarks(values: fiveDay.map(\.date)) { _ in
+            AxisMarks(values: .stride(by: .day)) { _ in
                 AxisGridLine().foregroundStyle(Color(Palette.inkSecondary).opacity(0.2))
                 AxisValueLabel(format: .dateTime.weekday(.abbreviated))
             }
