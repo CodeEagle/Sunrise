@@ -58,7 +58,7 @@ Then in Xcode:
    - Set your team
    - Enable **WeatherKit** (registered against the App ID in the Apple
      Developer portal)
-   - Add the **App Group** `group.app.sunrise` to both targets so the widget
+   - Add the **App Group** `group.Fun.SelfStudio.Sunrise` to both targets so the widget
      can read snapshots written by the main app
 2. Pick the `Sunrise` scheme and run on iOS 17+ simulator or device.
 
