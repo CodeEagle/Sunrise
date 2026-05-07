@@ -61,14 +61,23 @@ final class CharacterViewController: UIViewController {
 
         sunshineLabel.font = Typography.body(14)
         sunshineLabel.textColor = Palette.inkPrimary
-        sunshineLabel.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.85)
-        sunshineLabel.layer.cornerRadius = 14
-        sunshineLabel.layer.cornerCurve = .continuous
-        sunshineLabel.layer.masksToBounds = true
+        sunshineLabel.backgroundColor = .clear
         sunshineLabel.textAlignment = .center
-        sunshineLabel.heightAnchor.constraint(equalToConstant: 28).isActive = true
 
-        let header = UIStackView(arrangedSubviews: [titleLabel, UIView(), sunshineLabel])
+        let sunshineGlass = GlassPanel(style: .clear, cornerRadius: 14)
+        sunshineGlass.translatesAutoresizingMaskIntoConstraints = false
+        sunshineGlass.isUserInteractionEnabled = false
+        sunshineGlass.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        sunshineGlass.addSubview(sunshineLabel)
+        sunshineLabel.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            sunshineLabel.topAnchor.constraint(equalTo: sunshineGlass.topAnchor),
+            sunshineLabel.bottomAnchor.constraint(equalTo: sunshineGlass.bottomAnchor),
+            sunshineLabel.leadingAnchor.constraint(equalTo: sunshineGlass.leadingAnchor, constant: Spacing.s),
+            sunshineLabel.trailingAnchor.constraint(equalTo: sunshineGlass.trailingAnchor, constant: -Spacing.s)
+        ])
+
+        let header = UIStackView(arrangedSubviews: [titleLabel, UIView(), sunshineGlass])
         header.axis = .horizontal
         header.alignment = .center
         header.spacing = Spacing.s
@@ -87,16 +96,17 @@ final class CharacterViewController: UIViewController {
             actionStack.addArrangedSubview(makeActionButton(action))
         }
 
-        // Bubble
+        // Bubble — Liquid Glass background
         bubble.font = Typography.body(15)
         bubble.textColor = Palette.inkPrimary
         bubble.numberOfLines = 0
         bubble.textAlignment = .center
-        bubble.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.92)
-        bubble.layer.cornerRadius = Radius.medium
-        bubble.layer.cornerCurve = .continuous
-        bubble.layer.masksToBounds = true
+        bubble.backgroundColor = .clear
         bubble.translatesAutoresizingMaskIntoConstraints = false
+
+        let bubbleGlass = GlassPanel(style: .regular, cornerRadius: Radius.medium)
+        bubbleGlass.translatesAutoresizingMaskIntoConstraints = false
+        bubbleGlass.isUserInteractionEnabled = false
 
         // Mood section
         moodTitle.text = String(localized: "character.mood_state", defaultValue: "Mood state")
@@ -115,6 +125,7 @@ final class CharacterViewController: UIViewController {
         view.addSubview(header)
         view.addSubview(characterView)
         view.addSubview(actionStack)
+        view.addSubview(bubbleGlass)
         view.addSubview(bubble)
         view.addSubview(moodTitle)
         view.addSubview(moodStack)
@@ -148,6 +159,11 @@ final class CharacterViewController: UIViewController {
             bubble.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.l),
             bubble.heightAnchor.constraint(greaterThanOrEqualToConstant: 56),
 
+            bubbleGlass.topAnchor.constraint(equalTo: bubble.topAnchor),
+            bubbleGlass.bottomAnchor.constraint(equalTo: bubble.bottomAnchor),
+            bubbleGlass.leadingAnchor.constraint(equalTo: bubble.leadingAnchor),
+            bubbleGlass.trailingAnchor.constraint(equalTo: bubble.trailingAnchor),
+
             moodTitle.topAnchor.constraint(equalTo: bubble.bottomAnchor, constant: Spacing.m),
             moodTitle.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.l),
 
@@ -165,14 +181,21 @@ final class CharacterViewController: UIViewController {
     }
 
     private func makeActionButton(_ action: CharacterAction) -> UIButton {
-        var config = UIButton.Configuration.plain()
+        // iOS 26's `.glass()` configuration adopts Liquid Glass for the button
+        // chrome — gives the watercolor scene behind it room to read through.
+        var config: UIButton.Configuration
+        if #available(iOS 26.0, *) {
+            config = .glass()
+        } else {
+            config = .plain()
+            config.background.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.85)
+            config.background.cornerRadius = Radius.small
+        }
         config.title = localizedAction(action)
         config.image = UIImage(systemName: action.symbol)
         config.imagePadding = 4
         config.imagePlacement = .top
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4)
-        config.background.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.85)
-        config.background.cornerRadius = Radius.small
         config.baseForegroundColor = Palette.inkPrimary
         let button = UIButton(configuration: config)
         button.titleLabel?.font = Typography.caption(12)

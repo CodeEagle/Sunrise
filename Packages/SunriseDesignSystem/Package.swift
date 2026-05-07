@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "SunriseDesignSystem",
     defaultLocalization: "en",
-    platforms: [.iOS(.v17), .macOS(.v14)],
+    platforms: [.iOS(.v26), .macOS(.v26)],
     products: [
         .library(name: "SunriseDesignSystem", targets: ["SunriseDesignSystem"])
     ],

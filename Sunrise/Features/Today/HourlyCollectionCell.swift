@@ -36,9 +36,21 @@ final class HourlyCollectionCell: UICollectionViewCell {
     }
 
     private func configure() {
-        contentView.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.7)
-        contentView.layer.cornerRadius = Radius.medium
-        contentView.layer.cornerCurve = .continuous
+        contentView.backgroundColor = .clear
+
+        // Liquid Glass background pill so the cells read on the scene art
+        // without a flat cream wash.
+        let glass = GlassPanel(style: .clear, cornerRadius: Radius.medium)
+        glass.translatesAutoresizingMaskIntoConstraints = false
+        glass.isUserInteractionEnabled = false
+        contentView.addSubview(glass)
+        contentView.sendSubviewToBack(glass)
+        NSLayoutConstraint.activate([
+            glass.topAnchor.constraint(equalTo: contentView.topAnchor),
+            glass.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            glass.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            glass.trailingAnchor.constraint(equalTo: contentView.trailingAnchor)
+        ])
 
         timeLabel.font = Typography.caption(12)
         timeLabel.textColor = Palette.inkSecondary
