@@ -107,16 +107,16 @@ final class RootTabBarController: UITabBarController {
     }
 
     /// Soft cream tab bar with a yellow rounded chip behind the selected item,
-    /// matching the design board's floating capsule style. The chip is drawn
-    /// once into a stretchable image and assigned via UITabBarAppearance so it
-    /// renders correctly on every selection.
+    /// matching the design board's floating capsule style. Colors flow through
+    /// UITabBarAppearance; the chip rides on the bar-level
+    /// selectionIndicatorImage since that property is the reliable cross-iOS
+    /// way to attach a custom selection backdrop.
     private func configureTabBarAppearance() {
         let appearance = UITabBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.85)
         appearance.shadowColor = .clear
 
-        let chip = makeSelectionChip()
         for item in [appearance.stackedLayoutAppearance, appearance.inlineLayoutAppearance, appearance.compactInlineLayoutAppearance] {
             item.selected.iconColor = Palette.inkPrimary
             item.normal.iconColor = Palette.inkSecondary
@@ -128,11 +128,11 @@ final class RootTabBarController: UITabBarController {
                 .foregroundColor: Palette.inkSecondary,
                 .font: Typography.caption(11)
             ]
-            item.selectionIndicatorImage = chip
         }
 
         tabBar.standardAppearance = appearance
         tabBar.scrollEdgeAppearance = appearance
+        tabBar.selectionIndicatorImage = makeSelectionChip()
     }
 
     private func makeSelectionChip() -> UIImage {
