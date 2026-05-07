@@ -18,14 +18,22 @@ final class ProfileViewController: UIViewController {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
-    private enum Section: Int, CaseIterable {
-        case units
-        case notifications
-        case cities
-        case about
-    }
+    /// Single-section list of six rows mirroring the design board
+    /// (城市管理 / 天气提醒 / 角色与语音 / 单位设置 / 通知设置 / 关于).
+    private enum Row: Int, CaseIterable {
+        case cities, briefing, voice, units, notifications, about
 
-    private enum UnitsRow: Int, CaseIterable { case temperature, wind }
+        var symbol: String {
+            switch self {
+            case .cities: return "mappin.and.ellipse"
+            case .briefing: return "bell.badge"
+            case .voice: return "person.wave.2"
+            case .units: return "gearshape"
+            case .notifications: return "app.badge"
+            case .about: return "info.circle"
+            }
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -93,64 +101,58 @@ final class ProfileViewController: UIViewController {
 }
 
 extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
-    func numberOfSections(in tableView: UITableView) -> Int { Section.allCases.count }
+    func numberOfSections(in tableView: UITableView) -> Int { 1 }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch Section(rawValue: section)! {
-        case .units: return UnitsRow.allCases.count
-        case .notifications: return 1
-        case .cities: return 1
-        case .about: return 1
-        }
-    }
-
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        switch Section(rawValue: section)! {
-        case .units: return String(localized: "profile.units", defaultValue: "Units")
-        case .notifications: return String(localized: "profile.notifications", defaultValue: "Notifications")
-        case .cities: return String(localized: "profile.cities", defaultValue: "Cities")
-        case .about: return String(localized: "profile.about", defaultValue: "About")
-        }
+        Row.allCases.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
         cell.accessoryView = nil
-        cell.accessoryType = .none
+        cell.accessoryType = .disclosureIndicator
 
         var content = cell.defaultContentConfiguration()
         content.textProperties.font = Typography.body()
         content.secondaryTextProperties.font = Typography.caption()
+        content.secondaryTextProperties.color = Palette.inkSecondary
+        content.imageProperties.tintColor = Palette.sunYellow
 
-        switch Section(rawValue: indexPath.section)! {
+        let row = Row(rawValue: indexPath.row)!
+        content.image = UIImage(systemName: row.symbol)
+        switch row {
+        case .cities:
+            content.text = String(localized: "profile.row.cities", defaultValue: "City management")
+            content.secondaryText = String.localizedStringWithFormat(
+                String(localized: "profile.row.cities_value", defaultValue: "%d cities"),
+                store.managedCities.count
+            )
+        case .briefing:
+            content.text = String(localized: "profile.row.briefing", defaultValue: "Weather briefing")
+            content.secondaryText = store.settings.notificationsEnabled
+                ? String(localized: "profile.row.briefing_value_on", defaultValue: "Daily at 08:00")
+                : String(localized: "profile.row.briefing_value_off", defaultValue: "Off")
+        case .voice:
+            content.text = String(localized: "profile.row.voice", defaultValue: "Character & voice")
+            content.secondaryText = String(localized: "profile.row.voice_value", defaultValue: "Sunny · default voice")
         case .units:
-            switch UnitsRow(rawValue: indexPath.row)! {
-            case .temperature:
-                content.text = String(localized: "profile.temp_unit", defaultValue: "Temperature")
-                content.secondaryText = temperatureUnitTitle(store.settings.temperatureUnit)
-                cell.accessoryType = .disclosureIndicator
-            case .wind:
-                content.text = String(localized: "profile.wind_unit", defaultValue: "Wind speed")
-                content.secondaryText = windUnitTitle(store.settings.windSpeedUnit)
-                cell.accessoryType = .disclosureIndicator
-            }
+            content.text = String(localized: "profile.row.units", defaultValue: "Unit settings")
+            content.secondaryText = unitsSummary()
         case .notifications:
-            content.text = String(localized: "profile.daily_brief", defaultValue: "Daily morning briefing")
+            content.text = String(localized: "profile.row.notifications", defaultValue: "Notifications")
+            content.secondaryText = nil
+            cell.accessoryType = .none
             let toggle = UISwitch()
             toggle.isOn = store.settings.notificationsEnabled
             toggle.addTarget(self, action: #selector(handleNotifToggle(_:)), for: .valueChanged)
             cell.accessoryView = toggle
-        case .cities:
-            content.text = String(localized: "profile.manage_cities", defaultValue: "Manage cities")
-            content.secondaryText = String.localizedStringWithFormat(
-                String(localized: "profile.city_count", defaultValue: "%d saved"),
-                store.managedCities.count
-            )
-            cell.accessoryType = .disclosureIndicator
         case .about:
-            content.text = String(localized: "profile.version", defaultValue: "Version")
+            content.text = String(localized: "profile.row.about", defaultValue: "About Sunny weather")
             let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.0"
-            content.secondaryText = version
+            content.secondaryText = String.localizedStringWithFormat(
+                String(localized: "profile.version_value", defaultValue: "Version %@"),
+                version
+            )
         }
 
         cell.contentConfiguration = content
@@ -159,16 +161,10 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        switch Section(rawValue: indexPath.section)! {
-        case .units:
-            switch UnitsRow(rawValue: indexPath.row)! {
-            case .temperature: presentTemperaturePicker()
-            case .wind: presentWindPicker()
-            }
-        case .cities:
-            onManageCitiesTapped?()
-        case .notifications, .about:
-            break
+        switch Row(rawValue: indexPath.row)! {
+        case .cities: onManageCitiesTapped?()
+        case .units: presentUnitsPicker()
+        case .briefing, .voice, .about, .notifications: break
         }
     }
 
@@ -178,48 +174,44 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
         store.send(.notificationsToggled(sender.isOn, dailyTitle: title, dailyBody: body))
     }
 
-    private func presentTemperaturePicker() {
+    private func unitsSummary() -> String {
+        let temp = store.settings.temperatureUnit == .celsius ? "°C" : "°F"
+        let wind: String
+        switch store.settings.windSpeedUnit {
+        case .kilometersPerHour: wind = "km/h"
+        case .milesPerHour: wind = "mph"
+        case .metersPerSecond: wind = "m/s"
+        }
+        return "\(temp) · \(wind)"
+    }
+
+    private func presentUnitsPicker() {
         let alert = UIAlertController(
-            title: String(localized: "profile.temp_unit", defaultValue: "Temperature"),
+            title: String(localized: "profile.row.units", defaultValue: "Unit settings"),
             message: nil,
             preferredStyle: .actionSheet
         )
         for unit in TemperatureUnit.allCases {
-            alert.addAction(UIAlertAction(title: temperatureUnitTitle(unit), style: .default) { [weak self] _ in
+            let title = unit == .celsius ? "°C" : "°F"
+            alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
                 self?.store.send(.temperatureUnitChanged(unit))
             })
         }
-        alert.addAction(UIAlertAction(title: String(localized: "common.cancel", defaultValue: "Cancel"), style: .cancel))
-        present(alert, animated: true)
-    }
-
-    private func presentWindPicker() {
-        let alert = UIAlertController(
-            title: String(localized: "profile.wind_unit", defaultValue: "Wind speed"),
-            message: nil,
-            preferredStyle: .actionSheet
-        )
         for unit in WindSpeedUnit.allCases {
-            alert.addAction(UIAlertAction(title: windUnitTitle(unit), style: .default) { [weak self] _ in
+            let title: String
+            switch unit {
+            case .kilometersPerHour: title = "km/h"
+            case .milesPerHour: title = "mph"
+            case .metersPerSecond: title = "m/s"
+            }
+            alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
                 self?.store.send(.windUnitChanged(unit))
             })
         }
-        alert.addAction(UIAlertAction(title: String(localized: "common.cancel", defaultValue: "Cancel"), style: .cancel))
+        alert.addAction(UIAlertAction(
+            title: String(localized: "common.cancel", defaultValue: "Cancel"),
+            style: .cancel
+        ))
         present(alert, animated: true)
-    }
-
-    private func temperatureUnitTitle(_ unit: TemperatureUnit) -> String {
-        switch unit {
-        case .celsius: return "°C"
-        case .fahrenheit: return "°F"
-        }
-    }
-
-    private func windUnitTitle(_ unit: WindSpeedUnit) -> String {
-        switch unit {
-        case .kilometersPerHour: return "km/h"
-        case .milesPerHour: return "mph"
-        case .metersPerSecond: return "m/s"
-        }
     }
 }
