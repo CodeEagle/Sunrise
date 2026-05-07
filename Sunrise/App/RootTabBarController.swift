@@ -30,6 +30,19 @@ final class RootTabBarController: UITabBarController, UITabBarControllerDelegate
         // collection, UIKit renders the floating glass pill from the SDK,
         // matching the navigation-bar items (e.g. Today's hamburger button)
         // that already paint as Liquid Glass.
+        //
+        // System default `configureWithDefaultBackground()` on iOS 26 picks
+        // the Liquid Glass material — but it stacks an opaque cream tint on
+        // top, hiding whatever's behind the bar. Wiping `backgroundColor` to
+        // `.clear` strips that tint so content (e.g. the orange roof on
+        // Today) bleeds through the glass exactly like the navigation-bar
+        // items do.
+        let glassAppearance = UITabBarAppearance()
+        glassAppearance.configureWithDefaultBackground()
+        glassAppearance.backgroundColor = .clear
+        glassAppearance.shadowColor = .clear
+        tabBar.standardAppearance = glassAppearance
+        tabBar.scrollEdgeAppearance = glassAppearance
         tabBar.tintColor = Palette.inkPrimary
         tabBar.unselectedItemTintColor = Palette.inkSecondary
         delegate = self
