@@ -20,8 +20,9 @@ final class ForecastViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = String(localized: "tab.forecast", defaultValue: "Forecast")
         view.backgroundColor = Palette.canvas
+
+        title = String(localized: "forecast.nav_title", defaultValue: "15-day trend")
 
         emptyLabel.text = String(localized: "forecast.empty", defaultValue: "Pick a city on the Weather tab to see the 15-day outlook.")
         emptyLabel.font = Typography.body()

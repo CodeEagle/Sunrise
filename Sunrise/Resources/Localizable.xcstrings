@@ -1545,6 +1545,28 @@
           }
         }
       }
+    },
+    "forecast.nav_title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15-day trend"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15天天气趋势"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15日間の天気推移"
+          }
+        }
+      }
     }
   }
 }

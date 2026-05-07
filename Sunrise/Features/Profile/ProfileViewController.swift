@@ -84,8 +84,14 @@ final class ProfileViewController: UIViewController {
         textStack.spacing = 4
         textStack.translatesAutoresizingMaskIntoConstraints = false
 
+        let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
+        chevron.tintColor = Palette.inkSecondary
+        chevron.contentMode = .scaleAspectFit
+        chevron.translatesAutoresizingMaskIntoConstraints = false
+
         header.addSubview(avatar)
         header.addSubview(textStack)
+        header.addSubview(chevron)
         NSLayoutConstraint.activate([
             avatar.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: Spacing.l),
             avatar.centerYAnchor.constraint(equalTo: header.centerYAnchor),
@@ -93,8 +99,13 @@ final class ProfileViewController: UIViewController {
             avatar.heightAnchor.constraint(equalToConstant: 72),
 
             textStack.leadingAnchor.constraint(equalTo: avatar.trailingAnchor, constant: Spacing.m),
-            textStack.trailingAnchor.constraint(lessThanOrEqualTo: header.trailingAnchor, constant: -Spacing.l),
-            textStack.centerYAnchor.constraint(equalTo: header.centerYAnchor)
+            textStack.trailingAnchor.constraint(lessThanOrEqualTo: chevron.leadingAnchor, constant: -Spacing.s),
+            textStack.centerYAnchor.constraint(equalTo: header.centerYAnchor),
+
+            chevron.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -Spacing.l),
+            chevron.centerYAnchor.constraint(equalTo: header.centerYAnchor),
+            chevron.widthAnchor.constraint(equalToConstant: 14),
+            chevron.heightAnchor.constraint(equalToConstant: 18)
         ])
         return header
     }
