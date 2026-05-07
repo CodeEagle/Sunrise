@@ -13,6 +13,7 @@ final class TodayViewController: UIViewController {
 
     private let backdrop = SceneBackgroundView()
 
+    private let cityPin = UIImageView(image: UIImage(systemName: "location.fill"))
     private let cityLabel = UILabel()
     private let cityCaret = UIImageView(image: UIImage(systemName: "chevron.down"))
     private let updatedLabel = UILabel()
@@ -53,18 +54,26 @@ final class TodayViewController: UIViewController {
 
         cityLabel.font = Typography.title(18)
         cityLabel.textColor = Palette.inkPrimary
+        cityPin.tintColor = Palette.sunYellow
+        cityPin.contentMode = .scaleAspectFit
+        cityPin.translatesAutoresizingMaskIntoConstraints = false
+        cityPin.widthAnchor.constraint(equalToConstant: 14).isActive = true
         cityCaret.tintColor = Palette.inkPrimary
         cityCaret.contentMode = .scaleAspectFit
         cityCaret.translatesAutoresizingMaskIntoConstraints = false
         cityCaret.widthAnchor.constraint(equalToConstant: 12).isActive = true
 
-        let cityRow = UIStackView(arrangedSubviews: [cityLabel, cityCaret])
+        let cityRow = UIStackView(arrangedSubviews: [cityPin, cityLabel, cityCaret])
         cityRow.axis = .horizontal
         cityRow.alignment = .center
         cityRow.spacing = 4
 
-        updatedLabel.font = Typography.caption(11)
-        updatedLabel.textColor = Palette.inkSecondary
+        // Lift the updated subtitle up to caption(12) and use a slightly
+        // alpha-dimmed inkPrimary instead of inkSecondary — secondary is
+        // tuned for body sub-text on the cream canvas, but the nav titleView
+        // sits over the painted sky and ate the lower-contrast colour.
+        updatedLabel.font = Typography.caption(12)
+        updatedLabel.textColor = Palette.inkPrimary.withAlphaComponent(0.7)
         updatedLabel.textAlignment = .center
 
         let titleStack = UIStackView(arrangedSubviews: [cityRow, updatedLabel])

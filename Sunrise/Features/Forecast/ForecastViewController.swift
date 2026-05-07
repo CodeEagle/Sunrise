@@ -49,8 +49,8 @@ final class ForecastViewController: UIViewController {
         titleLabel.textColor = Palette.inkPrimary
         titleLabel.textAlignment = .center
 
-        subtitleLabel.font = Typography.caption(11)
-        subtitleLabel.textColor = Palette.inkSecondary
+        subtitleLabel.font = Typography.caption(12)
+        subtitleLabel.textColor = Palette.inkPrimary.withAlphaComponent(0.7)
         subtitleLabel.textAlignment = .center
 
         let stack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel])
