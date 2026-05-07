@@ -6,13 +6,10 @@ second-stage target.
 
 ## Screens
 
-| Today | Forecast | Sunny | Me |
-|---|---|---|---|
-| ![Today](docs/screenshots/01-today.png) | ![Forecast](docs/screenshots/02-forecast.png) | ![Sunny](docs/screenshots/03-character.png) | ![Me](docs/screenshots/04-profile.png) |
-
-Screenshots above are captured from the `iOS` GitHub Actions workflow on every
-push (UITest target launches the app with `-mockData` and records each tab),
-then committed back to `docs/screenshots/` as the canonical reference.
+Screenshots are captured by the `iOS` GitHub Actions workflow on every push
+(UITest target launches the app with `-mockData` and records each tab) and
+attached to the corresponding GitHub Release — the CI artifact is the source
+of truth for the latest UI.
 
 ## Tech stack
 
