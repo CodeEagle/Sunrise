@@ -23,15 +23,23 @@ jobs:
       - name: Select latest Xcode
         run: |
           ls /Applications/ | grep Xcode || true
-          # Prefer Xcode 26 (Liquid Glass / iOS 26 SDK); fall back to whatever
-          # the runner ships if the explicit version is missing.
-          for candidate in /Applications/Xcode_26*.app /Applications/Xcode.app; do
-            if [ -d "$candidate" ]; then
-              sudo xcode-select -s "$candidate"
-              break
-            fi
+          # Pick the highest-versioned non-beta Xcode 26 install — the default
+          # 26.0.1 on macos-26 isn't shipping the iOS 26.0 simulator runtime,
+          # so destinations of platform=iOS Simulator fail to resolve. Walking
+          # the dirs newest-first picks Xcode_26.5.0 (or whatever ships latest).
+          best=""
+          for candidate in $(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -v beta | sort -V -r); do
+            best="$candidate"
+            break
           done
+          if [ -z "$best" ] && [ -d /Applications/Xcode.app ]; then
+            best=/Applications/Xcode.app
+          fi
+          if [ -n "$best" ]; then
+            sudo xcode-select -s "$best"
+          fi
           xcodebuild -version
+          xcrun simctl list runtimes | head -20
 
       - name: Install XcodeGen
         run: brew install xcodegen
