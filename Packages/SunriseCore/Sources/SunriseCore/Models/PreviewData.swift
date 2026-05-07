@@ -23,14 +23,25 @@ public extension WeatherSnapshot {
                 precipitationChance: Percent(value: Double(offset % 4) / 10)
             )
         }
+        // Hand-pulled out of the .map closure — Swift 6's type checker can't
+        // resolve the inline literal cases for `condition` plus all the
+        // numeric coercions in time, so we lift each component to its own
+        // local first.
+        let conditions: [WeatherCondition] = [.clear, .cloudy, .rain, .thunderstorm, .snow, .windy]
         let daily: [DailyForecast] = (0..<15).map { offset in
-            DailyForecast(
-                date: calendar.date(byAdding: .day, value: offset, to: now) ?? now,
-                highTemperature: Temperature(celsius: 30 - Double(offset % 7)),
-                lowTemperature: Temperature(celsius: 22 - Double(offset % 5)),
-                condition: [.clear, .cloudy, .rain, .thunderstorm, .snow, .windy][offset % 6],
-                precipitationChance: Percent(value: Double(offset % 5) / 10),
-                wind: Wind(speedKPH: 8 + Double(offset % 5), directionDegrees: 135)
+            let date = calendar.date(byAdding: .day, value: offset, to: now) ?? now
+            let highC: Double = 30 - Double(offset % 7)
+            let lowC: Double = 22 - Double(offset % 5)
+            let condition = conditions[offset % conditions.count]
+            let precip = Percent(value: Double(offset % 5) / 10)
+            let wind = Wind(speedKPH: 8 + Double(offset % 5), directionDegrees: 135)
+            return DailyForecast(
+                date: date,
+                highTemperature: Temperature(celsius: highC),
+                lowTemperature: Temperature(celsius: lowC),
+                condition: condition,
+                precipitationChance: precip,
+                wind: wind
             )
         }
         return WeatherSnapshot(
