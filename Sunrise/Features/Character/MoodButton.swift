@@ -28,11 +28,14 @@ final class MoodButton: UIControl {
         imageView.tintColor = Palette.inkSecondary
 
         label.text = title
-        label.font = Typography.caption(13)
+        label.font = Typography.caption(12)
         label.textColor = Palette.inkPrimary
         label.textAlignment = .center
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         label.adjustsFontSizeToFitWidth = true
-        label.minimumScaleFactor = 0.8
+        label.minimumScaleFactor = 0.6
+        label.allowsDefaultTighteningForTruncation = true
         label.translatesAutoresizingMaskIntoConstraints = false
 
         addSubview(imageView)
