@@ -12,7 +12,6 @@ final class CharacterViewController: UIViewController {
     private let scrim = UIView()
     private var scrimGradient: CAGradientLayer?
 
-    private let titleLabel = UILabel()
     private let sunshineLabel = UILabel()
     private let portraitFallback = UIImageView()
     private lazy var characterView = LottieCharacterView(fallbackView: portraitFallback)
@@ -31,7 +30,11 @@ final class CharacterViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = String(localized: "tab.character", defaultValue: "Sunny")
+        // Nav title carries the page label so the body can lead straight with
+        // the centered sunshine pill, matching the design board. Set
+        // navigationItem.title directly so the explicit tabBarItem.title
+        // ("Sunny" / "小晴") wired up in RootTabBarController is untouched.
+        navigationItem.title = String(localized: "character.today_mood", defaultValue: "Sunny's mood today")
         view.backgroundColor = Palette.canvas
         configureLayout()
         observeState { [weak self] in self?.render() }
@@ -54,43 +57,36 @@ final class CharacterViewController: UIViewController {
         scrimGradient = gradient
         view.addSubview(scrim)
 
-        // Top header: title + sunshine pill
-        titleLabel.text = String(localized: "character.today_mood", defaultValue: "Sunny's mood today")
-        titleLabel.font = Typography.title(18)
-        titleLabel.textColor = Palette.inkPrimary
-
+        // Centered sunshine pill — the page title is carried by the nav bar
+        // (set in viewDidLoad), so the body can lead with this floating pill.
         sunshineLabel.font = Typography.body(14)
         sunshineLabel.textColor = Palette.inkPrimary
         sunshineLabel.backgroundColor = .clear
         sunshineLabel.textAlignment = .center
 
-        let sunshineGlass = GlassPanel(style: .clear, cornerRadius: 14)
+        let sunshineGlass = GlassPanel(style: .clear, cornerRadius: 16)
         sunshineGlass.translatesAutoresizingMaskIntoConstraints = false
         sunshineGlass.isUserInteractionEnabled = false
-        sunshineGlass.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        sunshineGlass.heightAnchor.constraint(equalToConstant: 32).isActive = true
         sunshineGlass.addSubview(sunshineLabel)
         sunshineLabel.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             sunshineLabel.topAnchor.constraint(equalTo: sunshineGlass.topAnchor),
             sunshineLabel.bottomAnchor.constraint(equalTo: sunshineGlass.bottomAnchor),
-            sunshineLabel.leadingAnchor.constraint(equalTo: sunshineGlass.leadingAnchor, constant: Spacing.s),
-            sunshineLabel.trailingAnchor.constraint(equalTo: sunshineGlass.trailingAnchor, constant: -Spacing.s)
+            sunshineLabel.leadingAnchor.constraint(equalTo: sunshineGlass.leadingAnchor, constant: Spacing.m),
+            sunshineLabel.trailingAnchor.constraint(equalTo: sunshineGlass.trailingAnchor, constant: -Spacing.m)
         ])
-
-        let header = UIStackView(arrangedSubviews: [titleLabel, UIView(), sunshineGlass])
-        header.axis = .horizontal
-        header.alignment = .center
-        header.spacing = Spacing.s
-        header.translatesAutoresizingMaskIntoConstraints = false
 
         // Character portrait
         portraitFallback.contentMode = .scaleAspectFit
         characterView.translatesAutoresizingMaskIntoConstraints = false
 
-        // Right-side action buttons (换装 / 语音 / 动作 / 日记)
+        // Right-side action chips (换装 / 语音 / 动作 / 日记) — separate tall
+        // pills, each its own floating glass button per the design board.
         actionStack.axis = .vertical
-        actionStack.spacing = Spacing.xs
-        actionStack.alignment = .trailing
+        actionStack.spacing = Spacing.s
+        actionStack.alignment = .fill
+        actionStack.distribution = .fillEqually
         actionStack.translatesAutoresizingMaskIntoConstraints = false
         for action in CharacterAction.allCases {
             actionStack.addArrangedSubview(makeActionButton(action))
@@ -122,7 +118,7 @@ final class CharacterViewController: UIViewController {
             moodStack.addArrangedSubview(makeMoodButton(mood))
         }
 
-        view.addSubview(header)
+        view.addSubview(sunshineGlass)
         view.addSubview(characterView)
         view.addSubview(actionStack)
         view.addSubview(bubbleGlass)
@@ -141,18 +137,17 @@ final class CharacterViewController: UIViewController {
             scrim.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrim.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            header.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: Spacing.s),
-            header.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.l),
-            header.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.l),
+            sunshineGlass.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: Spacing.s),
+            sunshineGlass.centerXAnchor.constraint(equalTo: view.centerXAnchor),
 
-            characterView.topAnchor.constraint(equalTo: header.bottomAnchor, constant: Spacing.m),
+            characterView.topAnchor.constraint(equalTo: sunshineGlass.bottomAnchor, constant: Spacing.s),
             characterView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.m),
             characterView.trailingAnchor.constraint(equalTo: actionStack.leadingAnchor, constant: -Spacing.s),
             characterView.heightAnchor.constraint(equalToConstant: 320),
 
             actionStack.centerYAnchor.constraint(equalTo: characterView.centerYAnchor),
             actionStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.m),
-            actionStack.widthAnchor.constraint(equalToConstant: 64),
+            actionStack.widthAnchor.constraint(equalToConstant: 68),
 
             bubble.topAnchor.constraint(equalTo: characterView.bottomAnchor, constant: Spacing.s),
             bubble.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.l),
@@ -189,17 +184,17 @@ final class CharacterViewController: UIViewController {
         } else {
             config = .plain()
             config.background.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.85)
-            config.background.cornerRadius = Radius.small
+            config.background.cornerRadius = Radius.medium
         }
         config.title = localizedAction(action)
         config.image = UIImage(systemName: action.symbol)
-        config.imagePadding = 4
+        config.imagePadding = 6
         config.imagePlacement = .top
-        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4)
+        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 4, bottom: 12, trailing: 4)
         config.baseForegroundColor = Palette.inkPrimary
         let button = UIButton(configuration: config)
         button.titleLabel?.font = Typography.caption(12)
-        button.heightAnchor.constraint(greaterThanOrEqualToConstant: 56).isActive = true
+        button.heightAnchor.constraint(greaterThanOrEqualToConstant: 64).isActive = true
         return button
     }
 
@@ -231,10 +226,10 @@ final class CharacterViewController: UIViewController {
         characterView.isHidden = true
 
         bubble.text = encouragement(for: store.condition, mood: store.mood)
-        sunshineLabel.text = "  " + String.localizedStringWithFormat(
+        sunshineLabel.text = String.localizedStringWithFormat(
             String(localized: "character.sunshine_score", defaultValue: "♥ Sunshine %d"),
             store.sunshinePoints
-        ) + "  "
+        )
 
         for case let button as MoodButton in moodStack.arrangedSubviews {
             button.isSelected = (button.mood == store.mood)

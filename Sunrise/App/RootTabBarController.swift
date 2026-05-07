@@ -25,6 +25,7 @@ final class RootTabBarController: UITabBarController {
         view.backgroundColor = Palette.canvas
         tabBar.tintColor = Palette.sunYellow
         tabBar.unselectedItemTintColor = Palette.inkSecondary
+        configureTabBarAppearance()
 
         let today = TodayViewController(
             store: store.scope(state: \.today, action: \.today)
@@ -103,6 +104,51 @@ final class RootTabBarController: UITabBarController {
 
     @objc private func handleCityListDone() {
         store.send(.dismissCityList)
+    }
+
+    /// Soft cream tab bar with a yellow rounded chip behind the selected item,
+    /// matching the design board's floating capsule style. The chip is drawn
+    /// once into a stretchable image and assigned via UITabBarAppearance so it
+    /// renders correctly on every selection.
+    private func configureTabBarAppearance() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.85)
+        appearance.shadowColor = .clear
+
+        let chip = makeSelectionChip()
+        for item in [appearance.stackedLayoutAppearance, appearance.inlineLayoutAppearance, appearance.compactInlineLayoutAppearance] {
+            item.selected.iconColor = Palette.inkPrimary
+            item.normal.iconColor = Palette.inkSecondary
+            item.selected.titleTextAttributes = [
+                .foregroundColor: Palette.inkPrimary,
+                .font: Typography.caption(11)
+            ]
+            item.normal.titleTextAttributes = [
+                .foregroundColor: Palette.inkSecondary,
+                .font: Typography.caption(11)
+            ]
+            item.selectionIndicatorImage = chip
+        }
+
+        tabBar.standardAppearance = appearance
+        tabBar.scrollEdgeAppearance = appearance
+    }
+
+    private func makeSelectionChip() -> UIImage {
+        let size = CGSize(width: 56, height: 44)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let raw = renderer.image { _ in
+            let rect = CGRect(origin: .zero, size: size).insetBy(dx: 2, dy: 4)
+            let path = UIBezierPath(roundedRect: rect, cornerRadius: 14)
+            Palette.sunYellow.withAlphaComponent(0.35).setFill()
+            path.fill()
+        }
+        // Cap insets keep the rounded ends crisp if iOS stretches the chip.
+        return raw.resizableImage(
+            withCapInsets: UIEdgeInsets(top: 16, left: 20, bottom: 16, right: 20),
+            resizingMode: .stretch
+        )
     }
 
     override func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {

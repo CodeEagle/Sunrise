@@ -18,7 +18,7 @@ final class TodayViewController: UIViewController {
     private let updatedLabel = UILabel()
 
     private let temperatureLabel = UILabel()
-    private let highLowLabel = UILabel()
+    private let apparentLabel = UILabel()
     private let conditionLabel = UILabel()
     private let detailRowLabel = UILabel()
 
@@ -51,7 +51,7 @@ final class TodayViewController: UIViewController {
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
         navigationController?.navigationBar.shadowImage = UIImage()
 
-        cityLabel.font = Typography.title(20)
+        cityLabel.font = Typography.title(18)
         cityLabel.textColor = Palette.inkPrimary
         cityCaret.tintColor = Palette.inkPrimary
         cityCaret.contentMode = .scaleAspectFit
@@ -62,7 +62,16 @@ final class TodayViewController: UIViewController {
         cityRow.axis = .horizontal
         cityRow.alignment = .center
         cityRow.spacing = 4
-        navigationItem.titleView = cityRow
+
+        updatedLabel.font = Typography.caption(11)
+        updatedLabel.textColor = Palette.inkSecondary
+        updatedLabel.textAlignment = .center
+
+        let titleStack = UIStackView(arrangedSubviews: [cityRow, updatedLabel])
+        titleStack.axis = .vertical
+        titleStack.alignment = .center
+        titleStack.spacing = 1
+        navigationItem.titleView = titleStack
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "line.3.horizontal"),
@@ -89,36 +98,34 @@ final class TodayViewController: UIViewController {
         scrim.isUserInteractionEnabled = false
         view.addSubview(scrim)
 
-        updatedLabel.font = Typography.caption(12)
-        updatedLabel.textColor = Palette.inkSecondary
-        updatedLabel.shadow()
-
         temperatureLabel.font = Typography.numeric(96)
         temperatureLabel.textColor = Palette.inkPrimary
         temperatureLabel.shadow(opacity: 0.25, radius: 4)
 
-        highLowLabel.font = Typography.title(18)
-        highLowLabel.textColor = Palette.inkSecondary
-        highLowLabel.shadow()
+        apparentLabel.font = Typography.body(14)
+        apparentLabel.textColor = Palette.inkSecondary
+        apparentLabel.shadow()
 
-        let tempRow = UIStackView(arrangedSubviews: [temperatureLabel, highLowLabel])
+        let tempRow = UIStackView(arrangedSubviews: [temperatureLabel, apparentLabel])
         tempRow.axis = .horizontal
+        // Last-baseline anchors the small "Feels like" caption at the bottom
+        // of the big temperature number, matching the design board.
         tempRow.alignment = .lastBaseline
         tempRow.spacing = Spacing.s
 
-        conditionLabel.font = Typography.title(18)
+        conditionLabel.font = Typography.title(20)
         conditionLabel.textColor = Palette.inkPrimary
         conditionLabel.shadow()
 
-        detailRowLabel.font = Typography.body(14)
+        detailRowLabel.font = Typography.body(13)
         detailRowLabel.textColor = Palette.inkSecondary
         detailRowLabel.numberOfLines = 0
         detailRowLabel.shadow()
 
-        let infoStack = UIStackView(arrangedSubviews: [updatedLabel, tempRow, conditionLabel, detailRowLabel, bubble])
+        let infoStack = UIStackView(arrangedSubviews: [tempRow, conditionLabel, detailRowLabel, bubble])
         infoStack.axis = .vertical
         infoStack.alignment = .leading
-        infoStack.spacing = Spacing.s
+        infoStack.spacing = Spacing.xs
         infoStack.setCustomSpacing(Spacing.m, after: detailRowLabel)
         infoStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(infoStack)
@@ -158,20 +165,12 @@ final class TodayViewController: UIViewController {
 
             temperatureLabel.text = formatter.temperature(snapshot.current.temperature) + "°"
 
-            if let high = snapshot.daily.first?.highTemperature {
-                highLowLabel.text = String.localizedStringWithFormat(
-                    String(localized: "today.high_pill", defaultValue: "%@ %@°"),
-                    localizedCondition(snapshot.current.condition),
-                    formatter.temperature(high)
-                )
-            } else {
-                highLowLabel.text = localizedCondition(snapshot.current.condition)
-            }
-
-            conditionLabel.text = String.localizedStringWithFormat(
+            apparentLabel.text = String.localizedStringWithFormat(
                 String(localized: "today.feels_like", defaultValue: "Feels like %@°"),
                 formatter.temperature(snapshot.current.apparentTemperature)
             )
+
+            conditionLabel.text = localizedCondition(snapshot.current.condition)
 
             let wind = String.localizedStringWithFormat(
                 String(localized: "today.wind_inline", defaultValue: "Wind %@"),
@@ -200,14 +199,14 @@ final class TodayViewController: UIViewController {
             bubble.isHidden = false
         } else if store.isLoading {
             temperatureLabel.text = "–"
-            highLowLabel.text = nil
+            apparentLabel.text = nil
             conditionLabel.text = String(localized: "today.loading", defaultValue: "Fetching the latest forecast…")
             detailRowLabel.text = nil
             updatedLabel.text = nil
             bubble.isHidden = true
         } else if let error = store.error {
             temperatureLabel.text = "–"
-            highLowLabel.text = nil
+            apparentLabel.text = nil
             conditionLabel.text = String(localized: "today.error", defaultValue: "Couldn't fetch weather")
             detailRowLabel.text = error
             updatedLabel.text = nil

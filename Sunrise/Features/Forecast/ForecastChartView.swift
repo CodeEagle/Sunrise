@@ -21,6 +21,8 @@ struct ForecastChartView: View {
         return df
     }()
 
+    private var fiveDay: [DailyForecast] { Array(snapshot.daily.prefix(5)) }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -29,7 +31,10 @@ struct ForecastChartView: View {
                     temperatureChart
                 }
                 section(title: String(localized: "forecast.precip", defaultValue: "Precipitation chance")) {
-                    precipitationChart
+                    VStack(alignment: .leading, spacing: 8) {
+                        precipitationChart
+                        windRow
+                    }
                 }
                 section(title: String(localized: "forecast.daily", defaultValue: "Daily details")) {
                     dailyList
@@ -43,7 +48,7 @@ struct ForecastChartView: View {
 
     private var fiveDayStrip: some View {
         HStack(alignment: .top, spacing: 4) {
-            ForEach(Array(snapshot.daily.prefix(5).enumerated()), id: \.element.id) { index, day in
+            ForEach(Array(fiveDay.enumerated()), id: \.element.id) { index, day in
                 VStack(spacing: 6) {
                     Text(dayLabel(for: day, index: index))
                         .font(.caption.weight(.semibold))
@@ -95,7 +100,7 @@ struct ForecastChartView: View {
     }
 
     private var temperatureChart: some View {
-        Chart(snapshot.daily) { day in
+        Chart(fiveDay) { day in
             AreaMark(
                 x: .value("day", day.date),
                 yStart: .value("low", tempValue(day.lowTemperature)),
@@ -116,6 +121,7 @@ struct ForecastChartView: View {
             )
             .foregroundStyle(Color(Palette.blossomPink))
             .interpolationMethod(.catmullRom)
+            .symbol(.circle)
 
             LineMark(
                 x: .value("day", day.date),
@@ -123,10 +129,11 @@ struct ForecastChartView: View {
             )
             .foregroundStyle(Color(Palette.skyBlue))
             .interpolationMethod(.catmullRom)
+            .symbol(.circle)
         }
-        .frame(height: 200)
+        .frame(height: 180)
         .chartXAxis {
-            AxisMarks(values: .stride(by: .day, count: 2)) { _ in
+            AxisMarks(values: fiveDay.map(\.date)) { _ in
                 AxisGridLine()
                 AxisValueLabel(format: .dateTime.weekday(.abbreviated))
             }
@@ -134,31 +141,65 @@ struct ForecastChartView: View {
     }
 
     private var precipitationChart: some View {
-        Chart(snapshot.daily) { day in
+        Chart(fiveDay) { day in
             BarMark(
                 x: .value("day", day.date, unit: .day),
                 y: .value("precip", day.precipitationChance.value * 100)
             )
             .foregroundStyle(Color(Palette.skyBlue))
             .cornerRadius(4)
-        }
-        .frame(height: 140)
-        .chartYAxis {
-            AxisMarks(values: [0, 50, 100]) { value in
-                AxisGridLine()
-                AxisValueLabel {
-                    if let v = value.as(Int.self) {
-                        Text("\(v)%")
-                    }
-                }
+            .annotation(position: .top, alignment: .center) {
+                Text("\(Int((day.precipitationChance.value * 100).rounded()))%")
+                    .font(.caption2)
+                    .foregroundStyle(Color(Palette.inkSecondary))
             }
         }
+        .frame(height: 140)
+        .chartYAxis(.hidden)
         .chartXAxis {
-            AxisMarks(values: .stride(by: .day, count: 2)) { _ in
-                AxisGridLine()
+            AxisMarks(values: fiveDay.map(\.date)) { _ in
+                AxisGridLine().foregroundStyle(Color(Palette.inkSecondary).opacity(0.2))
                 AxisValueLabel(format: .dateTime.weekday(.abbreviated))
             }
         }
+    }
+
+    private var windRow: some View {
+        HStack(spacing: 0) {
+            ForEach(fiveDay) { day in
+                VStack(spacing: 2) {
+                    Text(windDirectionLabel(for: day.wind))
+                        .font(.caption2)
+                        .foregroundStyle(Color(Palette.inkSecondary))
+                    Text(windLevelLabel(for: day.wind))
+                        .font(.caption2)
+                        .foregroundStyle(Color(Palette.inkSecondary))
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+    }
+
+    private func windDirectionLabel(for wind: Wind) -> String {
+        let bucket = Int(((wind.directionDegrees + 22.5).truncatingRemainder(dividingBy: 360)) / 45)
+        switch bucket {
+        case 0: return String(localized: "wind.dir.n", defaultValue: "N")
+        case 1: return String(localized: "wind.dir.ne", defaultValue: "NE")
+        case 2: return String(localized: "wind.dir.e", defaultValue: "E")
+        case 3: return String(localized: "wind.dir.se", defaultValue: "SE")
+        case 4: return String(localized: "wind.dir.s", defaultValue: "S")
+        case 5: return String(localized: "wind.dir.sw", defaultValue: "SW")
+        case 6: return String(localized: "wind.dir.w", defaultValue: "W")
+        default: return String(localized: "wind.dir.nw", defaultValue: "NW")
+        }
+    }
+
+    private func windLevelLabel(for wind: Wind) -> String {
+        let level = max(0, min(12, Int((wind.speedKPH / 6).rounded())))
+        return String.localizedStringWithFormat(
+            String(localized: "wind.level", defaultValue: "Lv %d"),
+            level
+        )
     }
 
     private var dailyList: some View {
