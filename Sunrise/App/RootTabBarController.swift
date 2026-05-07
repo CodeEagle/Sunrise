@@ -141,10 +141,11 @@ final class RootTabBarController: UITabBarController {
         let raw = renderer.image { _ in
             let rect = CGRect(origin: .zero, size: size).insetBy(dx: 2, dy: 4)
             let path = UIBezierPath(roundedRect: rect, cornerRadius: 14)
-            Palette.sunYellow.withAlphaComponent(0.35).setFill()
+            // 0.35 was almost invisible against the cream tab bar; bump to
+            // 0.55 so the chip reads at glance distance per the design board.
+            Palette.sunYellow.withAlphaComponent(0.55).setFill()
             path.fill()
         }
-        // Cap insets keep the rounded ends crisp if iOS stretches the chip.
         return raw.resizableImage(
             withCapInsets: UIEdgeInsets(top: 16, left: 20, bottom: 16, right: 20),
             resizingMode: .stretch

@@ -132,12 +132,12 @@ struct ForecastChartView: View {
             .symbol(.circle)
         }
         .frame(height: 180)
-        .chartXAxis {
-            AxisMarks(values: .stride(by: .day)) { _ in
-                AxisGridLine()
-                AxisValueLabel(format: .dateTime.weekday(.abbreviated))
-            }
-        }
+        // Strip directly above already labels each day; hiding both axes here
+        // keeps the chart card visually clean and stops the auto X-axis
+        // (Fri/Sat/Sun…) from contradicting the strip's Today/Tomorrow/…
+        // labels.
+        .chartXAxis(.hidden)
+        .chartYAxis(.hidden)
     }
 
     private var precipitationChart: some View {
@@ -156,12 +156,9 @@ struct ForecastChartView: View {
         }
         .frame(height: 140)
         .chartYAxis(.hidden)
-        .chartXAxis {
-            AxisMarks(values: .stride(by: .day)) { _ in
-                AxisGridLine().foregroundStyle(Color(Palette.inkSecondary).opacity(0.2))
-                AxisValueLabel(format: .dateTime.weekday(.abbreviated))
-            }
-        }
+        // Hide X axis here too — the wind row directly below carries the
+        // per-day annotation, so duplicating weekday labels just adds noise.
+        .chartXAxis(.hidden)
     }
 
     private var windRow: some View {
