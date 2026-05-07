@@ -23,25 +23,28 @@ public extension WeatherSnapshot {
                 precipitationChance: Percent(value: Double(offset % 4) / 10)
             )
         }
-        // Hand-pulled out of the .map closure — Swift 6's type checker can't
-        // resolve the inline literal cases for `condition` plus all the
-        // numeric coercions in time, so we lift each component to its own
-        // local first.
-        let conditions: [WeatherCondition] = [.clear, .cloudy, .rain, .thunderstorm, .snow, .windy]
+        // Smooth-ish 15-day mock so the trend chart reads as a clean curve
+        // instead of a saw-tooth. First 5 days sit close to the reference
+        // values shown in the design board (今天/明天/周三/周四/周五).
+        let highCs: [Double] = [30, 28, 26, 23, 25, 26, 27, 28, 27, 26, 24, 23, 22, 24, 25]
+        let lowCs:  [Double] = [24, 23, 21, 20, 20, 19, 19, 20, 20, 19, 18, 17, 17, 18, 19]
+        let precips: [Double] = [0.10, 0.20, 0.60, 0.30, 0.10, 0.15, 0.20, 0.25, 0.20, 0.15, 0.05, 0.05, 0.10, 0.15, 0.20]
+        let conditions: [WeatherCondition] = [
+            .clear, .cloudy, .rain, .thunderstorm, .clear,
+            .clear, .cloudy, .cloudy, .rain, .clear,
+            .clear, .clear, .cloudy, .windy, .clear
+        ]
+        let windDirections: [Int] = [135, 90, 45, 0, 135, 135, 90, 45, 0, 135, 135, 90, 45, 0, 135]
+        let windLevels:     [Double] = [2, 2, 3, 2, 2, 2, 2, 3, 2, 2, 2, 2, 3, 4, 2]
         let daily: [DailyForecast] = (0..<15).map { offset in
             let date = calendar.date(byAdding: .day, value: offset, to: now) ?? now
-            let highC: Double = 30 - Double(offset % 7)
-            let lowC: Double = 22 - Double(offset % 5)
-            let condition = conditions[offset % conditions.count]
-            let precip = Percent(value: Double(offset % 5) / 10)
-            let wind = Wind(speedKPH: 8 + Double(offset % 5), directionDegrees: 135)
             return DailyForecast(
                 date: date,
-                highTemperature: Temperature(celsius: highC),
-                lowTemperature: Temperature(celsius: lowC),
-                condition: condition,
-                precipitationChance: precip,
-                wind: wind
+                highTemperature: Temperature(celsius: highCs[offset]),
+                lowTemperature: Temperature(celsius: lowCs[offset]),
+                condition: conditions[offset],
+                precipitationChance: Percent(value: precips[offset]),
+                wind: Wind(speedKPH: windLevels[offset] * 6, directionDegrees: Double(windDirections[offset]))
             )
         }
         return WeatherSnapshot(

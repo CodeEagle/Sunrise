@@ -16,7 +16,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         applyLaunchArgumentOverrides()
 
-        let store = Store(initialState: RootReducer.State()) {
+        let store = Store(initialState: initialRootState()) {
             RootReducer()
                 ._printChanges()
         }
@@ -41,5 +41,16 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             $0.persistenceClient = .previewValue
             $0.notificationsClient = .previewValue
         }
+    }
+
+    /// Mock-mode launches need richer starter state than production launches —
+    /// the design board shows a non-zero sunshine score (阳光值 86), and starting
+    /// from 0 makes the screenshot read as "empty" instead of representative.
+    private func initialRootState() -> RootReducer.State {
+        var state = RootReducer.State()
+        if ProcessInfo.processInfo.arguments.contains("-mockData") {
+            state.character.sunshinePoints = 86
+        }
+        return state
     }
 }

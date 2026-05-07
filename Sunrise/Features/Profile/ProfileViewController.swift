@@ -37,7 +37,9 @@ final class ProfileViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = String(localized: "tab.profile", defaultValue: "Me")
+        // Design board has no page-level title — the avatar card stands in
+        // for it. Skip setting `navigationItem.title` so the nav bar reads
+        // empty above the table.
         view.backgroundColor = Palette.canvas
 
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -59,29 +61,41 @@ final class ProfileViewController: UIViewController {
     }
 
     private func makeHeader(width: CGFloat) -> UIView {
-        let header = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 132))
+        // Avatar lives in its own rounded card above the settings list, so
+        // we wrap it in a card view inset from the table edges.
+        let outer = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 116))
+        outer.backgroundColor = .clear
+
+        let card = UIView()
+        card.backgroundColor = Palette.cloudWhite
+        card.layer.cornerRadius = Radius.medium
+        card.layer.cornerCurve = .continuous
+        card.translatesAutoresizingMaskIntoConstraints = false
 
         let avatar = UIImageView()
         avatar.contentMode = .scaleAspectFill
-        avatar.image = CharacterArt.image(forConditionRawValue: "clear")
-        avatar.layer.cornerRadius = 36
+        // Mood portraits are bust crops — they sit cleanly in a circle, unlike
+        // the full-body character scenes which get awkwardly squashed.
+        avatar.image = MoodArt.image(forMoodRawValue: "happy")
+            ?? CharacterArt.image(forConditionRawValue: "clear")
+        avatar.layer.cornerRadius = 30
         avatar.clipsToBounds = true
-        avatar.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.5)
+        avatar.backgroundColor = Palette.sunYellow.withAlphaComponent(0.25)
         avatar.translatesAutoresizingMaskIntoConstraints = false
 
         let name = UILabel()
         name.text = String(localized: "profile.friend_name", defaultValue: "Sunny's friend")
-        name.font = Typography.title(20)
+        name.font = Typography.title(18)
         name.textColor = Palette.inkPrimary
 
         let id = UILabel()
         id.text = "ID: 20240520"
-        id.font = Typography.caption(13)
+        id.font = Typography.caption(12)
         id.textColor = Palette.inkSecondary
 
         let textStack = UIStackView(arrangedSubviews: [name, id])
         textStack.axis = .vertical
-        textStack.spacing = 4
+        textStack.spacing = 2
         textStack.translatesAutoresizingMaskIntoConstraints = false
 
         let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
@@ -89,25 +103,32 @@ final class ProfileViewController: UIViewController {
         chevron.contentMode = .scaleAspectFit
         chevron.translatesAutoresizingMaskIntoConstraints = false
 
-        header.addSubview(avatar)
-        header.addSubview(textStack)
-        header.addSubview(chevron)
+        outer.addSubview(card)
+        card.addSubview(avatar)
+        card.addSubview(textStack)
+        card.addSubview(chevron)
+
         NSLayoutConstraint.activate([
-            avatar.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: Spacing.l),
-            avatar.centerYAnchor.constraint(equalTo: header.centerYAnchor),
-            avatar.widthAnchor.constraint(equalToConstant: 72),
-            avatar.heightAnchor.constraint(equalToConstant: 72),
+            card.topAnchor.constraint(equalTo: outer.topAnchor, constant: Spacing.s),
+            card.bottomAnchor.constraint(equalTo: outer.bottomAnchor, constant: -Spacing.s),
+            card.leadingAnchor.constraint(equalTo: outer.leadingAnchor, constant: Spacing.m),
+            card.trailingAnchor.constraint(equalTo: outer.trailingAnchor, constant: -Spacing.m),
+
+            avatar.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: Spacing.m),
+            avatar.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            avatar.widthAnchor.constraint(equalToConstant: 60),
+            avatar.heightAnchor.constraint(equalToConstant: 60),
 
             textStack.leadingAnchor.constraint(equalTo: avatar.trailingAnchor, constant: Spacing.m),
             textStack.trailingAnchor.constraint(lessThanOrEqualTo: chevron.leadingAnchor, constant: -Spacing.s),
-            textStack.centerYAnchor.constraint(equalTo: header.centerYAnchor),
+            textStack.centerYAnchor.constraint(equalTo: card.centerYAnchor),
 
-            chevron.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -Spacing.l),
-            chevron.centerYAnchor.constraint(equalTo: header.centerYAnchor),
-            chevron.widthAnchor.constraint(equalToConstant: 14),
-            chevron.heightAnchor.constraint(equalToConstant: 18)
+            chevron.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -Spacing.m),
+            chevron.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            chevron.widthAnchor.constraint(equalToConstant: 12),
+            chevron.heightAnchor.constraint(equalToConstant: 16)
         ])
-        return header
+        return outer
     }
 }
 

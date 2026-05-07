@@ -9,6 +9,8 @@ final class ForecastViewController: UIViewController {
     private let store: StoreOf<ForecastReducer>
     private var hostingController: UIHostingController<AnyView>?
     private let emptyLabel = UILabel()
+    private let titleLabel = UILabel()
+    private let subtitleLabel = UILabel()
 
     init(store: StoreOf<ForecastReducer>) {
         self.store = store
@@ -22,7 +24,7 @@ final class ForecastViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = Palette.canvas
 
-        title = String(localized: "forecast.nav_title", defaultValue: "15-day trend")
+        configureTitleView()
 
         emptyLabel.text = String(localized: "forecast.empty", defaultValue: "Pick a city on the Weather tab to see the 15-day outlook.")
         emptyLabel.font = Typography.body()
@@ -41,7 +43,26 @@ final class ForecastViewController: UIViewController {
         observeState { [weak self] in self?.render() }
     }
 
+    private func configureTitleView() {
+        titleLabel.text = String(localized: "forecast.nav_title", defaultValue: "15-day trend")
+        titleLabel.font = Typography.title(17)
+        titleLabel.textColor = Palette.inkPrimary
+        titleLabel.textAlignment = .center
+
+        subtitleLabel.font = Typography.caption(11)
+        subtitleLabel.textColor = Palette.inkSecondary
+        subtitleLabel.textAlignment = .center
+
+        let stack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel])
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = 1
+        navigationItem.titleView = stack
+    }
+
     private func render() {
+        subtitleLabel.text = store.selectedCity?.name
+        subtitleLabel.isHidden = (subtitleLabel.text ?? "").isEmpty
         guard let snapshot = store.snapshot else {
             emptyLabel.isHidden = false
             removeHostingController()

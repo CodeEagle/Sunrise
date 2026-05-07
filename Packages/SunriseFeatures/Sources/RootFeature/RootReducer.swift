@@ -88,6 +88,10 @@ public struct RootReducer: Sendable {
                 state.profile.settings = settings
                 return .none
 
+            case let .today(.citySelected(city)):
+                state.forecast.selectedCity = city
+                return .none
+
             case .today, .forecast, .character, .profile, .cityList:
                 return .none
             }
