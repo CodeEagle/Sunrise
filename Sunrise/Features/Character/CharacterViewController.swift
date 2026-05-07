@@ -47,12 +47,16 @@ final class CharacterViewController: UIViewController {
         scrim.translatesAutoresizingMaskIntoConstraints = false
         scrim.isUserInteractionEnabled = false
         let gradient = CAGradientLayer()
+        // Four-stop wash so the bubble and mood rows sit on near-solid cream
+        // — earlier the bottom 30% only reached 0.7 alpha and the painted
+        // bedroom floor bled through, eating "Mood state" and the labels.
         gradient.colors = [
             Palette.canvas.withAlphaComponent(0.6).cgColor,
             UIColor.clear.cgColor,
-            Palette.canvas.withAlphaComponent(0.7).cgColor
+            Palette.canvas.withAlphaComponent(0.75).cgColor,
+            Palette.canvas.withAlphaComponent(0.95).cgColor
         ]
-        gradient.locations = [0.0, 0.5, 1.0]
+        gradient.locations = [0.0, 0.35, 0.62, 1.0]
         scrim.layer.addSublayer(gradient)
         scrimGradient = gradient
         view.addSubview(scrim)
