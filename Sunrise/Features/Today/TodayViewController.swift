@@ -113,7 +113,9 @@ final class TodayViewController: UIViewController {
         tempRow.alignment = .lastBaseline
         tempRow.spacing = Spacing.s
 
-        conditionLabel.font = Typography.title(20)
+        // 24pt matches the design board where the condition label reads as
+        // a bold mid-tier title under the giant temperature, not a footnote.
+        conditionLabel.font = Typography.title(24)
         conditionLabel.textColor = Palette.inkPrimary
         conditionLabel.shadow()
 

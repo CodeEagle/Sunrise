@@ -146,7 +146,10 @@ final class CharacterViewController: UIViewController {
             characterView.heightAnchor.constraint(equalToConstant: 320),
 
             actionStack.centerYAnchor.constraint(equalTo: characterView.centerYAnchor),
-            actionStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.m),
+            // Use Spacing.l (24) instead of m (16) — the design board has
+            // visibly more breathing room between the chip column and the
+            // screen edge.
+            actionStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.l),
             actionStack.widthAnchor.constraint(equalToConstant: 68),
 
             bubble.topAnchor.constraint(equalTo: characterView.bottomAnchor, constant: Spacing.s),
