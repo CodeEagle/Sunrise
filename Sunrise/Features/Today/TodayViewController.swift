@@ -78,12 +78,14 @@ final class TodayViewController: UIViewController {
         view.addSubview(backdrop)
 
         scrim.translatesAutoresizingMaskIntoConstraints = false
+        // Cream wash from ~55% downward so dark text stays legible over the
+        // busy painted scene (the character & rooftops live in that area).
         scrim.colors = [
             UIColor.clear,
             Palette.canvas.withAlphaComponent(0.0),
-            Palette.canvas.withAlphaComponent(0.55)
+            Palette.canvas.withAlphaComponent(0.85)
         ]
-        scrim.locations = [0.0, 0.45, 1.0]
+        scrim.locations = [0.0, 0.55, 1.0]
         scrim.isUserInteractionEnabled = false
         view.addSubview(scrim)
 
@@ -315,7 +317,9 @@ private final class GradientView: UIView {
 }
 
 private extension UILabel {
-    func shadow(opacity: Float = 0.18, radius: CGFloat = 2) {
+    /// Soft white halo around dark text, so labels stay legible over the
+    /// busy painted scenes behind them.
+    func shadow(opacity: Float = 0.85, radius: CGFloat = 4) {
         layer.shadowColor = UIColor.white.cgColor
         layer.shadowOpacity = opacity
         layer.shadowRadius = radius
