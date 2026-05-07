@@ -15,9 +15,16 @@ struct ForecastChartView: View {
         return df
     }()
 
+    private let dateFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateFormat = "MM/dd"
+        return df
+    }()
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                fiveDayStrip
                 section(title: String(localized: "forecast.temp_trend", defaultValue: "Temperature trend")) {
                     temperatureChart
                 }
@@ -32,6 +39,50 @@ struct ForecastChartView: View {
             .padding(.vertical, 24)
         }
         .background(Color(Palette.canvas))
+    }
+
+    private var fiveDayStrip: some View {
+        HStack(alignment: .top, spacing: 4) {
+            ForEach(Array(snapshot.daily.prefix(5).enumerated()), id: \.element.id) { index, day in
+                VStack(spacing: 6) {
+                    Text(dayLabel(for: day, index: index))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color(Palette.inkPrimary))
+                    Text(dateFormatter.string(from: day.date))
+                        .font(.caption2)
+                        .foregroundStyle(Color(Palette.inkSecondary))
+                    Group {
+                        if let watercolor = WeatherIconArt.image(forConditionRawValue: day.condition.rawValue) {
+                            Image(uiImage: watercolor).resizable().scaledToFit()
+                        } else {
+                            Image(systemName: ConditionGlyph.symbolName(forConditionRawValue: day.condition.rawValue))
+                                .resizable()
+                                .scaledToFit()
+                                .foregroundStyle(Color(ConditionGlyph.tint(forConditionRawValue: day.condition.rawValue)))
+                        }
+                    }
+                    .frame(height: 36)
+                    Text(formatter.temperature(day.highTemperature) + "°")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color(Palette.blossomPink))
+                    Text(formatter.temperature(day.lowTemperature) + "°")
+                        .font(.body)
+                        .foregroundStyle(Color(Palette.skyBlue))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(Color(Palette.cloudWhite).opacity(0.85))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+        }
+    }
+
+    private func dayLabel(for day: DailyForecast, index: Int) -> String {
+        switch index {
+        case 0: return String(localized: "forecast.day.today", defaultValue: "Today")
+        case 1: return String(localized: "forecast.day.tomorrow", defaultValue: "Tomorrow")
+        default: return dayFormatter.string(from: day.date)
+        }
     }
 
     @ViewBuilder

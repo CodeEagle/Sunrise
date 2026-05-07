@@ -3,7 +3,7 @@ import ComposableArchitecture
 import SunriseCore
 
 public enum CharacterMood: String, Codable, Sendable, CaseIterable {
-    case happy, calm, tender, worried, excited, shy
+    case happy, calm, tender, worried, excited, flustered
 }
 
 @Reducer
