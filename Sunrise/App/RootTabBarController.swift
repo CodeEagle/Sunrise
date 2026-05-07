@@ -31,14 +31,18 @@ final class RootTabBarController: UITabBarController, UITabBarControllerDelegate
         // matching the navigation-bar items (e.g. Today's hamburger button)
         // that already paint as Liquid Glass.
         //
+        // To reach the same Liquid Glass treatment that the navigation-bar
+        // hamburger button on Today already gets, hand the tab bar the
+        // *same* `UIGlassEffect()` object UIKit uses for `UIBarButtonItem`s.
         // System default `configureWithDefaultBackground()` on iOS 26 picks
-        // the Liquid Glass material — but it stacks an opaque cream tint on
-        // top, hiding whatever's behind the bar. Wiping `backgroundColor` to
-        // `.clear` strips that tint so content (e.g. the orange roof on
-        // Today) bleeds through the glass exactly like the navigation-bar
-        // items do.
+        // a Liquid Glass material too, but a more chrome-y / cream-tinted
+        // variant — overriding `backgroundEffect` with a fresh
+        // `UIGlassEffect()` matches the bar button's transparency, and
+        // `backgroundColor = .clear` strips any residual tint so content
+        // bleeds through (e.g. the orange roof on Today).
         let glassAppearance = UITabBarAppearance()
         glassAppearance.configureWithDefaultBackground()
+        glassAppearance.backgroundEffect = UIGlassEffect()
         glassAppearance.backgroundColor = .clear
         glassAppearance.shadowColor = .clear
         tabBar.standardAppearance = glassAppearance
