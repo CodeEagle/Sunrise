@@ -71,8 +71,7 @@ struct ForecastChartView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
-                .background(Color(Palette.cloudWhite).opacity(0.85))
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 14))
             }
         }
     }
@@ -190,8 +189,7 @@ struct ForecastChartView: View {
                 }
                 .padding(.vertical, 6)
                 .padding(.horizontal, 12)
-                .background(Color(Palette.cloudWhite).opacity(0.8))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 12))
             }
         }
     }

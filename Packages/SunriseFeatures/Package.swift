@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "SunriseFeatures",
     defaultLocalization: "en",
-    platforms: [.iOS(.v17), .macOS(.v14)],
+    platforms: [.iOS(.v26), .macOS(.v26)],
     products: [
         .library(name: "RootFeature", targets: ["RootFeature"]),
         .library(name: "TodayFeature", targets: ["TodayFeature"]),

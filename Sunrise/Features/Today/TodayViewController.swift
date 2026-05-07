@@ -268,9 +268,19 @@ private final class BubbleView: UIView {
 
     init() {
         super.init(frame: .zero)
-        backgroundColor = Palette.cloudWhite.withAlphaComponent(0.9)
-        layer.cornerRadius = Radius.medium
-        layer.cornerCurve = .continuous
+        backgroundColor = .clear
+
+        // Liquid Glass backdrop, layered behind the label + speaker icon.
+        let glass = GlassPanel(style: .regular, cornerRadius: Radius.medium)
+        glass.translatesAutoresizingMaskIntoConstraints = false
+        glass.isUserInteractionEnabled = false
+        addSubview(glass)
+        NSLayoutConstraint.activate([
+            glass.topAnchor.constraint(equalTo: topAnchor),
+            glass.bottomAnchor.constraint(equalTo: bottomAnchor),
+            glass.leadingAnchor.constraint(equalTo: leadingAnchor),
+            glass.trailingAnchor.constraint(equalTo: trailingAnchor)
+        ])
 
         label.font = Typography.body(14)
         label.textColor = Palette.inkPrimary

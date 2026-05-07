@@ -2,9 +2,10 @@ import UIKit
 import CharacterFeature
 import SunriseDesignSystem
 
-/// Selectable mood pill — circular portrait on top, label below.
+/// Selectable mood pill — Liquid Glass background, circular portrait on top, label below.
 final class MoodButton: UIControl {
     let mood: CharacterMood
+    private let glass = GlassPanel(style: .clear, cornerRadius: Radius.medium)
     private let imageView = UIImageView()
     private let label = UILabel()
 
@@ -16,8 +17,11 @@ final class MoodButton: UIControl {
         self.mood = mood
         super.init(frame: .zero)
 
-        layer.cornerRadius = Radius.medium
-        layer.cornerCurve = .continuous
+        backgroundColor = .clear
+
+        glass.translatesAutoresizingMaskIntoConstraints = false
+        glass.isUserInteractionEnabled = false
+        addSubview(glass)
 
         imageView.contentMode = .scaleAspectFill
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -42,6 +46,11 @@ final class MoodButton: UIControl {
         addSubview(label)
 
         NSLayoutConstraint.activate([
+            glass.topAnchor.constraint(equalTo: topAnchor),
+            glass.bottomAnchor.constraint(equalTo: bottomAnchor),
+            glass.leadingAnchor.constraint(equalTo: leadingAnchor),
+            glass.trailingAnchor.constraint(equalTo: trailingAnchor),
+
             imageView.topAnchor.constraint(equalTo: topAnchor, constant: Spacing.xs),
             imageView.centerXAnchor.constraint(equalTo: centerXAnchor),
             imageView.widthAnchor.constraint(equalToConstant: 56),
@@ -62,11 +71,13 @@ final class MoodButton: UIControl {
     required init?(coder: NSCoder) { fatalError() }
 
     private func applySelectionStyling() {
+        // Selected mood gets a sunshine tint behind the Liquid Glass; the
+        // glass picks the colour up and renders a warm yellow chip.
         if isSelected {
-            backgroundColor = Palette.sunYellow.withAlphaComponent(0.85)
+            backgroundColor = Palette.sunYellow.withAlphaComponent(0.7)
             label.textColor = Palette.inkPrimary
         } else {
-            backgroundColor = Palette.cloudWhite.withAlphaComponent(0.55)
+            backgroundColor = .clear
             label.textColor = Palette.inkSecondary
         }
     }

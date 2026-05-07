@@ -11,19 +11,26 @@ on:
 env:
   XCODE_PROJECT: Sunrise.xcodeproj
   SCHEME: Sunrise
-  IOS_SIMULATOR: iPhone 16
+  IOS_SIMULATOR: iPhone 17
 
 jobs:
   build-test-screenshot:
-    runs-on: macos-15
-    timeout-minutes: 40
+    runs-on: macos-26
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
 
       - name: Select latest Xcode
         run: |
           ls /Applications/ | grep Xcode || true
-          sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)" || true
+          # Prefer Xcode 26 (Liquid Glass / iOS 26 SDK); fall back to whatever
+          # the runner ships if the explicit version is missing.
+          for candidate in /Applications/Xcode_26*.app /Applications/Xcode.app; do
+            if [ -d "$candidate" ]; then
+              sudo xcode-select -s "$candidate"
+              break
+            fi
+          done
           xcodebuild -version
 
       - name: Install XcodeGen
