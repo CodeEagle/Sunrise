@@ -8,7 +8,7 @@ import ProfileFeature
 import CityFeature
 import SunriseDesignSystem
 
-final class RootTabBarController: UITabBarController {
+final class RootTabBarController: UITabBarController, UITabBarControllerDelegate {
     private let store: StoreOf<RootReducer>
     private var presentedCityList: UIViewController?
 
@@ -23,16 +23,16 @@ final class RootTabBarController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = Palette.canvas
-        // Don't set `standardAppearance` / `scrollEdgeAppearance` — assigning
-        // a custom UITabBarAppearance, even with `configureWithDefaultBackground`,
-        // shadows iOS 26's native Liquid Glass material with the iOS 13-era
-        // UIBlurEffect default. Leaving the appearance untouched lets the
-        // system render the floating Liquid Glass tab bar straight from the
-        // SDK; we only override the tint colours and the yellow selection
-        // chip on top.
+        // iOS 26 Liquid Glass on the tab bar is gated on the iOS 18+ `UITab`
+        // API: setting `viewControllers` + `UITabBarItem` keeps the system on
+        // the iOS 13-era UIBlurEffect material no matter what (or no) custom
+        // appearance we install. Once we hand the bar a `tabs = [UITab]`
+        // collection, UIKit renders the floating glass pill from the SDK,
+        // matching the navigation-bar items (e.g. Today's hamburger button)
+        // that already paint as Liquid Glass.
         tabBar.tintColor = Palette.inkPrimary
         tabBar.unselectedItemTintColor = Palette.inkSecondary
-        tabBar.selectionIndicatorImage = makeSelectionChip()
+        delegate = self
 
         let today = TodayViewController(
             store: store.scope(state: \.today, action: \.today)
@@ -40,29 +40,17 @@ final class RootTabBarController: UITabBarController {
         today.onMenuTapped = { [weak self] in
             self?.store.send(.presentCityList)
         }
-        today.tabBarItem = UITabBarItem(
-            title: String(localized: "tab.today", defaultValue: "Weather"),
-            image: TabIcon.image(named: "tab_weather", fallbackSF: "cloud.sun"),
-            selectedImage: TabIcon.image(named: "tab_weather", fallbackSF: "cloud.sun.fill")
-        )
+        let todayNav = UINavigationController(rootViewController: today)
 
         let forecast = ForecastViewController(
             store: store.scope(state: \.forecast, action: \.forecast)
         )
-        forecast.tabBarItem = UITabBarItem(
-            title: String(localized: "tab.forecast", defaultValue: "Forecast"),
-            image: TabIcon.image(named: "tab_forecast", fallbackSF: "calendar"),
-            selectedImage: TabIcon.image(named: "tab_forecast", fallbackSF: "calendar.circle.fill")
-        )
+        let forecastNav = UINavigationController(rootViewController: forecast)
 
         let character = CharacterViewController(
             store: store.scope(state: \.character, action: \.character)
         )
-        character.tabBarItem = UITabBarItem(
-            title: String(localized: "tab.character", defaultValue: "Sunny"),
-            image: TabIcon.image(named: "tab_character", fallbackSF: "face.smiling"),
-            selectedImage: TabIcon.image(named: "tab_character", fallbackSF: "face.smiling.inverse")
-        )
+        let characterNav = UINavigationController(rootViewController: character)
 
         let profile = ProfileViewController(
             store: store.scope(state: \.profile, action: \.profile)
@@ -70,20 +58,41 @@ final class RootTabBarController: UITabBarController {
         profile.onManageCitiesTapped = { [weak self] in
             self?.store.send(.presentCityList)
         }
-        profile.tabBarItem = UITabBarItem(
+        let profileNav = UINavigationController(rootViewController: profile)
+
+        let todayTab = UITab(
+            title: String(localized: "tab.today", defaultValue: "Weather"),
+            image: TabIcon.image(named: "tab_weather", fallbackSF: "cloud.sun"),
+            identifier: RootTab.today.rawValue,
+            viewControllerProvider: { _ in todayNav }
+        )
+        let forecastTab = UITab(
+            title: String(localized: "tab.forecast", defaultValue: "Forecast"),
+            image: TabIcon.image(named: "tab_forecast", fallbackSF: "calendar"),
+            identifier: RootTab.forecast.rawValue,
+            viewControllerProvider: { _ in forecastNav }
+        )
+        let characterTab = UITab(
+            title: String(localized: "tab.character", defaultValue: "Sunny"),
+            image: TabIcon.image(named: "tab_character", fallbackSF: "face.smiling"),
+            identifier: RootTab.character.rawValue,
+            viewControllerProvider: { _ in characterNav }
+        )
+        let profileTab = UITab(
             title: String(localized: "tab.profile", defaultValue: "Me"),
             image: TabIcon.image(named: "tab_profile", fallbackSF: "person"),
-            selectedImage: TabIcon.image(named: "tab_profile", fallbackSF: "person.fill")
+            identifier: RootTab.profile.rawValue,
+            viewControllerProvider: { _ in profileNav }
         )
 
-        viewControllers = [today, forecast, character, profile].map {
-            UINavigationController(rootViewController: $0)
-        }
+        tabs = [todayTab, forecastTab, characterTab, profileTab]
 
         observeState { [weak self] in
             guard let self else { return }
-            let index = RootTab.allCases.firstIndex(of: self.store.selectedTab) ?? 0
-            if self.selectedIndex != index { self.selectedIndex = index }
+            let id = self.store.selectedTab.rawValue
+            if let target = self.tab(forIdentifier: id), self.selectedTab !== target {
+                self.selectedTab = target
+            }
             self.syncCityListPresentation()
         }
 
@@ -113,37 +122,8 @@ final class RootTabBarController: UITabBarController {
         store.send(.dismissCityList)
     }
 
-    private func makeSelectionChip() -> UIImage {
-        // Slightly bigger insets so the chip outline reads as a discrete
-        // "pill behind the icon" rather than a wash that fills the whole
-        // item width.
-        let size = CGSize(width: 60, height: 48)
-        let renderer = UIGraphicsImageRenderer(size: size)
-        let raw = renderer.image { _ in
-            let rect = CGRect(origin: .zero, size: size).insetBy(dx: 4, dy: 6)
-            let path = UIBezierPath(roundedRect: rect, cornerRadius: 14)
-            // iOS 26's Liquid Glass tab bar dims selectionIndicatorImage —
-            // 0.55 read as nearly invisible. 0.85 punches through the glass
-            // wash without going full opaque (which would overpower the
-            // icon).
-            Palette.sunYellow.withAlphaComponent(0.85).setFill()
-            path.fill()
-        }
-        return raw.resizableImage(
-            withCapInsets: UIEdgeInsets(top: 18, left: 22, bottom: 18, right: 22),
-            resizingMode: .stretch
-        )
-    }
-
-    override func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
-        guard let index = self.tabBar.items?.firstIndex(of: item),
-              let tab = RootTab.allCases[safe: index] else { return }
-        store.send(.tabSelected(tab))
-    }
-}
-
-private extension Array {
-    subscript(safe index: Int) -> Element? {
-        indices.contains(index) ? self[index] : nil
+    func tabBarController(_ tabBarController: UITabBarController, didSelect tab: UITab) {
+        guard let rootTab = RootTab(rawValue: tab.identifier) else { return }
+        store.send(.tabSelected(rootTab))
     }
 }
