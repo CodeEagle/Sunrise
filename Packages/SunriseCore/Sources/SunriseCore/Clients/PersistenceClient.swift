@@ -44,18 +44,18 @@ private enum StoreKey: String {
 }
 
 /// MVP storage: UserDefaults + Codable. Swap for GRDB once we add hourly history / aggregates.
+/// Stateless on purpose — `UserDefaults`, `JSONEncoder` and `JSONDecoder`
+/// are flagged non-Sendable under Swift 6 strict concurrency, so holding
+/// them as stored properties would force the whole struct off `Sendable`.
+/// Constructing fresh ones per call is cheap relative to a settings save.
 private struct UserDefaultsStore: Sendable {
-    let defaults = UserDefaults.standard
-    let encoder = JSONEncoder()
-    let decoder = JSONDecoder()
-
     func load<T: Decodable>(_ type: T.Type, key: StoreKey) -> T? {
-        guard let data = defaults.data(forKey: key.rawValue) else { return nil }
-        return try? decoder.decode(T.self, from: data)
+        guard let data = UserDefaults.standard.data(forKey: key.rawValue) else { return nil }
+        return try? JSONDecoder().decode(T.self, from: data)
     }
 
     func save<T: Encodable>(_ value: T, key: StoreKey) {
-        guard let data = try? encoder.encode(value) else { return }
-        defaults.set(data, forKey: key.rawValue)
+        guard let data = try? JSONEncoder().encode(value) else { return }
+        UserDefaults.standard.set(data, forKey: key.rawValue)
     }
 }
