@@ -136,18 +136,23 @@ final class RootTabBarController: UITabBarController {
     }
 
     private func makeSelectionChip() -> UIImage {
-        let size = CGSize(width: 56, height: 44)
+        // Slightly bigger insets so the chip outline reads as a discrete
+        // "pill behind the icon" rather than a wash that fills the whole
+        // item width.
+        let size = CGSize(width: 60, height: 48)
         let renderer = UIGraphicsImageRenderer(size: size)
         let raw = renderer.image { _ in
-            let rect = CGRect(origin: .zero, size: size).insetBy(dx: 2, dy: 4)
+            let rect = CGRect(origin: .zero, size: size).insetBy(dx: 4, dy: 6)
             let path = UIBezierPath(roundedRect: rect, cornerRadius: 14)
-            // 0.35 was almost invisible against the cream tab bar; bump to
-            // 0.55 so the chip reads at glance distance per the design board.
-            Palette.sunYellow.withAlphaComponent(0.55).setFill()
+            // iOS 26's Liquid Glass tab bar dims selectionIndicatorImage —
+            // 0.55 read as nearly invisible. 0.85 punches through the glass
+            // wash without going full opaque (which would overpower the
+            // icon).
+            Palette.sunYellow.withAlphaComponent(0.85).setFill()
             path.fill()
         }
         return raw.resizableImage(
-            withCapInsets: UIEdgeInsets(top: 16, left: 20, bottom: 16, right: 20),
+            withCapInsets: UIEdgeInsets(top: 18, left: 22, bottom: 18, right: 22),
             resizingMode: .stretch
         )
     }
