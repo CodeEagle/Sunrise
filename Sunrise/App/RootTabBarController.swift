@@ -31,22 +31,21 @@ final class RootTabBarController: UITabBarController, UITabBarControllerDelegate
         // matching the navigation-bar items (e.g. Today's hamburger button)
         // that already paint as Liquid Glass.
         //
-        // To reach the same Liquid Glass treatment that the navigation-bar
-        // hamburger button on Today already gets, hand the tab bar the
-        // *same* `UIGlassEffect()` object UIKit uses for `UIBarButtonItem`s.
-        // System default `configureWithDefaultBackground()` on iOS 26 picks
-        // a Liquid Glass material too, but a more chrome-y / cream-tinted
-        // variant — overriding `backgroundEffect` with a fresh
-        // `UIGlassEffect()` matches the bar button's transparency, and
-        // `backgroundColor = .clear` strips any residual tint so content
-        // bleeds through (e.g. the orange roof on Today).
+        // Match PaperBoat's tab-bar recipe (CodeEagle/EPUBReaderPro,
+        // PaperBoat/iOS/SceneDelegate.swift): keep the iOS 26 Liquid Glass
+        // backdrop the system installs via `configureWithDefaultBackground()`,
+        // and float a 96%-opaque canvas wash on top so the bar reads as a
+        // soft cream pill that lets a hint of the underlying content tint
+        // through. `shadowColor = .clear` removes the hairline above the
+        // bar; `isTranslucent = true` makes sure the wash composes with the
+        // glass material rather than replacing it.
         let glassAppearance = UITabBarAppearance()
         glassAppearance.configureWithDefaultBackground()
-        glassAppearance.backgroundEffect = UIGlassEffect()
-        glassAppearance.backgroundColor = .clear
+        glassAppearance.backgroundColor = Palette.canvas.withAlphaComponent(0.96)
         glassAppearance.shadowColor = .clear
         tabBar.standardAppearance = glassAppearance
         tabBar.scrollEdgeAppearance = glassAppearance
+        tabBar.isTranslucent = true
         tabBar.tintColor = Palette.inkPrimary
         tabBar.unselectedItemTintColor = Palette.inkSecondary
         delegate = self
