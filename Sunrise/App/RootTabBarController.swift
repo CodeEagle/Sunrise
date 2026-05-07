@@ -23,28 +23,19 @@ final class RootTabBarController: UITabBarController, UITabBarControllerDelegate
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = Palette.canvas
-        // iOS 26 Liquid Glass on the tab bar is gated on the iOS 18+ `UITab`
-        // API: setting `viewControllers` + `UITabBarItem` keeps the system on
-        // the iOS 13-era UIBlurEffect material no matter what (or no) custom
-        // appearance we install. Once we hand the bar a `tabs = [UITab]`
-        // collection (see below), UIKit renders the floating glass pill from
-        // the SDK.
-        //
-        // `configureWithDefaultBackground()` opts into the system Liquid
-        // Glass material. We deliberately do NOT set a `backgroundColor` —
-        // anything above ~0.15 alpha collapses the refraction/tinting back
-        // into a flat colour wash (which is exactly what we shipped before
-        // and the reason the bar didn't read as glass). Apple's first-party
-        // tab bars (Music, Maps) leave the colour to the system so the bar
-        // picks up whatever content scrolls behind it. `shadowColor = .clear`
-        // removes the hairline above the bar; `isTranslucent = true` lets
-        // the glass material compose with content, not replace it.
-        let glassAppearance = UITabBarAppearance()
-        glassAppearance.configureWithDefaultBackground()
-        glassAppearance.shadowColor = .clear
-        tabBar.standardAppearance = glassAppearance
-        tabBar.scrollEdgeAppearance = glassAppearance
-        tabBar.isTranslucent = true
+        // iOS 26 Liquid Glass on the tab bar is gated on TWO things:
+        //   1. Using the iOS 18+ `UITab` API (`tabs = [UITab(...)]`, see
+        //      below). The legacy `viewControllers` + `tabBarItem` path
+        //      renders the iOS 13-era UIBlurEffect material and never
+        //      upgrades.
+        //   2. NOT assigning a custom `UITabBarAppearance` at all. Even one
+        //      built via `configureWithDefaultBackground()` silently swaps
+        //      the bar back onto the legacy blur pipeline and suppresses
+        //      Liquid Glass — that's the bug we shipped before. tintColor
+        //      and unselectedItemTintColor work fine without a custom
+        //      appearance, so we set just those and let the system handle
+        //      the material, hairline, and pill geometry.
+        // Ref: WWDC25 #284 "Build a UIKit app with the new design".
         tabBar.tintColor = Palette.inkPrimary
         tabBar.unselectedItemTintColor = Palette.inkSecondary
         delegate = self
