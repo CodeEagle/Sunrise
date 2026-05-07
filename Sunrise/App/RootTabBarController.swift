@@ -23,9 +23,16 @@ final class RootTabBarController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = Palette.canvas
-        tabBar.tintColor = Palette.sunYellow
+        // Don't set `standardAppearance` / `scrollEdgeAppearance` — assigning
+        // a custom UITabBarAppearance, even with `configureWithDefaultBackground`,
+        // shadows iOS 26's native Liquid Glass material with the iOS 13-era
+        // UIBlurEffect default. Leaving the appearance untouched lets the
+        // system render the floating Liquid Glass tab bar straight from the
+        // SDK; we only override the tint colours and the yellow selection
+        // chip on top.
+        tabBar.tintColor = Palette.inkPrimary
         tabBar.unselectedItemTintColor = Palette.inkSecondary
-        configureTabBarAppearance()
+        tabBar.selectionIndicatorImage = makeSelectionChip()
 
         let today = TodayViewController(
             store: store.scope(state: \.today, action: \.today)
@@ -104,34 +111,6 @@ final class RootTabBarController: UITabBarController {
 
     @objc private func handleCityListDone() {
         store.send(.dismissCityList)
-    }
-
-    /// Let iOS 26 render the tab bar with its native Liquid Glass material —
-    /// previously we forced a solid cream `backgroundColor` over a transparent
-    /// appearance, which flattened the glass into an opaque pastel rectangle.
-    /// `configureWithDefaultBackground()` gives us the Liquid Glass blur the
-    /// design board calls for; we only override item-level ink colours and
-    /// keep the yellow selection chip on top.
-    private func configureTabBarAppearance() {
-        let appearance = UITabBarAppearance()
-        appearance.configureWithDefaultBackground()
-
-        for item in [appearance.stackedLayoutAppearance, appearance.inlineLayoutAppearance, appearance.compactInlineLayoutAppearance] {
-            item.selected.iconColor = Palette.inkPrimary
-            item.normal.iconColor = Palette.inkSecondary
-            item.selected.titleTextAttributes = [
-                .foregroundColor: Palette.inkPrimary,
-                .font: Typography.caption(11)
-            ]
-            item.normal.titleTextAttributes = [
-                .foregroundColor: Palette.inkSecondary,
-                .font: Typography.caption(11)
-            ]
-        }
-
-        tabBar.standardAppearance = appearance
-        tabBar.scrollEdgeAppearance = appearance
-        tabBar.selectionIndicatorImage = makeSelectionChip()
     }
 
     private func makeSelectionChip() -> UIImage {
