@@ -106,16 +106,15 @@ final class RootTabBarController: UITabBarController {
         store.send(.dismissCityList)
     }
 
-    /// Soft cream tab bar with a yellow rounded chip behind the selected item,
-    /// matching the design board's floating capsule style. Colors flow through
-    /// UITabBarAppearance; the chip rides on the bar-level
-    /// selectionIndicatorImage since that property is the reliable cross-iOS
-    /// way to attach a custom selection backdrop.
+    /// Let iOS 26 render the tab bar with its native Liquid Glass material —
+    /// previously we forced a solid cream `backgroundColor` over a transparent
+    /// appearance, which flattened the glass into an opaque pastel rectangle.
+    /// `configureWithDefaultBackground()` gives us the Liquid Glass blur the
+    /// design board calls for; we only override item-level ink colours and
+    /// keep the yellow selection chip on top.
     private func configureTabBarAppearance() {
         let appearance = UITabBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.85)
-        appearance.shadowColor = .clear
+        appearance.configureWithDefaultBackground()
 
         for item in [appearance.stackedLayoutAppearance, appearance.inlineLayoutAppearance, appearance.compactInlineLayoutAppearance] {
             item.selected.iconColor = Palette.inkPrimary
