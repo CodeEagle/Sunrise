@@ -198,24 +198,14 @@ final class CharacterViewController: UIViewController {
     }
 
     private func render() {
+        // Backdrop is the cozy-room scene with the character already painted in;
+        // hide the standalone portrait overlay so we don't double-stack the figure.
         backdrop.update(
             conditionRawValue: store.condition.rawValue,
             palette: palette(for: store.condition),
-            preferredAsset: "bg_room"
+            preferredAsset: "bg_character_room"
         )
-
-        if let art = CharacterArt.image(forConditionRawValue: store.condition.rawValue) {
-            portraitFallback.image = art
-            portraitFallback.tintColor = nil
-        } else {
-            let symbolName = symbolName(for: store.mood)
-            let config = UIImage.SymbolConfiguration(pointSize: 160, weight: .regular)
-            portraitFallback.image = UIImage(systemName: symbolName, withConfiguration: config)
-            portraitFallback.tintColor = ConditionGlyph.tint(forConditionRawValue: store.condition.rawValue)
-        }
-
-        let animated = AnimatedCondition(rawValue: store.condition.rawValue) ?? .clear
-        characterView.update(condition: animated, dayPeriod: .day)
+        characterView.isHidden = true
 
         bubble.text = encouragement(for: store.condition, mood: store.mood)
         sunshineLabel.text = "  " + String.localizedStringWithFormat(
@@ -247,7 +237,7 @@ final class CharacterViewController: UIViewController {
         case .tender: return "heart.fill"
         case .worried: return "cloud.drizzle.fill"
         case .excited: return "sparkles"
-        case .shy: return "leaf.fill"
+        case .flustered: return "wind.snow"
         }
     }
 
@@ -258,7 +248,7 @@ final class CharacterViewController: UIViewController {
         case .tender: return String(localized: "mood.tender", defaultValue: "Tender")
         case .worried: return String(localized: "mood.worried", defaultValue: "Worried")
         case .excited: return String(localized: "mood.excited", defaultValue: "Excited")
-        case .shy: return String(localized: "mood.shy", defaultValue: "Shy")
+        case .flustered: return String(localized: "mood.flustered", defaultValue: "Flustered")
         }
     }
 
@@ -278,7 +268,7 @@ final class CharacterViewController: UIViewController {
         case (.tender, _): return String(localized: "character.tender", defaultValue: "Sunny is sending you warm wishes today.")
         case (.worried, _): return String(localized: "character.worried", defaultValue: "Sunny is a little nervous. Stay close, okay?")
         case (.excited, _): return String(localized: "character.excited", defaultValue: "Sunny found something fun! Want to play?")
-        case (.shy, _): return String(localized: "character.shy", defaultValue: "Sunny is hiding behind a cloud, peeking shyly.")
+        case (.flustered, _): return String(localized: "character.flustered", defaultValue: "Sunny is a little flustered today — go gently!")
         }
     }
 }
