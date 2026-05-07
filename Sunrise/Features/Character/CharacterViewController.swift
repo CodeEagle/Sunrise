@@ -104,10 +104,12 @@ final class CharacterViewController: UIViewController {
         bubbleGlass.translatesAutoresizingMaskIntoConstraints = false
         bubbleGlass.isUserInteractionEnabled = false
 
-        // Mood section
+        // Mood section — design board uses inkPrimary (full weight) for the
+        // "心情状态" label, not the secondary tone we had. Bumping the colour
+        // also rescues legibility against the painted bedroom backdrop.
         moodTitle.text = String(localized: "character.mood_state", defaultValue: "Mood state")
         moodTitle.font = Typography.body(15)
-        moodTitle.textColor = Palette.inkSecondary
+        moodTitle.textColor = Palette.inkPrimary
         moodTitle.translatesAutoresizingMaskIntoConstraints = false
 
         moodStack.axis = .horizontal
