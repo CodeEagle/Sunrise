@@ -4,6 +4,16 @@ A WeatherKit-powered iOS weather app with an animated character companion.
 Hand-drawn 80s-anime aesthetic, designed for iOS first with macOS as a
 second-stage target.
 
+## Screens
+
+| Today | Forecast | Sunny | Me |
+|---|---|---|---|
+| ![Today](docs/screenshots/01-today.png) | ![Forecast](docs/screenshots/02-forecast.png) | ![Sunny](docs/screenshots/03-character.png) | ![Me](docs/screenshots/04-profile.png) |
+
+Screenshots above are captured from the `iOS` GitHub Actions workflow on every
+push (UITest target launches the app with `-mockData` and records each tab),
+then committed back to `docs/screenshots/` as the canonical reference.
+
 ## Tech stack
 
 - **UI**: UIKit + Auto Layout, with SwiftUI islands for Swift Charts and the widget
