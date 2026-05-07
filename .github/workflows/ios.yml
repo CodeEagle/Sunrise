@@ -20,26 +20,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Select latest Xcode
+      - name: Select Xcode matching an installed iOS Simulator runtime
         run: |
           ls /Applications/ | grep Xcode || true
-          # Pick the highest-versioned non-beta Xcode 26 install — the default
-          # 26.0.1 on macos-26 isn't shipping the iOS 26.0 simulator runtime,
-          # so destinations of platform=iOS Simulator fail to resolve. Walking
-          # the dirs newest-first picks Xcode_26.5.0 (or whatever ships latest).
+          xcrun simctl list runtimes | grep iOS || true
+
+          # Walk Xcode_26.x newest-first (skipping betas) and pick the first
+          # one whose iOS major.minor has a Simulator runtime installed on
+          # this runner image — runners ship a sparse set (e.g. 26.1, 26.2,
+          # 26.4 but not 26.5/26.0), so blindly selecting the newest Xcode
+          # leaves builds without a usable Simulator destination.
           best=""
+          installed=$(xcrun simctl list runtimes | grep iOS | sed -E 's/iOS ([0-9]+\.[0-9]+).*/\1/' | tr -d ' ')
           for candidate in $(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -v beta | sort -V -r); do
-            best="$candidate"
-            break
+            ver=$(echo "$candidate" | sed -E 's|.*Xcode_(26\.[0-9]+)(\..*)?\.app|\1|')
+            if echo "$installed" | grep -qx "$ver"; then
+              best="$candidate"
+              break
+            fi
           done
+          if [ -z "$best" ]; then
+            # Fallback: just take the newest Xcode 26 install we have.
+            best=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -v beta | sort -V -r | head -1)
+          fi
           if [ -z "$best" ] && [ -d /Applications/Xcode.app ]; then
             best=/Applications/Xcode.app
           fi
           if [ -n "$best" ]; then
+            echo "Selected: $best"
             sudo xcode-select -s "$best"
           fi
           xcodebuild -version
-          xcrun simctl list runtimes | head -20
 
       - name: Install XcodeGen
         run: brew install xcodegen
