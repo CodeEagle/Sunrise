@@ -27,21 +27,20 @@ final class RootTabBarController: UITabBarController, UITabBarControllerDelegate
         // API: setting `viewControllers` + `UITabBarItem` keeps the system on
         // the iOS 13-era UIBlurEffect material no matter what (or no) custom
         // appearance we install. Once we hand the bar a `tabs = [UITab]`
-        // collection, UIKit renders the floating glass pill from the SDK,
-        // matching the navigation-bar items (e.g. Today's hamburger button)
-        // that already paint as Liquid Glass.
+        // collection (see below), UIKit renders the floating glass pill from
+        // the SDK.
         //
-        // Match PaperBoat's tab-bar recipe (CodeEagle/EPUBReaderPro,
-        // PaperBoat/iOS/SceneDelegate.swift): keep the iOS 26 Liquid Glass
-        // backdrop the system installs via `configureWithDefaultBackground()`,
-        // and float a 96%-opaque canvas wash on top so the bar reads as a
-        // soft cream pill that lets a hint of the underlying content tint
-        // through. `shadowColor = .clear` removes the hairline above the
-        // bar; `isTranslucent = true` makes sure the wash composes with the
-        // glass material rather than replacing it.
+        // `configureWithDefaultBackground()` opts into the system Liquid
+        // Glass material. We deliberately do NOT set a `backgroundColor` —
+        // anything above ~0.15 alpha collapses the refraction/tinting back
+        // into a flat colour wash (which is exactly what we shipped before
+        // and the reason the bar didn't read as glass). Apple's first-party
+        // tab bars (Music, Maps) leave the colour to the system so the bar
+        // picks up whatever content scrolls behind it. `shadowColor = .clear`
+        // removes the hairline above the bar; `isTranslucent = true` lets
+        // the glass material compose with content, not replace it.
         let glassAppearance = UITabBarAppearance()
         glassAppearance.configureWithDefaultBackground()
-        glassAppearance.backgroundColor = Palette.canvas.withAlphaComponent(0.96)
         glassAppearance.shadowColor = .clear
         tabBar.standardAppearance = glassAppearance
         tabBar.scrollEdgeAppearance = glassAppearance
