@@ -33,10 +33,19 @@ public final class SceneBackgroundView: UIView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
-    public func update(conditionRawValue: String, palette: GradientPalette) {
+    /// `preferredAsset` lets pages override the default `bg_<condition>.png`
+    /// lookup with their own scene art (e.g. Today uses `today_<condition>.png`
+    /// composites that include the character; Character uses `bg_room.png`).
+    public func update(conditionRawValue: String, palette: GradientPalette, preferredAsset: String? = nil) {
         gradient.palette = palette
-        let name = "bg_\(conditionRawValue)"
-        let image = UIImage(named: name) ?? Bundle.main.path(forResource: name, ofType: "png").flatMap { UIImage(contentsOfFile: $0) }
+        let candidates = [preferredAsset, "bg_\(conditionRawValue)"].compactMap { $0 }
+        let image = candidates.lazy.compactMap { name -> UIImage? in
+            if let asset = UIImage(named: name) { return asset }
+            if let path = Bundle.main.path(forResource: name, ofType: "png") {
+                return UIImage(contentsOfFile: path)
+            }
+            return nil
+        }.first
         imageView.image = image
         imageView.alpha = image == nil ? 0 : 1
     }

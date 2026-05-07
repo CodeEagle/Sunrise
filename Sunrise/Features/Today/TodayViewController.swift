@@ -7,21 +7,21 @@ import SunriseDesignSystem
 final class TodayViewController: UIViewController {
     private let store: StoreOf<TodayReducer>
 
+    private let backdrop = SceneBackgroundView()
     private let scrollView = UIScrollView()
     private let contentStack = UIStackView()
-    private let backdrop = SceneBackgroundView()
+    private let scrim = UIView()
 
     private let cityLabel = UILabel()
     private let updatedLabel = UILabel()
     private let temperatureLabel = UILabel()
     private let conditionLabel = UILabel()
-    private let feelsLabel = UILabel()
-    private let heroCharacterImage = UIImageView()
+    private let detailRowLabel = UILabel()
 
     private let hourlyCollection: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        layout.itemSize = CGSize(width: 64, height: 96)
+        layout.itemSize = CGSize(width: 56, height: 88)
         layout.minimumInteritemSpacing = Spacing.xs
         layout.sectionInset = UIEdgeInsets(top: 0, left: Spacing.m, bottom: 0, right: Spacing.m)
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -30,11 +30,6 @@ final class TodayViewController: UIViewController {
         cv.alwaysBounceHorizontal = true
         return cv
     }()
-
-    private let detailsRow = UIStackView()
-    private let humidityPill = PillView()
-    private let windPill = PillView()
-    private let uvPill = PillView()
 
     private let bubbleLabel = PaddedLabel()
     private let refreshControl = UIRefreshControl()
@@ -51,15 +46,21 @@ final class TodayViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = String(localized: "tab.today", defaultValue: "Weather")
         view.backgroundColor = Palette.canvas
 
+        // Title becomes the scene's city pill, so hide the system nav title.
+        navigationItem.titleView = UIView()
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.shadowImage = UIImage()
+
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            image: UIImage(systemName: "list.bullet"),
+            image: UIImage(systemName: "line.3.horizontal"),
             style: .plain,
             target: self,
             action: #selector(handleMenuTap)
         )
+        navigationItem.rightBarButtonItem?.tintColor = Palette.inkPrimary
 
         configureLayout()
 
@@ -73,125 +74,147 @@ final class TodayViewController: UIViewController {
     private func configureLayout() {
         backdrop.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(backdrop)
-        NSLayoutConstraint.activate([
-            backdrop.topAnchor.constraint(equalTo: view.topAnchor),
-            backdrop.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            backdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            backdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
+
+        // Soft cream-tinted scrim across the bottom 55% so overlay text and
+        // the hourly strip stay readable over busy scene art.
+        scrim.translatesAutoresizingMaskIntoConstraints = false
+        scrim.isUserInteractionEnabled = false
+        scrim.backgroundColor = .clear
+        let gradient = CAGradientLayer()
+        gradient.colors = [
+            UIColor.clear.cgColor,
+            Palette.canvas.withAlphaComponent(0.4).cgColor,
+            Palette.canvas.withAlphaComponent(0.85).cgColor
+        ]
+        gradient.locations = [0.0, 0.4, 1.0]
+        scrim.layer.addSublayer(gradient)
+        scrimGradient = gradient
+        view.addSubview(scrim)
 
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.refreshControl = refreshControl
         scrollView.alwaysBounceVertical = true
+        scrollView.backgroundColor = .clear
         refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
         view.addSubview(scrollView)
+
+        contentStack.axis = .vertical
+        contentStack.spacing = Spacing.m
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(contentStack)
+
         NSLayoutConstraint.activate([
+            backdrop.topAnchor.constraint(equalTo: view.topAnchor),
+            backdrop.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            backdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            scrim.topAnchor.constraint(equalTo: view.topAnchor),
+            scrim.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrim.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrim.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-        contentStack.axis = .vertical
-        contentStack.spacing = Spacing.l
-        contentStack.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(contentStack)
-        NSLayoutConstraint.activate([
             contentStack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: Spacing.m),
             contentStack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -Spacing.l),
-            contentStack.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: Spacing.m),
-            contentStack.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -Spacing.m)
+            contentStack.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: Spacing.l),
+            contentStack.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -Spacing.l)
         ])
 
-        contentStack.addArrangedSubview(buildHeroCard())
-        contentStack.addArrangedSubview(buildHourlyCard())
-        contentStack.addArrangedSubview(buildDetailsCard())
+        contentStack.addArrangedSubview(buildHeader())
+        contentStack.addArrangedSubview(spacer(height: 220))   // breathing room over the scene
+        contentStack.addArrangedSubview(buildReadout())
+        contentStack.addArrangedSubview(buildHourly())
         contentStack.addArrangedSubview(buildBubble())
     }
 
-    private func buildHeroCard() -> UIView {
-        let card = CardView()
-        card.translatesAutoresizingMaskIntoConstraints = false
-
-        cityLabel.font = Typography.title(20)
-        cityLabel.textColor = Palette.inkPrimary
-
-        updatedLabel.font = Typography.caption(12)
-        updatedLabel.textColor = Palette.inkSecondary
-
-        temperatureLabel.font = Typography.numeric(80)
-        temperatureLabel.textColor = Palette.inkPrimary
-
-        conditionLabel.font = Typography.body(16)
-        conditionLabel.textColor = Palette.inkSecondary
-
-        feelsLabel.font = Typography.caption(13)
-        feelsLabel.textColor = Palette.inkSecondary
-
-        let titleStack = UIStackView(arrangedSubviews: [cityLabel, updatedLabel])
-        titleStack.axis = .vertical
-        titleStack.spacing = 2
-
-        let textColumn = UIStackView(arrangedSubviews: [titleStack, temperatureLabel, conditionLabel, feelsLabel])
-        textColumn.axis = .vertical
-        textColumn.spacing = Spacing.xs
-        textColumn.alignment = .leading
-        textColumn.translatesAutoresizingMaskIntoConstraints = false
-        card.addSubview(textColumn)
-
-        heroCharacterImage.contentMode = .scaleAspectFit
-        heroCharacterImage.translatesAutoresizingMaskIntoConstraints = false
-        // 1024×1024 PNG would otherwise drag the card to 1000pt+; force a 1:1
-        // box at 45% of the card width and let the card size to text height.
-        heroCharacterImage.setContentHuggingPriority(.defaultLow, for: .vertical)
-        heroCharacterImage.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
-        card.addSubview(heroCharacterImage)
-
-        NSLayoutConstraint.activate([
-            textColumn.topAnchor.constraint(equalTo: card.topAnchor, constant: Spacing.l),
-            textColumn.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: Spacing.l),
-            textColumn.trailingAnchor.constraint(lessThanOrEqualTo: heroCharacterImage.leadingAnchor, constant: -Spacing.xs),
-
-            heroCharacterImage.topAnchor.constraint(equalTo: card.topAnchor, constant: Spacing.s),
-            heroCharacterImage.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -Spacing.s),
-            heroCharacterImage.widthAnchor.constraint(equalTo: card.widthAnchor, multiplier: 0.45),
-            heroCharacterImage.heightAnchor.constraint(equalTo: heroCharacterImage.widthAnchor),
-
-            card.bottomAnchor.constraint(greaterThanOrEqualTo: textColumn.bottomAnchor, constant: Spacing.l),
-            card.bottomAnchor.constraint(greaterThanOrEqualTo: heroCharacterImage.bottomAnchor, constant: Spacing.s)
-        ])
-
-        return card
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        scrimGradient?.frame = scrim.bounds
     }
 
-    private func buildHourlyCard() -> UIView {
+    private var scrimGradient: CAGradientLayer?
+
+    private func buildHeader() -> UIView {
+        cityLabel.font = Typography.title(22)
+        cityLabel.textColor = Palette.inkPrimary
+        cityLabel.shadow(opacity: 0.2)
+
+        updatedLabel.font = Typography.caption(12)
+        updatedLabel.textColor = Palette.inkPrimary.withAlphaComponent(0.75)
+        updatedLabel.shadow(opacity: 0.15)
+
+        let stack = UIStackView(arrangedSubviews: [cityLabel, updatedLabel])
+        stack.axis = .vertical
+        stack.spacing = 2
+        stack.alignment = .leading
+        return stack
+    }
+
+    private func buildReadout() -> UIView {
+        temperatureLabel.font = Typography.numeric(96)
+        temperatureLabel.textColor = Palette.inkPrimary
+        temperatureLabel.shadow(opacity: 0.25, radius: 4)
+
+        conditionLabel.font = Typography.title(20)
+        conditionLabel.textColor = Palette.inkPrimary
+        conditionLabel.shadow(opacity: 0.2)
+
+        detailRowLabel.font = Typography.body(14)
+        detailRowLabel.textColor = Palette.inkSecondary
+        detailRowLabel.numberOfLines = 0
+        detailRowLabel.shadow(opacity: 0.15)
+
+        let stack = UIStackView(arrangedSubviews: [temperatureLabel, conditionLabel, detailRowLabel])
+        stack.axis = .vertical
+        stack.spacing = Spacing.xs
+        stack.alignment = .leading
+        return stack
+    }
+
+    private func buildHourly() -> UIView {
         hourlyCollection.register(HourlyCollectionCell.self, forCellWithReuseIdentifier: HourlyCollectionCell.reuseID)
         hourlyCollection.dataSource = self
         hourlyCollection.translatesAutoresizingMaskIntoConstraints = false
-        hourlyCollection.heightAnchor.constraint(equalToConstant: 110).isActive = true
-        return hourlyCollection
-    }
 
-    private func buildDetailsCard() -> UIView {
-        detailsRow.axis = .horizontal
-        detailsRow.distribution = .fillEqually
-        detailsRow.spacing = Spacing.s
-        [humidityPill, windPill, uvPill].forEach(detailsRow.addArrangedSubview)
-        detailsRow.heightAnchor.constraint(equalToConstant: 72).isActive = true
-        return detailsRow
+        let container = UIView()
+        container.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.7)
+        container.layer.cornerRadius = Radius.medium
+        container.layer.cornerCurve = .continuous
+        hourlyCollection.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(hourlyCollection)
+        NSLayoutConstraint.activate([
+            hourlyCollection.topAnchor.constraint(equalTo: container.topAnchor, constant: Spacing.s),
+            hourlyCollection.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -Spacing.s),
+            hourlyCollection.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            hourlyCollection.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            container.heightAnchor.constraint(equalToConstant: 110)
+        ])
+        return container
     }
 
     private func buildBubble() -> UIView {
         bubbleLabel.font = Typography.body(15)
         bubbleLabel.textColor = Palette.inkPrimary
         bubbleLabel.numberOfLines = 0
-        bubbleLabel.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.85)
+        bubbleLabel.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.9)
         bubbleLabel.layer.cornerRadius = Radius.medium
         bubbleLabel.layer.cornerCurve = .continuous
         bubbleLabel.layer.masksToBounds = true
-        bubbleLabel.textAlignment = .center
+        bubbleLabel.textAlignment = .left
         bubbleLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 56).isActive = true
         return bubbleLabel
+    }
+
+    private func spacer(height: CGFloat) -> UIView {
+        let v = UIView()
+        v.heightAnchor.constraint(equalToConstant: height).isActive = true
+        v.backgroundColor = .clear
+        return v
     }
 
     private func render() {
@@ -204,15 +227,32 @@ final class TodayViewController: UIViewController {
         if let snapshot {
             backdrop.update(
                 conditionRawValue: snapshot.current.condition.rawValue,
-                palette: palette(for: snapshot.current.condition, period: snapshot.current.dayPeriod)
+                palette: palette(for: snapshot.current.condition, period: snapshot.current.dayPeriod),
+                preferredAsset: "today_\(snapshot.current.condition.rawValue)"
             )
-            heroCharacterImage.image = CharacterArt.image(forConditionRawValue: snapshot.current.condition.rawValue)
             temperatureLabel.text = formatter.temperature(snapshot.current.temperature) + "°"
-            conditionLabel.text = localizedCondition(snapshot.current.condition)
-            feelsLabel.text = String.localizedStringWithFormat(
-                String(localized: "today.feels_like", defaultValue: "Feels like %@°"),
-                formatter.temperature(snapshot.current.apparentTemperature)
+            conditionLabel.text = String.localizedStringWithFormat(
+                "%@ · %@",
+                localizedCondition(snapshot.current.condition),
+                String.localizedStringWithFormat(
+                    String(localized: "today.feels_like", defaultValue: "Feels like %@°"),
+                    formatter.temperature(snapshot.current.apparentTemperature)
+                )
             )
+
+            let humidity = String.localizedStringWithFormat(
+                String(localized: "today.humidity_inline", defaultValue: "Humidity %@"),
+                formatter.percent(snapshot.current.humidity)
+            )
+            let wind = String.localizedStringWithFormat(
+                String(localized: "today.wind_inline", defaultValue: "Wind %@"),
+                formatter.windSpeed(snapshot.current.wind)
+            )
+            let uv = String.localizedStringWithFormat(
+                String(localized: "today.uv_inline", defaultValue: "UV %d"),
+                snapshot.current.uvIndex
+            )
+            detailRowLabel.text = [wind, humidity, uv].joined(separator: "  ·  ")
 
             let updatedFormatter = DateFormatter()
             updatedFormatter.locale = formatter.locale
@@ -223,31 +263,18 @@ final class TodayViewController: UIViewController {
                 updatedFormatter.string(from: snapshot.updatedAt)
             )
 
-            humidityPill.setContent(
-                title: String(localized: "today.humidity_title", defaultValue: "Humidity"),
-                value: formatter.percent(snapshot.current.humidity)
-            )
-            windPill.setContent(
-                title: String(localized: "today.wind_title", defaultValue: "Wind"),
-                value: formatter.windSpeed(snapshot.current.wind)
-            )
-            uvPill.setContent(
-                title: String(localized: "today.uv_title", defaultValue: "UV Index"),
-                value: "\(snapshot.current.uvIndex)"
-            )
-
             bubbleLabel.text = encouragement(for: snapshot.current.condition)
             hourlyCollection.reloadData()
         } else if store.isLoading {
             temperatureLabel.text = "–"
             conditionLabel.text = String(localized: "today.loading", defaultValue: "Fetching the latest forecast…")
-            feelsLabel.text = nil
+            detailRowLabel.text = nil
             updatedLabel.text = nil
             bubbleLabel.text = nil
         } else if let error = store.error {
             temperatureLabel.text = "–"
             conditionLabel.text = String(localized: "today.error", defaultValue: "Couldn't fetch weather")
-            feelsLabel.text = error
+            detailRowLabel.text = error
             updatedLabel.text = nil
             bubbleLabel.text = nil
         }
@@ -332,5 +359,15 @@ private final class PaddedLabel: UILabel {
         let size = super.intrinsicContentSize
         return CGSize(width: size.width + insets.left + insets.right,
                       height: size.height + insets.top + insets.bottom)
+    }
+}
+
+private extension UILabel {
+    func shadow(opacity: Float, radius: CGFloat = 2) {
+        layer.shadowColor = UIColor.white.cgColor
+        layer.shadowOpacity = opacity
+        layer.shadowRadius = radius
+        layer.shadowOffset = .zero
+        layer.masksToBounds = false
     }
 }
