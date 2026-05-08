@@ -67,7 +67,7 @@ final class ProfileViewController: UIViewController {
         outer.backgroundColor = .clear
 
         let card = UIView()
-        card.backgroundColor = Palette.cloudWhite
+        card.backgroundColor = Palette.surface
         card.layer.cornerRadius = Radius.medium
         card.layer.cornerCurve = .continuous
         card.translatesAutoresizingMaskIntoConstraints = false

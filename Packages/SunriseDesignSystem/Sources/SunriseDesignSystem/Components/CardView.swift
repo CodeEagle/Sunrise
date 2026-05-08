@@ -2,15 +2,17 @@
 import UIKit
 
 public final class CardView: UIView {
-    public init(cornerRadius: CGFloat = Radius.large, fill: UIColor = Palette.cloudWhite) {
+    public init(cornerRadius: CGFloat = Radius.large, fill: UIColor = Palette.surface) {
         super.init(frame: .zero)
         backgroundColor = fill
         layer.cornerRadius = cornerRadius
         layer.cornerCurve = .continuous
-        layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOpacity = 0.06
-        layer.shadowRadius = 16
-        layer.shadowOffset = CGSize(width: 0, height: 8)
+        layer.shadowOpacity = Elevation.cardOpacity
+        layer.shadowRadius = Elevation.cardRadius
+        layer.shadowOffset = Elevation.cardOffset
+        bindAdaptiveColors { [weak self] traits in
+            self?.layer.shadowColor = Palette.shadow.resolvedColor(with: traits).cgColor
+        }
     }
 
     @available(*, unavailable)

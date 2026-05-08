@@ -30,9 +30,11 @@ public final class GlassPanel: UIView {
             backdrop = UIVisualEffectView(effect: style.glass)
         } else {
             // Pre-iOS-26 fallback (won't actually run since deployment is 26+,
-            // but keeps the package compilable as we transition).
+            // but keeps the package compilable as we transition). Uses the
+            // theme-aware Palette.surface so light/dark mode stay coherent
+            // with the rest of the cream/slate surfaces.
             let v = UIView()
-            v.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.85)
+            v.backgroundColor = Palette.surface.withAlphaComponent(Opacity.glassStrong)
             backdrop = v
         }
         super.init(frame: .zero)

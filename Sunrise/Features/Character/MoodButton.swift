@@ -38,7 +38,7 @@ final class MoodButton: UIControl {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.layer.cornerRadius = Self.portraitSize / 2
         imageView.clipsToBounds = true
-        imageView.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.4)
+        imageView.backgroundColor = Palette.surface.withAlphaComponent(Opacity.glassFaint)
         imageView.image = image ?? UIImage(systemName: "face.smiling")
         imageView.tintColor = Palette.inkSecondary
         portraitContainer.addSubview(imageView)
@@ -82,7 +82,7 @@ final class MoodButton: UIControl {
 
     private func applySelectionStyling() {
         if isSelected {
-            portraitContainer.backgroundColor = Palette.sunYellow.withAlphaComponent(0.55)
+            portraitContainer.backgroundColor = Palette.sunYellow.withAlphaComponent(Opacity.highlight)
             label.textColor = Palette.inkPrimary
         } else {
             portraitContainer.backgroundColor = .clear

@@ -97,12 +97,13 @@ final class TodayViewController: UIViewController {
         view.addSubview(backdrop)
 
         scrim.translatesAutoresizingMaskIntoConstraints = false
-        // Cream wash from ~55% downward so dark text stays legible over the
-        // busy painted scene (the character & rooftops live in that area).
+        // Canvas-coloured wash from ~55% downward so the body labels stay
+        // legible over the busy painted scene (the character + rooftops
+        // live in that area). Uses Palette.canvas — adapts to dark mode.
         scrim.colors = [
             UIColor.clear,
             Palette.canvas.withAlphaComponent(0.0),
-            Palette.canvas.withAlphaComponent(0.85)
+            Palette.canvas.withAlphaComponent(Opacity.glassStrong)
         ]
         scrim.locations = [0.0, 0.55, 1.0]
         scrim.isUserInteractionEnabled = false
@@ -346,9 +347,22 @@ private final class GradientView: UIView {
 
     override class var layerClass: AnyClass { CAGradientLayer.self }
 
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        // CAGradientLayer holds resolved CGColors and won't follow a trait
+        // flip on its own — re-resolve every dynamic UIColor whenever the
+        // system theme changes.
+        bindAdaptiveColors { [weak self] _ in
+            self?.sync()
+        }
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
     private func sync() {
         guard let layer = layer as? CAGradientLayer else { return }
-        layer.colors = colors.map { $0.cgColor }
+        layer.colors = colors.map { $0.resolvedColor(with: traitCollection).cgColor }
         layer.locations = locations
         layer.startPoint = CGPoint(x: 0.5, y: 0)
         layer.endPoint = CGPoint(x: 0.5, y: 1)
@@ -356,13 +370,17 @@ private final class GradientView: UIView {
 }
 
 private extension UILabel {
-    /// Soft white halo around dark text, so labels stay legible over the
-    /// busy painted scenes behind them.
-    func shadow(opacity: Float = 0.85, radius: CGFloat = 4) {
-        layer.shadowColor = UIColor.white.cgColor
+    /// Soft halo around the label text so it stays legible over the busy
+    /// painted scene behind it. Uses `Palette.textHalo` so the halo flips
+    /// to a dark wash in dark mode (where the ink is now off-cream and
+    /// would otherwise vanish into the bright painted highlights).
+    func shadow(opacity: Float = Float(Opacity.halo), radius: CGFloat = 4) {
         layer.shadowOpacity = opacity
         layer.shadowRadius = radius
         layer.shadowOffset = .zero
         layer.masksToBounds = false
+        bindAdaptiveColors { [weak self] traits in
+            self?.layer.shadowColor = Palette.textHalo.resolvedColor(with: traits).cgColor
+        }
     }
 }

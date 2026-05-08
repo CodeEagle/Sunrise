@@ -22,7 +22,7 @@ public enum ConditionGlyph {
         case "clear": return Palette.sunYellow
         case "cloudy", "fog": return Palette.inkSecondary
         case "rain", "thunderstorm": return Palette.skyBlue
-        case "snow": return UIColor(white: 0.78, alpha: 1)
+        case "snow": return Palette.snowTint
         case "windy": return Palette.leafGreen
         default: return Palette.inkSecondary
         }

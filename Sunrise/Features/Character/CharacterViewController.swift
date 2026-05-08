@@ -50,16 +50,22 @@ final class CharacterViewController: UIViewController {
         // Four-stop wash so the bubble and mood rows sit on near-solid cream
         // — earlier the bottom 30% only reached 0.7 alpha and the painted
         // bedroom floor bled through, eating "Mood state" and the labels.
-        gradient.colors = [
-            Palette.canvas.withAlphaComponent(0.6).cgColor,
-            UIColor.clear.cgColor,
-            Palette.canvas.withAlphaComponent(0.75).cgColor,
-            Palette.canvas.withAlphaComponent(0.95).cgColor
-        ]
         gradient.locations = [0.0, 0.35, 0.62, 1.0]
         scrim.layer.addSublayer(gradient)
         scrimGradient = gradient
         view.addSubview(scrim)
+        // CGColors don't auto-resolve dynamic UIColors when the system flips
+        // light↔dark — re-bake the four-stop wash whenever the trait changes
+        // so the scrim follows Palette.canvas into dark mode instead of
+        // staying glued to the light-mode cream.
+        scrim.bindAdaptiveColors { [weak self] traits in
+            self?.scrimGradient?.colors = [
+                Palette.canvas.resolvedColor(with: traits).withAlphaComponent(Opacity.scrimSoft).cgColor,
+                UIColor.clear.cgColor,
+                Palette.canvas.resolvedColor(with: traits).withAlphaComponent(Opacity.scrimMid).cgColor,
+                Palette.canvas.resolvedColor(with: traits).withAlphaComponent(Opacity.scrimHeavy).cgColor
+            ]
+        }
 
         // Centered sunshine pill — the page title is carried by the nav bar
         // (set in viewDidLoad), so the body can lead with this floating pill.
@@ -192,7 +198,7 @@ final class CharacterViewController: UIViewController {
             config = .glass()
         } else {
             config = .plain()
-            config.background.backgroundColor = Palette.cloudWhite.withAlphaComponent(0.85)
+            config.background.backgroundColor = Palette.surface.withAlphaComponent(Opacity.glassStrong)
             config.background.cornerRadius = Radius.medium
         }
         config.title = localizedAction(action)

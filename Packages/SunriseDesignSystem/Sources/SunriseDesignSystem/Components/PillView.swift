@@ -19,7 +19,7 @@ public final class PillView: UIView {
     }
 
     private func configure() {
-        backgroundColor = Palette.cloudWhite.withAlphaComponent(0.7)
+        backgroundColor = Palette.surface.withAlphaComponent(Opacity.glass)
         layer.cornerRadius = Radius.small
         layer.cornerCurve = .continuous
 
