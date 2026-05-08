@@ -53,7 +53,11 @@ public struct RootReducer: Sendable {
         Reduce { state, action in
             switch action {
             case .appLaunched:
-                return .send(.cityList(.onAppear))
+                return .merge(
+                    .send(.today(.onAppear)),
+                    .send(.cityList(.onAppear)),
+                    .send(.profile(.onAppear))
+                )
 
             case let .tabSelected(tab):
                 state.selectedTab = tab
@@ -69,16 +73,41 @@ public struct RootReducer: Sendable {
 
             case let .cityList(.delegate(.selected(city))):
                 state.isPresentingCityList = false
-                return .send(.today(.citySelected(city)))
+                return .merge(
+                    .send(.today(.citiesUpdated(cities: state.cityList.cities, selectedID: city.id))),
+                    .send(.forecast(.citySelected(city)))
+                )
 
             case let .cityList(.citiesLoaded(cities)):
-                guard state.today.selectedCity == nil else { return .none }
-                if let first = cities.first {
-                    return .send(.today(.citySelected(first)))
+                let selectedID = state.cityList.selectedCityID
+                let selectedCity = selectedID.flatMap { id in cities.first(where: { $0.id == id }) }
+                if let selectedCity {
+                    return .merge(
+                        .send(.today(.citiesUpdated(cities: cities, selectedID: selectedCity.id))),
+                        .send(.forecast(.citySelected(selectedCity)))
+                    )
                 }
-                return .send(.today(.useCurrentLocationTapped))
+                return .send(.today(.citiesUpdated(cities: cities, selectedID: nil)))
 
-            case let .today(.weatherResponse(.success(snapshot))):
+            case .cityList(.deleteCity), .cityList(.moveCity):
+                return .send(.today(.citiesUpdated(
+                    cities: state.cityList.cities,
+                    selectedID: state.cityList.selectedCityID
+                )))
+
+            case let .today(.selectCity(id)):
+                state.cityList.selectedCityID = id
+                if let page = state.today.pages[id: id] {
+                    state.forecast.snapshot = page.snapshot
+                    state.forecast.selectedCity = page.city
+                    if let snapshot = page.snapshot {
+                        state.character.condition = snapshot.current.condition
+                    }
+                }
+                return .none
+
+            case let .today(.page(.element(id, .weatherResponse(.success(snapshot))))):
+                guard id == state.today.selectedCityID else { return .none }
                 state.forecast.snapshot = snapshot
                 state.character.condition = snapshot.current.condition
                 return .none
@@ -88,9 +117,20 @@ public struct RootReducer: Sendable {
                 state.profile.settings = settings
                 return .none
 
-            case let .today(.citySelected(city)):
+            case let .today(.currentLocationResolved(.success(city))):
+                // Bootstrap path — user had no saved cities, pager fell back
+                // to current location. Mirror into forecast so its title view
+                // populates immediately.
                 state.forecast.selectedCity = city
                 return .none
+
+            case let .profile(.delegate(.settingsChanged(settings))):
+                // Settings sub-pages mutate via ProfileReducer; mirror into
+                // Today and Forecast so the units / theme update everywhere.
+                return .merge(
+                    .send(.today(.settingsLoaded(settings))),
+                    .send(.forecast(.settingsUpdated(settings)))
+                )
 
             case .today, .forecast, .character, .profile, .cityList:
                 return .none

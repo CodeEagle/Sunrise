@@ -4,33 +4,38 @@ import TodayFeature
 import SunriseCore
 import SunriseDesignSystem
 
-/// Single-screen Today layout that matches the design board 1:1: a full-bleed
-/// scene illustration with the city name + temperature + condition + wind /
-/// humidity / UV row + speech bubble all anchored to the bottom-left, layered
-/// over the scene with light shadows for legibility.
+/// Horizontal pager of city pages — matches the system Weather app: each
+/// city is a full-screen page, swipe left/right to switch, dot indicator at
+/// the bottom shows position, "manage cities" pill on the trailing side.
+///
+/// Each visible / adjacent page is its own `TodayPageViewController` backed by
+/// a scoped `StoreOf<TodayPageReducer>`, so a fetch on the active page can
+/// continue while the user swipes ahead to the next city.
 final class TodayViewController: UIViewController {
     private let store: StoreOf<TodayReducer>
+    private let pageVC: UIPageViewController
+    private let pageControl = UIPageControl()
+    private let manageButton = UIButton(type: .system)
+    private let emptyLabel = UILabel()
 
-    private let backdrop = SceneBackgroundView()
-
-    private let cityPin = UIImageView(image: UIImage(systemName: "location.fill"))
-    private let cityLabel = UILabel()
-    private let cityCaret = UIImageView(image: UIImage(systemName: "chevron.down"))
-    private let updatedLabel = UILabel()
-
-    private let temperatureLabel = UILabel()
-    private let apparentLabel = UILabel()
-    private let conditionLabel = UILabel()
-    private let detailRowLabel = UILabel()
-
-    private let bubble = BubbleView()
-    private let scrim = GradientView()
-    private let retryButton = UIButton(type: .system)
+    private var children: [City.ID: TodayPageViewController] = [:]
+    /// Snapshot of the most recent ordered city ids the pager rendered. Lets
+    /// us detect whether `pages` mutated and rebuild the children map without
+    /// re-syncing on every observation.
+    private var orderedIDs: [City.ID] = []
+    /// Tracks whether the page-vc has any controller mounted at all — guard
+    /// against the first `setViewControllers` racing with a still-empty store
+    /// (the initial render before `citiesUpdated` arrives).
+    private var hasMountedInitialPage = false
 
     var onMenuTapped: (() -> Void)?
 
     init(store: StoreOf<TodayReducer>) {
         self.store = store
+        self.pageVC = UIPageViewController(
+            transitionStyle: .scroll,
+            navigationOrientation: .horizontal
+        )
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -41,346 +46,201 @@ final class TodayViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = Palette.canvas
 
-        configureNavigationBar()
-        configureLayout()
+        // Hide the nav bar on the pager — each page now carries its own
+        // city header inside the body, and the manage button + dots live
+        // in the bottom overlay so the painted scene reads full-bleed.
+        navigationController?.setNavigationBarHidden(true, animated: false)
+
+        configureChildPager()
+        configureBottomBar()
+        configureEmptyState()
 
         observeState { [weak self] in self?.render() }
-        store.send(.onAppear)
     }
 
-    private func configureNavigationBar() {
-        navigationController?.navigationBar.isTranslucent = true
-        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
-        navigationController?.navigationBar.shadowImage = UIImage()
-
-        cityLabel.font = Typography.title(18)
-        cityLabel.textColor = Palette.inkPrimary
-        cityPin.tintColor = Palette.sunYellow
-        cityPin.contentMode = .scaleAspectFit
-        cityPin.translatesAutoresizingMaskIntoConstraints = false
-        cityPin.widthAnchor.constraint(equalToConstant: 14).isActive = true
-        cityCaret.tintColor = Palette.inkPrimary
-        cityCaret.contentMode = .scaleAspectFit
-        cityCaret.translatesAutoresizingMaskIntoConstraints = false
-        cityCaret.widthAnchor.constraint(equalToConstant: 12).isActive = true
-
-        let cityRow = UIStackView(arrangedSubviews: [cityPin, cityLabel, cityCaret])
-        cityRow.axis = .horizontal
-        cityRow.alignment = .center
-        cityRow.spacing = 4
-
-        // Lift the updated subtitle up to caption(12) and use a slightly
-        // alpha-dimmed inkPrimary instead of inkSecondary — secondary is
-        // tuned for body sub-text on the cream canvas, but the nav titleView
-        // sits over the painted sky and ate the lower-contrast colour.
-        updatedLabel.font = Typography.caption(12)
-        updatedLabel.textColor = Palette.inkPrimary.withAlphaComponent(0.7)
-        updatedLabel.textAlignment = .center
-
-        let titleStack = UIStackView(arrangedSubviews: [cityRow, updatedLabel])
-        titleStack.axis = .vertical
-        titleStack.alignment = .center
-        titleStack.spacing = 1
-        navigationItem.titleView = titleStack
-
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            image: UIImage(systemName: "line.3.horizontal"),
-            style: .plain,
-            target: self,
-            action: #selector(handleMenuTap)
-        )
-        navigationItem.rightBarButtonItem?.tintColor = Palette.inkPrimary
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
     }
 
-    private func configureLayout() {
-        backdrop.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(backdrop)
+    private func configureChildPager() {
+        addChild(pageVC)
+        pageVC.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(pageVC.view)
+        NSLayoutConstraint.activate([
+            pageVC.view.topAnchor.constraint(equalTo: view.topAnchor),
+            pageVC.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            pageVC.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            pageVC.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        pageVC.didMove(toParent: self)
+        pageVC.dataSource = self
+        pageVC.delegate = self
+    }
 
-        scrim.translatesAutoresizingMaskIntoConstraints = false
-        // Canvas-coloured wash from ~55% downward so the body labels stay
-        // legible over the busy painted scene (the character + rooftops
-        // live in that area). Uses Palette.canvas — adapts to dark mode.
-        scrim.colors = [
-            UIColor.clear,
-            Palette.canvas.withAlphaComponent(0.0),
-            Palette.canvas.withAlphaComponent(Opacity.glassStrong)
-        ]
-        scrim.locations = [0.0, 0.55, 1.0]
-        scrim.isUserInteractionEnabled = false
-        view.addSubview(scrim)
+    private func configureBottomBar() {
+        let glass = GlassPanel(style: .clear, cornerRadius: Radius.large)
+        glass.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(glass)
 
-        temperatureLabel.font = Typography.numeric(96)
-        temperatureLabel.textColor = Palette.inkPrimary
-        temperatureLabel.shadow(opacity: 0.25, radius: 4)
+        pageControl.translatesAutoresizingMaskIntoConstraints = false
+        pageControl.hidesForSinglePage = true
+        pageControl.pageIndicatorTintColor = Palette.inkPrimary.withAlphaComponent(0.3)
+        pageControl.currentPageIndicatorTintColor = Palette.inkPrimary
+        pageControl.addTarget(self, action: #selector(handlePageControlTap), for: .valueChanged)
+        view.addSubview(pageControl)
 
-        apparentLabel.font = Typography.body(14)
-        apparentLabel.textColor = Palette.inkSecondary
-        apparentLabel.shadow()
-
-        let tempRow = UIStackView(arrangedSubviews: [temperatureLabel, apparentLabel])
-        tempRow.axis = .horizontal
-        // Last-baseline anchors the small "Feels like" caption at the bottom
-        // of the big temperature number, matching the design board.
-        tempRow.alignment = .lastBaseline
-        tempRow.spacing = Spacing.s
-
-        // 24pt matches the design board where the condition label reads as
-        // a bold mid-tier title under the giant temperature, not a footnote.
-        conditionLabel.font = Typography.title(24)
-        conditionLabel.textColor = Palette.inkPrimary
-        conditionLabel.shadow()
-
-        detailRowLabel.font = Typography.body(13)
-        detailRowLabel.textColor = Palette.inkSecondary
-        detailRowLabel.numberOfLines = 0
-        detailRowLabel.shadow()
-
-        var retryConfig = UIButton.Configuration.tinted()
-        retryConfig.cornerStyle = .capsule
-        retryConfig.title = String(localized: "today.retry", defaultValue: "Retry")
-        retryConfig.image = UIImage(systemName: "arrow.clockwise")
-        retryConfig.imagePadding = 6
-        retryConfig.baseBackgroundColor = Palette.canvas
-        retryConfig.baseForegroundColor = Palette.inkPrimary
-        retryButton.configuration = retryConfig
-        retryButton.addTarget(self, action: #selector(handleRetryTap), for: .touchUpInside)
-        retryButton.isHidden = true
-
-        let infoStack = UIStackView(arrangedSubviews: [tempRow, conditionLabel, detailRowLabel, retryButton, bubble])
-        infoStack.axis = .vertical
-        infoStack.alignment = .leading
-        infoStack.spacing = Spacing.xs
-        infoStack.setCustomSpacing(Spacing.m, after: detailRowLabel)
-        infoStack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(infoStack)
+        var manageConfig = UIButton.Configuration.plain()
+        manageConfig.image = UIImage(systemName: "list.bullet")
+        manageConfig.baseForegroundColor = Palette.inkPrimary
+        manageConfig.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
+        manageButton.configuration = manageConfig
+        manageButton.translatesAutoresizingMaskIntoConstraints = false
+        manageButton.addTarget(self, action: #selector(handleManageTap), for: .touchUpInside)
+        view.addSubview(manageButton)
 
         NSLayoutConstraint.activate([
-            backdrop.topAnchor.constraint(equalTo: view.topAnchor),
-            backdrop.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            backdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            backdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            glass.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -Spacing.xs),
+            glass.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.l),
+            glass.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.l),
+            glass.heightAnchor.constraint(equalToConstant: 44),
 
-            scrim.topAnchor.constraint(equalTo: view.topAnchor),
-            scrim.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrim.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrim.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            pageControl.centerYAnchor.constraint(equalTo: glass.centerYAnchor),
+            pageControl.centerXAnchor.constraint(equalTo: glass.centerXAnchor),
 
-            infoStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.l),
-            infoStack.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -Spacing.l),
-            infoStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -Spacing.m),
+            manageButton.centerYAnchor.constraint(equalTo: glass.centerYAnchor),
+            manageButton.trailingAnchor.constraint(equalTo: glass.trailingAnchor, constant: -Spacing.xs)
+        ])
+    }
 
-            bubble.widthAnchor.constraint(equalTo: infoStack.widthAnchor)
+    private func configureEmptyState() {
+        emptyLabel.text = String(localized: "today.locating", defaultValue: "Locating…")
+        emptyLabel.font = Typography.body()
+        emptyLabel.textColor = Palette.inkSecondary
+        emptyLabel.textAlignment = .center
+        emptyLabel.numberOfLines = 0
+        emptyLabel.translatesAutoresizingMaskIntoConstraints = false
+        emptyLabel.isHidden = true
+        view.addSubview(emptyLabel)
+        NSLayoutConstraint.activate([
+            emptyLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emptyLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            emptyLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: Spacing.l),
+            emptyLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -Spacing.l)
         ])
     }
 
     private func render() {
-        let snapshot = store.snapshot
-        let formatter = WeatherFormatter(settings: store.settings)
-
-        cityLabel.text = store.selectedCity?.name
-            ?? String(localized: "today.locating", defaultValue: "Locating…")
-
-        if let snapshot {
-            backdrop.update(
-                conditionRawValue: snapshot.current.condition.rawValue,
-                palette: palette(for: snapshot.current.condition, period: snapshot.current.dayPeriod),
-                preferredAsset: "today_\(snapshot.current.condition.rawValue)",
-                animated: true
-            )
-
-            temperatureLabel.text = formatter.temperature(snapshot.current.temperature) + "°"
-
-            apparentLabel.text = String.localizedStringWithFormat(
-                String(localized: "today.feels_like", defaultValue: "Feels like %@°"),
-                formatter.temperature(snapshot.current.apparentTemperature)
-            )
-
-            conditionLabel.text = localizedCondition(snapshot.current.condition)
-
-            let wind = String.localizedStringWithFormat(
-                String(localized: "today.wind_inline", defaultValue: "Wind %@"),
-                formatter.windSpeed(snapshot.current.wind)
-            )
-            let humidity = String.localizedStringWithFormat(
-                String(localized: "today.humidity_inline", defaultValue: "Humidity %@"),
-                formatter.percent(snapshot.current.humidity)
-            )
-            let uv = String.localizedStringWithFormat(
-                String(localized: "today.uv_inline", defaultValue: "UV %d"),
-                snapshot.current.uvIndex
-            )
-            detailRowLabel.text = [wind, humidity, uv].joined(separator: "  ·  ")
-
-            let updatedFormatter = DateFormatter()
-            updatedFormatter.locale = formatter.locale
-            updatedFormatter.dateStyle = .none
-            updatedFormatter.timeStyle = .short
-            updatedLabel.text = String.localizedStringWithFormat(
-                String(localized: "today.updated_at", defaultValue: "Updated %@"),
-                updatedFormatter.string(from: snapshot.updatedAt)
-            )
-
-            bubble.text = encouragement(for: snapshot.current.condition)
-            bubble.isHidden = false
-        } else if store.isLoading {
-            temperatureLabel.text = "–"
-            apparentLabel.text = nil
-            conditionLabel.text = String(localized: "today.loading", defaultValue: "Fetching the latest forecast…")
-            detailRowLabel.text = nil
-            updatedLabel.text = nil
-            bubble.isHidden = true
-        } else if let error = store.error {
-            temperatureLabel.text = "–"
-            apparentLabel.text = nil
-            conditionLabel.text = String(localized: "today.error", defaultValue: "Couldn't fetch weather")
-            detailRowLabel.text = error
-            updatedLabel.text = nil
-            bubble.isHidden = true
+        let ids = Array(store.pages.ids)
+        if ids != orderedIDs {
+            orderedIDs = ids
+            pruneOrphans()
         }
 
-        retryButton.isHidden = (store.error == nil)
+        pageControl.numberOfPages = ids.count
+
+        guard !ids.isEmpty else {
+            emptyLabel.text = store.isResolvingLocation
+                ? String(localized: "today.locating", defaultValue: "Locating…")
+                : String(localized: "today.empty",
+                         defaultValue: "Add a city to see the weather.")
+            emptyLabel.isHidden = false
+            if hasMountedInitialPage {
+                pageVC.setViewControllers([], direction: .forward, animated: false)
+                hasMountedInitialPage = false
+            }
+            return
+        }
+        emptyLabel.isHidden = true
+
+        let targetID = store.selectedCityID ?? ids.first!
+        let targetIndex = ids.firstIndex(of: targetID) ?? 0
+        pageControl.currentPage = targetIndex
+
+        guard let target = childController(for: targetID) else { return }
+        let visibleID = currentlyVisibleID()
+        if !hasMountedInitialPage || visibleID != targetID {
+            let direction: UIPageViewController.NavigationDirection
+            if let visibleID,
+               let from = ids.firstIndex(of: visibleID),
+               from < targetIndex {
+                direction = .forward
+            } else {
+                direction = .reverse
+            }
+            pageVC.setViewControllers([target], direction: direction, animated: hasMountedInitialPage)
+            hasMountedInitialPage = true
+        }
     }
 
-    @objc private func handleMenuTap() {
+    private func currentlyVisibleID() -> City.ID? {
+        guard let visible = pageVC.viewControllers?.first as? TodayPageViewController else { return nil }
+        return visible.cityID
+    }
+
+    private func childController(for id: City.ID) -> TodayPageViewController? {
+        if let existing = children[id] { return existing }
+        guard let pageStore = store.scope(state: \.pages[id: id], action: \.page[id: id]) else {
+            return nil
+        }
+        let vc = TodayPageViewController(store: pageStore)
+        vc.cityID = id
+        children[id] = vc
+        return vc
+    }
+
+    private func pruneOrphans() {
+        let live = Set(orderedIDs)
+        children = children.filter { live.contains($0.key) }
+    }
+
+    @objc private func handleManageTap() {
         onMenuTapped?()
     }
 
-    @objc private func handleRetryTap() {
-        store.send(.retryTapped)
+    @objc private func handlePageControlTap() {
+        let idx = pageControl.currentPage
+        guard idx < orderedIDs.count else { return }
+        store.send(.selectCity(orderedIDs[idx]))
+    }
+}
+
+extension TodayViewController: UIPageViewControllerDataSource, UIPageViewControllerDelegate {
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+        guard let page = viewController as? TodayPageViewController,
+              let id = page.cityID,
+              let index = orderedIDs.firstIndex(of: id),
+              index > 0 else { return nil }
+        return childController(for: orderedIDs[index - 1]) as UIViewController?
     }
 
-    private func palette(for condition: WeatherCondition, period: DayPeriod) -> GradientPalette {
-        switch (condition, period) {
-        case (.clear, .night), (.clear, .dusk): return .clearNight
-        case (.clear, _): return .clearDay
-        case (.cloudy, _): return .cloudy
-        case (.rain, _): return .rain
-        case (.thunderstorm, _): return .thunderstorm
-        case (.snow, _): return .snow
-        case (.windy, _): return .windy
-        case (.fog, _): return .fog
-        }
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+        guard let page = viewController as? TodayPageViewController,
+              let id = page.cityID,
+              let index = orderedIDs.firstIndex(of: id),
+              index < orderedIDs.count - 1 else { return nil }
+        return childController(for: orderedIDs[index + 1]) as UIViewController?
     }
 
-    private func localizedCondition(_ condition: WeatherCondition) -> String {
-        switch condition {
-        case .clear: return String(localized: "condition.clear", defaultValue: "Clear")
-        case .cloudy: return String(localized: "condition.cloudy", defaultValue: "Cloudy")
-        case .rain: return String(localized: "condition.rain", defaultValue: "Rain")
-        case .thunderstorm: return String(localized: "condition.thunderstorm", defaultValue: "Thunderstorms")
-        case .snow: return String(localized: "condition.snow", defaultValue: "Snow")
-        case .windy: return String(localized: "condition.windy", defaultValue: "Windy")
-        case .fog: return String(localized: "condition.fog", defaultValue: "Foggy")
-        }
-    }
-
-    private func encouragement(for condition: WeatherCondition) -> String {
-        switch condition {
-        case .clear: return String(localized: "bubble.clear", defaultValue: "Beautiful day — let's go outside!")
-        case .cloudy: return String(localized: "bubble.cloudy", defaultValue: "Clouds drifting by — what shape will they make next?")
-        case .rain: return String(localized: "bubble.rain", defaultValue: "Don't forget your umbrella!")
-        case .thunderstorm: return String(localized: "bubble.thunderstorm", defaultValue: "Storms incoming — stay safe indoors.")
-        case .snow: return String(localized: "bubble.snow", defaultValue: "Snowflakes! Let's build a snowman.")
-        case .windy: return String(localized: "bubble.windy", defaultValue: "Hold onto your hat — it's blustery out there!")
-        case .fog: return String(localized: "bubble.fog", defaultValue: "Misty morning — drive carefully.")
+    func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
+        guard completed,
+              let visible = pageViewController.viewControllers?.first as? TodayPageViewController,
+              let id = visible.cityID else { return }
+        if id != store.selectedCityID {
+            store.send(.selectCity(id))
         }
     }
 }
 
-private final class BubbleView: UIView {
-    private let label = UILabel()
-    private let speakerIcon = UIImageView(image: UIImage(systemName: "speaker.wave.2.fill"))
+private var cityIDAssociation: UInt8 = 0
 
-    var text: String? {
-        get { label.text }
-        set { label.text = newValue }
-    }
-
-    init() {
-        super.init(frame: .zero)
-        backgroundColor = .clear
-
-        // Liquid Glass backdrop, layered behind the label + speaker icon.
-        let glass = GlassPanel(style: .regular, cornerRadius: Radius.medium)
-        glass.translatesAutoresizingMaskIntoConstraints = false
-        glass.isUserInteractionEnabled = false
-        addSubview(glass)
-        NSLayoutConstraint.activate([
-            glass.topAnchor.constraint(equalTo: topAnchor),
-            glass.bottomAnchor.constraint(equalTo: bottomAnchor),
-            glass.leadingAnchor.constraint(equalTo: leadingAnchor),
-            glass.trailingAnchor.constraint(equalTo: trailingAnchor)
-        ])
-
-        label.font = Typography.body(14)
-        label.textColor = Palette.inkPrimary
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-
-        speakerIcon.tintColor = Palette.inkSecondary
-        speakerIcon.contentMode = .scaleAspectFit
-        speakerIcon.translatesAutoresizingMaskIntoConstraints = false
-
-        addSubview(label)
-        addSubview(speakerIcon)
-
-        NSLayoutConstraint.activate([
-            label.topAnchor.constraint(equalTo: topAnchor, constant: 12),
-            label.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12),
-            label.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
-            label.trailingAnchor.constraint(equalTo: speakerIcon.leadingAnchor, constant: -8),
-
-            speakerIcon.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-            speakerIcon.centerYAnchor.constraint(equalTo: centerYAnchor),
-            speakerIcon.widthAnchor.constraint(equalToConstant: 18),
-            speakerIcon.heightAnchor.constraint(equalToConstant: 18)
-        ])
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
-}
-
-private final class GradientView: UIView {
-    var colors: [UIColor] = [] { didSet { sync() } }
-    var locations: [NSNumber] = [] { didSet { sync() } }
-
-    override class var layerClass: AnyClass { CAGradientLayer.self }
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        // CAGradientLayer holds resolved CGColors and won't follow a trait
-        // flip on its own — re-resolve every dynamic UIColor whenever the
-        // system theme changes.
-        bindAdaptiveColors { [weak self] _ in
-            self?.sync()
-        }
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
-
-    private func sync() {
-        guard let layer = layer as? CAGradientLayer else { return }
-        layer.colors = colors.map { $0.resolvedColor(with: traitCollection).cgColor }
-        layer.locations = locations
-        layer.startPoint = CGPoint(x: 0.5, y: 0)
-        layer.endPoint = CGPoint(x: 0.5, y: 1)
-    }
-}
-
-private extension UILabel {
-    /// Soft halo around the label text so it stays legible over the busy
-    /// painted scene behind it. Uses `Palette.textHalo` so the halo flips
-    /// to a dark wash in dark mode (where the ink is now off-cream and
-    /// would otherwise vanish into the bright painted highlights).
-    func shadow(opacity: Float = Float(Opacity.halo), radius: CGFloat = 4) {
-        layer.shadowOpacity = opacity
-        layer.shadowRadius = radius
-        layer.shadowOffset = .zero
-        layer.masksToBounds = false
-        bindAdaptiveColors { [weak self] traits in
-            self?.layer.shadowColor = Palette.textHalo.resolvedColor(with: traits).cgColor
-        }
+extension TodayPageViewController {
+    /// Stash the page's city id on the view controller so the data-source
+    /// callbacks can recover it without scoping the store again. UIPageVC
+    /// hands us back UIViewController in its delegate, and we need a way
+    /// from that VC instance back to its position in the ordered list.
+    var cityID: City.ID? {
+        get { objc_getAssociatedObject(self, &cityIDAssociation) as? City.ID }
+        set { objc_setAssociatedObject(self, &cityIDAssociation, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
 }

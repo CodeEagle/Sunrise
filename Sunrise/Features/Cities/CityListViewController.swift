@@ -22,12 +22,25 @@ final class CityListViewController: UIViewController {
         title = String(localized: "cities.title", defaultValue: "Cities")
         view.backgroundColor = Palette.canvas
 
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
+        // Bar buttons need their tint pinned to Palette.inkPrimary — without
+        // it the system picks the parent nav bar's tint which can drift back
+        // to systemBlue when the modal is re-presented (we'd see a white-ish
+        // "+" against the cream sheet, which is the bug a user flagged).
+        let addButton = UIBarButtonItem(
             barButtonSystemItem: .add,
             target: self,
             action: #selector(handleAdd)
         )
-        navigationItem.leftBarButtonItem = editButtonItem
+        addButton.tintColor = Palette.inkPrimary
+        navigationItem.rightBarButtonItem = addButton
+
+        let editItem = editButtonItem
+        editItem.tintColor = Palette.inkPrimary
+        navigationItem.leftBarButtonItem = editItem
+
+        // Apply the same tint to the surrounding nav bar so the title chrome
+        // stays in inkPrimary even after Liquid Glass swaps materials.
+        navigationController?.navigationBar.tintColor = Palette.inkPrimary
 
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.backgroundColor = .clear

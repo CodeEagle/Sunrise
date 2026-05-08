@@ -22,6 +22,10 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
 
         let window = UIWindow(windowScene: windowScene)
+        // Apply the persisted theme *before* setting the root so the very
+        // first frame matches the saved preference (no flash of light mode
+        // when the user has chosen dark, or vice-versa).
+        window.overrideUserInterfaceStyle = uiKitStyle(for: persistedTheme())
         window.rootViewController = RootTabBarController(store: store)
         self.window = window
         window.makeKeyAndVisible()
@@ -43,14 +47,26 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 
-    /// Mock-mode launches need richer starter state than production launches —
-    /// the design board shows a non-zero sunshine score (阳光值 86), and starting
-    /// from 0 makes the screenshot read as "empty" instead of representative.
     private func initialRootState() -> RootReducer.State {
-        var state = RootReducer.State()
-        if ProcessInfo.processInfo.arguments.contains("-mockData") {
-            state.character.sunshinePoints = 86
+        RootReducer.State()
+    }
+
+    /// Reads the persisted theme directly from UserDefaults (the same keys
+    /// `PersistenceClient` writes to). Done synchronously here so we can paint
+    /// the first frame without a hop through the actor-isolated client.
+    private func persistedTheme() -> ThemePreference {
+        guard let data = UserDefaults.standard.data(forKey: "sunrise.settings"),
+              let settings = try? JSONDecoder().decode(UserSettings.self, from: data) else {
+            return .system
         }
-        return state
+        return settings.theme
+    }
+
+    private func uiKitStyle(for theme: ThemePreference) -> UIUserInterfaceStyle {
+        switch theme {
+        case .system: return .unspecified
+        case .light: return .light
+        case .dark: return .dark
+        }
     }
 }

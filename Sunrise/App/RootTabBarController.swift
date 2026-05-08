@@ -100,9 +100,25 @@ final class RootTabBarController: UITabBarController, UITabBarControllerDelegate
                 self.selectedTab = target
             }
             self.syncCityListPresentation()
+            self.syncThemePreference()
         }
 
         store.send(.appLaunched)
+    }
+
+    /// Mirror the user's ThemePreference into the host window. Called on
+    /// every observation tick — the comparison is cheap and lets the theme
+    /// picker update the chrome live without a relaunch.
+    private func syncThemePreference() {
+        let style: UIUserInterfaceStyle
+        switch store.profile.settings.theme {
+        case .system: style = .unspecified
+        case .light: style = .light
+        case .dark: style = .dark
+        }
+        if view.window?.overrideUserInterfaceStyle != style {
+            view.window?.overrideUserInterfaceStyle = style
+        }
     }
 
     private func syncCityListPresentation() {
@@ -110,12 +126,25 @@ final class RootTabBarController: UITabBarController, UITabBarControllerDelegate
             let cityListVC = CityListViewController(
                 store: store.scope(state: \.cityList, action: \.cityList)
             )
-            cityListVC.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            // Override the leftBarButtonItem set inside CityListViewController
+            // (the edit button) with a Done button on the modal — the user
+            // can re-enter edit mode via the table swipe gestures.
+            let doneButton = UIBarButtonItem(
                 barButtonSystemItem: .done,
                 target: self,
                 action: #selector(handleCityListDone)
             )
+            doneButton.tintColor = Palette.inkPrimary
+            cityListVC.navigationItem.leftBarButtonItem = doneButton
+
             let nav = UINavigationController(rootViewController: cityListVC)
+            // Propagate the host window's effective interface style to the
+            // modal sheet — without this, iOS 26 sheets sometimes resolve to
+            // .light regardless of the underlying window's override (the
+            // "add-city button reverts to white theme" bug).
+            if let window = view.window, window.overrideUserInterfaceStyle != .unspecified {
+                nav.overrideUserInterfaceStyle = window.overrideUserInterfaceStyle
+            }
             present(nav, animated: true)
             presentedCityList = nav
         } else if !store.isPresentingCityList, let presented = presentedCityList {

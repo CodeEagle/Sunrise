@@ -56,17 +56,8 @@ struct ForecastChartView: View {
                     Text(dateFormatter.string(from: day.date))
                         .font(.caption2)
                         .foregroundStyle(Color(Palette.inkSecondary))
-                    Group {
-                        if let watercolor = WeatherIconArt.image(forConditionRawValue: day.condition.rawValue) {
-                            Image(uiImage: watercolor).resizable().scaledToFit()
-                        } else {
-                            Image(systemName: ConditionGlyph.symbolName(forConditionRawValue: day.condition.rawValue))
-                                .resizable()
-                                .scaledToFit()
-                                .foregroundStyle(Color(ConditionGlyph.tint(forConditionRawValue: day.condition.rawValue)))
-                        }
-                    }
-                    .frame(height: 36)
+                    AnimatedWeatherIcon(conditionRawValue: day.condition.rawValue)
+                        .frame(width: 44, height: 44)
                     Text(formatter.temperature(day.highTemperature) + "°")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(Color(Palette.blossomPink))
@@ -100,7 +91,8 @@ struct ForecastChartView: View {
     }
 
     private var temperatureChart: some View {
-        Chart(fiveDay) { day in
+        let unitSuffix = settings.temperatureUnit == .celsius ? "°C" : "°F"
+        return Chart(fiveDay) { day in
             AreaMark(
                 x: .value("day", day.date),
                 yStart: .value("low", tempValue(day.lowTemperature)),
@@ -122,6 +114,11 @@ struct ForecastChartView: View {
             .foregroundStyle(Color(Palette.blossomPink))
             .interpolationMethod(.catmullRom)
             .symbol(.circle)
+            .annotation(position: .top, alignment: .center, spacing: 2) {
+                Text("\(Int(tempValue(day.highTemperature).rounded()))°")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(Color(Palette.blossomPink))
+            }
 
             LineMark(
                 x: .value("day", day.date),
@@ -130,14 +127,39 @@ struct ForecastChartView: View {
             .foregroundStyle(Color(Palette.skyBlue))
             .interpolationMethod(.catmullRom)
             .symbol(.circle)
+            .annotation(position: .bottom, alignment: .center, spacing: 2) {
+                Text("\(Int(tempValue(day.lowTemperature).rounded()))°")
+                    .font(.caption2)
+                    .foregroundStyle(Color(Palette.skyBlue))
+            }
         }
-        .frame(height: 180)
-        // Strip directly above already labels each day; hiding both axes here
-        // keeps the chart card visually clean and stops the auto X-axis
-        // (Fri/Sat/Sun…) from contradicting the strip's Today/Tomorrow/…
-        // labels.
-        .chartXAxis(.hidden)
-        .chartYAxis(.hidden)
+        .frame(height: 200)
+        // X-axis: weekday tick per data point so the temperature strip and
+        // the chart agree on the day labels. Y-axis: degrees with the unit
+        // suffix on the leading edge so a reader can pin numbers without
+        // counting from the strip above.
+        .chartXAxis {
+            AxisMarks(values: fiveDay.map(\.date)) { value in
+                AxisGridLine()
+                    .foregroundStyle(Color(Palette.inkSecondary).opacity(0.15))
+                AxisValueLabel(format: .dateTime.weekday(.abbreviated))
+                    .foregroundStyle(Color(Palette.inkSecondary))
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading) { value in
+                AxisGridLine()
+                    .foregroundStyle(Color(Palette.inkSecondary).opacity(0.15))
+                AxisValueLabel {
+                    if let raw = value.as(Double.self) {
+                        Text("\(Int(raw))\(unitSuffix)")
+                            .font(.caption2)
+                            .foregroundStyle(Color(Palette.inkSecondary))
+                    }
+                }
+            }
+        }
+        .padding(.top, 14)
     }
 
     private var precipitationChart: some View {
@@ -207,15 +229,8 @@ struct ForecastChartView: View {
                         .font(.body)
                         .foregroundStyle(Color(Palette.inkPrimary))
                         .frame(width: 56, alignment: .leading)
-                    Group {
-                        if let watercolor = WeatherIconArt.image(forConditionRawValue: day.condition.rawValue) {
-                            Image(uiImage: watercolor).resizable().scaledToFit()
-                        } else {
-                            Image(systemName: ConditionGlyph.symbolName(forConditionRawValue: day.condition.rawValue))
-                                .foregroundStyle(Color(ConditionGlyph.tint(forConditionRawValue: day.condition.rawValue)))
-                        }
-                    }
-                    .frame(width: 28, height: 28)
+                    AnimatedWeatherIcon(conditionRawValue: day.condition.rawValue)
+                        .frame(width: 32, height: 32)
                     Text(formatter.percent(day.precipitationChance))
                         .font(.caption)
                         .foregroundStyle(Color(Palette.skyBlue))

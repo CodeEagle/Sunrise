@@ -42,6 +42,7 @@ Apple normalises App IDs to lowercase server-side, but Xcode signing is case-sen
 
 ## Image-gen agent (codex CLI)
 
+- Install: `npm i -g @openai/codex` (the operator authorises ChatGPT once the device code is printed).
 - `codex login --device-auth` then visit `https://auth.openai.com/codex/device` with the printed code.
 - Image generation: `codex exec --skip-git-repo-check --sandbox workspace-write --dangerously-bypass-approvals-and-sandbox -i <reference.png>` with prompt on stdin (the `-i FILE...` form swallows positional args, so always pipe the prompt).
 - Generated PNGs land at `~/.codex/generated_images/<session>/ig_*.png`. **Always re-check dimensions** — gpt-image-2 ignores the requested size; resize via Pillow's LANCZOS to the target before shipping (App icons must be exactly 1024×1024, RGB only, no alpha — Xcode rejects otherwise).

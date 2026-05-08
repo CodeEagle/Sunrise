@@ -5,44 +5,50 @@ import SunriseCore
 import WidgetKit
 #endif
 
+/// The Today tab as a whole — a swipeable pager of city pages. Mirrors the
+/// city list maintained by `CityFeature` (RootReducer brokers the sync), owns
+/// the loaded `UserSettings`, and resolves the user's current location when
+/// they have no saved cities yet.
+///
+/// Per-city state lives in `TodayPageReducer`; this reducer only orchestrates
+/// selection, settings propagation and current-location bootstrap.
 @Reducer
 public struct TodayReducer: Sendable {
     @ObservableState
     public struct State: Equatable, Sendable {
-        public var selectedCity: City?
-        public var snapshot: WeatherSnapshot?
-        public var isLoading: Bool = false
-        public var error: String?
-        public var settings: UserSettings = .default
+        public var pages: IdentifiedArrayOf<TodayPageReducer.State>
+        public var selectedCityID: City.ID?
+        public var settings: UserSettings
+        public var isResolvingLocation: Bool
+
+        public var selectedPage: TodayPageReducer.State? {
+            guard let id = selectedCityID else { return nil }
+            return pages[id: id]
+        }
 
         public init(
-            selectedCity: City? = nil,
-            snapshot: WeatherSnapshot? = nil,
-            isLoading: Bool = false,
-            error: String? = nil,
-            settings: UserSettings = .default
+            pages: IdentifiedArrayOf<TodayPageReducer.State> = [],
+            selectedCityID: City.ID? = nil,
+            settings: UserSettings = .default,
+            isResolvingLocation: Bool = false
         ) {
-            self.selectedCity = selectedCity
-            self.snapshot = snapshot
-            self.isLoading = isLoading
-            self.error = error
+            self.pages = pages
+            self.selectedCityID = selectedCityID
             self.settings = settings
+            self.isResolvingLocation = isResolvingLocation
         }
     }
 
     public enum Action: Sendable {
         case onAppear
-        case refreshTapped
-        case useCurrentLocationTapped
-        /// Surfaced by the error-state retry button. The first
-        /// `useCurrentLocationTapped` effect is gone by the time the user
-        /// flips Settings → Privacy → Location Services back on, so without
-        /// a manual re-trigger the screen stays stuck on the error message.
-        case retryTapped
-        case citySelected(City)
-        case weatherResponse(Result<WeatherSnapshot, FetchError>)
-        case currentLocationResolved(Result<City, FetchError>)
         case settingsLoaded(UserSettings)
+        /// Pushed by the parent reducer whenever the canonical city list
+        /// changes (loaded from disk, search resolved, deleted, reordered).
+        case citiesUpdated(cities: [City], selectedID: City.ID?)
+        case selectCity(City.ID)
+        case useCurrentLocationTapped
+        case currentLocationResolved(Result<City, FetchError>)
+        case page(IdentifiedActionOf<TodayPageReducer>)
     }
 
     public struct FetchError: Error, Equatable, Sendable {
@@ -52,7 +58,6 @@ public struct TodayReducer: Sendable {
         }
     }
 
-    @Dependency(\.weatherClient) var weatherClient
     @Dependency(\.locationClient) var locationClient
     @Dependency(\.persistenceClient) var persistenceClient
 
@@ -67,21 +72,49 @@ public struct TodayReducer: Sendable {
                     await send(.settingsLoaded(settings))
                 }
 
-            case .refreshTapped:
-                return refresh(for: state.selectedCity)
+            case let .settingsLoaded(settings):
+                state.settings = settings
+                for id in state.pages.ids {
+                    state.pages[id: id]?.settings = settings
+                }
+                return .none
 
-            case .retryTapped:
-                state.error = nil
-                state.isLoading = true
-                if let city = state.selectedCity {
-                    return refresh(for: city)
+            case let .citiesUpdated(cities, selectedID):
+                let existing = state.pages
+                state.pages = IdentifiedArray(uniqueElements: cities.map { city in
+                    if var page = existing[id: city.id] {
+                        page.city = city
+                        page.settings = state.settings
+                        return page
+                    } else {
+                        return TodayPageReducer.State(city: city, settings: state.settings)
+                    }
+                })
+                if let id = selectedID, state.pages[id: id] != nil {
+                    state.selectedCityID = id
                 } else {
+                    state.selectedCityID = state.pages.ids.first
+                }
+                if state.pages.isEmpty, !state.isResolvingLocation {
                     return .send(.useCurrentLocationTapped)
                 }
+                if let id = state.selectedCityID {
+                    // Re-emit selectCity so the parent reducer can mirror the
+                    // (possibly cached) snapshot into forecast / character.
+                    return .send(.selectCity(id))
+                }
+                return .none
+
+            case let .selectCity(id):
+                guard state.pages[id: id] != nil else { return .none }
+                state.selectedCityID = id
+                if let page = state.pages[id: id], page.snapshot == nil, !page.isLoading {
+                    return .send(.page(.element(id: id, action: .onAppear)))
+                }
+                return .none
 
             case .useCurrentLocationTapped:
-                state.isLoading = true
-                state.error = nil
+                state.isResolvingLocation = true
                 return .run { send in
                     do {
                         let coordinate = try await locationClient.currentLocation()
@@ -96,54 +129,38 @@ public struct TodayReducer: Sendable {
                     }
                 }
 
-            case let .citySelected(city):
-                state.selectedCity = city
-                return refresh(for: city)
-
             case let .currentLocationResolved(.success(city)):
-                state.selectedCity = city
-                return refresh(for: city)
+                state.isResolvingLocation = false
+                if state.pages[id: city.id] == nil {
+                    state.pages.append(TodayPageReducer.State(city: city, settings: state.settings))
+                }
+                state.selectedCityID = city.id
+                return .send(.page(.element(id: city.id, action: .onAppear)))
 
-            case let .currentLocationResolved(.failure(error)):
-                state.isLoading = false
-                state.error = error.message
+            case .currentLocationResolved(.failure):
+                state.isResolvingLocation = false
                 return .none
 
-            case let .weatherResponse(.success(snapshot)):
-                state.isLoading = false
-                state.snapshot = snapshot
-                state.error = nil
-                let city = state.selectedCity
+            case let .page(.element(id, .weatherResponse(.success(snapshot)))):
+                // Mirror the selected page's snapshot into App-Group storage so
+                // the widget keeps showing the city the user is actively
+                // viewing. Off-screen page fetches don't disturb the widget.
+                guard id == state.selectedCityID, let city = state.pages[id: id]?.city else {
+                    return .none
+                }
                 return .run { _ in
-                    if let city {
-                        SharedStorage.saveSnapshot(snapshot, city: city)
-                    }
+                    SharedStorage.saveSnapshot(snapshot, city: city)
                     #if canImport(WidgetKit)
                     WidgetCenter.shared.reloadAllTimelines()
                     #endif
                 }
 
-            case let .weatherResponse(.failure(error)):
-                state.isLoading = false
-                state.error = error.message
-                return .none
-
-            case let .settingsLoaded(settings):
-                state.settings = settings
+            case .page:
                 return .none
             }
         }
-    }
-
-    private func refresh(for city: City?) -> Effect<Action> {
-        guard let city else { return .none }
-        return .run { send in
-            do {
-                let snapshot = try await weatherClient.fetch(coordinate: city.coordinate)
-                await send(.weatherResponse(.success(snapshot)))
-            } catch {
-                await send(.weatherResponse(.failure(FetchError(error))))
-            }
+        .forEach(\.pages, action: \.page) {
+            TodayPageReducer()
         }
     }
 }

@@ -20,7 +20,14 @@ public struct ProfileReducer: Sendable {
         case citiesLoaded([City])
         case temperatureUnitChanged(TemperatureUnit)
         case windUnitChanged(WindSpeedUnit)
+        case themeChanged(ThemePreference)
+        case languageChanged(AppLanguage)
         case notificationsToggled(Bool, dailyTitle: String, dailyBody: String)
+        case delegate(Delegate)
+
+        public enum Delegate: Sendable, Equatable {
+            case settingsChanged(UserSettings)
+        }
     }
 
     @Dependency(\.persistenceClient) var persistence
@@ -49,11 +56,19 @@ public struct ProfileReducer: Sendable {
 
             case let .temperatureUnitChanged(unit):
                 state.settings.temperatureUnit = unit
-                return persist(state.settings)
+                return persistAndBroadcast(state.settings)
 
             case let .windUnitChanged(unit):
                 state.settings.windSpeedUnit = unit
-                return persist(state.settings)
+                return persistAndBroadcast(state.settings)
+
+            case let .themeChanged(preference):
+                state.settings.theme = preference
+                return persistAndBroadcast(state.settings)
+
+            case let .languageChanged(language):
+                state.settings.language = language
+                return persistAndBroadcast(state.settings)
 
             case let .notificationsToggled(enabled, title, body):
                 state.settings.notificationsEnabled = enabled
@@ -65,12 +80,18 @@ public struct ProfileReducer: Sendable {
                         await notifications.cancelDailyBriefing()
                     }
                 }
-                return .merge(persist(state.settings), scheduling)
+                return .merge(persistAndBroadcast(state.settings), scheduling)
+
+            case .delegate:
+                return .none
             }
         }
     }
 
-    private func persist(_ settings: UserSettings) -> Effect<Action> {
-        .run { _ in try? await persistence.saveSettings(settings: settings) }
+    private func persistAndBroadcast(_ settings: UserSettings) -> Effect<Action> {
+        .merge(
+            .run { _ in try? await persistence.saveSettings(settings: settings) },
+            .send(.delegate(.settingsChanged(settings)))
+        )
     }
 }

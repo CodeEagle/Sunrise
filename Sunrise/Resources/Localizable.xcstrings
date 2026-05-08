@@ -77,19 +77,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Me"
+            "value": "Settings"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "我的"
+            "value": "设置"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "マイページ"
+            "value": "設定"
           }
         }
       }
@@ -1773,6 +1773,142 @@
             "value": "風力 %d"
           }
         }
+      }
+    },
+    "today.retry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Retry" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "重试" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "再試行" } }
+      }
+    },
+    "today.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Add a city to see the weather." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "添加城市以查看天气。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "都市を追加すると天気が表示されます。" } }
+      }
+    },
+    "character.nav_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sunny" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "小晴" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ハル" } }
+      }
+    },
+    "settings.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Settings" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "设置" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "設定" } }
+      }
+    },
+    "settings.section.appearance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Appearance" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "外观" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "外観" } }
+      }
+    },
+    "settings.section.data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Data" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "数据" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "データ" } }
+      }
+    },
+    "settings.section.about": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "About" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "关于" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "情報" } }
+      }
+    },
+    "settings.row.theme": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Theme" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "主题" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "テーマ" } }
+      }
+    },
+    "settings.row.language": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Language" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "语言" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "言語" } }
+      }
+    },
+    "settings.theme.system": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "System" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "跟随系统" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "システム" } }
+      }
+    },
+    "settings.theme.light": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Light" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "浅色" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ライト" } }
+      }
+    },
+    "settings.theme.dark": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Dark" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "深色" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "ダーク" } }
+      }
+    },
+    "settings.language.system": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "System" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "跟随系统" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "システム" } }
+      }
+    },
+    "settings.language.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Language changes take effect after relaunching Sunrise." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "切换语言后，请重新启动 Sunrise 生效。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "言語の変更は Sunrise を再起動後に反映されます。" } }
+      }
+    },
+    "settings.language.relaunch_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Relaunch required" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "需要重新启动" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "再起動が必要です" } }
+      }
+    },
+    "settings.language.relaunch_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Quit and reopen Sunrise to apply the new language." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "退出并重新打开 Sunrise 以应用新语言。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Sunrise を終了し、再度開いて新しい言語を適用してください。" } }
+      }
+    },
+    "common.ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "OK" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "好的" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "OK" } }
       }
     }
   }

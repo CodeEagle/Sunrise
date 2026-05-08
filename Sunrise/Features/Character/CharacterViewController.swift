@@ -3,22 +3,19 @@ import ComposableArchitecture
 import CharacterFeature
 import SunriseCore
 import SunriseDesignSystem
-import SunriseAnimation
 
+/// Character tab — Sunny's standing portrait layered over the live weather
+/// scene. The mood / outfit / voice chips are gone; this screen now reads as
+/// a character poster with a small speech bubble. Will host a Seedance 2.0
+/// generated video loop in a follow-up — for now the static portrait sits in
+/// for the video player.
 final class CharacterViewController: UIViewController {
     private let store: StoreOf<CharacterReducer>
 
     private let backdrop = SceneBackgroundView()
-    private let scrim = UIView()
-    private var scrimGradient: CAGradientLayer?
-
-    private let sunshineLabel = UILabel()
-    private let portraitFallback = UIImageView()
-    private lazy var characterView = LottieCharacterView(fallbackView: portraitFallback)
+    private let portrait = UIImageView()
+    private let conditionPill = UILabel()
     private let bubble = PaddedLabel()
-    private let actionStack = UIStackView()
-    private let moodTitle = UILabel()
-    private let moodStack = UIStackView()
 
     init(store: StoreOf<CharacterReducer>) {
         self.store = store
@@ -30,12 +27,9 @@ final class CharacterViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Nav title carries the page label so the body can lead straight with
-        // the centered sunshine pill, matching the design board. Set
-        // navigationItem.title directly so the explicit tabBarItem.title
-        // ("Sunny" / "小晴") wired up in RootTabBarController is untouched.
-        navigationItem.title = String(localized: "character.today_mood", defaultValue: "Sunny's mood today")
+        navigationItem.title = String(localized: "character.nav_title", defaultValue: "Sunny")
         view.backgroundColor = Palette.canvas
+
         configureLayout()
         observeState { [weak self] in self?.render() }
     }
@@ -44,65 +38,31 @@ final class CharacterViewController: UIViewController {
         backdrop.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(backdrop)
 
-        scrim.translatesAutoresizingMaskIntoConstraints = false
-        scrim.isUserInteractionEnabled = false
-        let gradient = CAGradientLayer()
-        // Four-stop wash so the bubble and mood rows sit on near-solid cream
-        // — earlier the bottom 30% only reached 0.7 alpha and the painted
-        // bedroom floor bled through, eating "Mood state" and the labels.
-        gradient.locations = [0.0, 0.35, 0.62, 1.0]
-        scrim.layer.addSublayer(gradient)
-        scrimGradient = gradient
-        view.addSubview(scrim)
-        // CGColors don't auto-resolve dynamic UIColors when the system flips
-        // light↔dark — re-bake the four-stop wash whenever the trait changes
-        // so the scrim follows Palette.canvas into dark mode instead of
-        // staying glued to the light-mode cream.
-        scrim.bindAdaptiveColors { [weak self] traits in
-            self?.scrimGradient?.colors = [
-                Palette.canvas.resolvedColor(with: traits).withAlphaComponent(Opacity.scrimSoft).cgColor,
-                UIColor.clear.cgColor,
-                Palette.canvas.resolvedColor(with: traits).withAlphaComponent(Opacity.scrimMid).cgColor,
-                Palette.canvas.resolvedColor(with: traits).withAlphaComponent(Opacity.scrimHeavy).cgColor
-            ]
-        }
+        portrait.contentMode = .scaleAspectFit
+        portrait.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(portrait)
 
-        // Centered sunshine pill — the page title is carried by the nav bar
-        // (set in viewDidLoad), so the body can lead with this floating pill.
-        sunshineLabel.font = Typography.body(14)
-        sunshineLabel.textColor = Palette.inkPrimary
-        sunshineLabel.backgroundColor = .clear
-        sunshineLabel.textAlignment = .center
+        // Floating glass pill that names the current weather condition —
+        // pinned top-center so the user reads "what is Sunny standing in".
+        let conditionGlass = GlassPanel(style: .clear, cornerRadius: 18)
+        conditionGlass.translatesAutoresizingMaskIntoConstraints = false
+        conditionGlass.isUserInteractionEnabled = false
+        conditionGlass.heightAnchor.constraint(equalToConstant: 36).isActive = true
+        conditionGlass.addSubview(conditionPill)
 
-        let sunshineGlass = GlassPanel(style: .clear, cornerRadius: 16)
-        sunshineGlass.translatesAutoresizingMaskIntoConstraints = false
-        sunshineGlass.isUserInteractionEnabled = false
-        sunshineGlass.heightAnchor.constraint(equalToConstant: 32).isActive = true
-        sunshineGlass.addSubview(sunshineLabel)
-        sunshineLabel.translatesAutoresizingMaskIntoConstraints = false
+        conditionPill.font = Typography.body(14)
+        conditionPill.textColor = Palette.inkPrimary
+        conditionPill.textAlignment = .center
+        conditionPill.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            sunshineLabel.topAnchor.constraint(equalTo: sunshineGlass.topAnchor),
-            sunshineLabel.bottomAnchor.constraint(equalTo: sunshineGlass.bottomAnchor),
-            sunshineLabel.leadingAnchor.constraint(equalTo: sunshineGlass.leadingAnchor, constant: Spacing.m),
-            sunshineLabel.trailingAnchor.constraint(equalTo: sunshineGlass.trailingAnchor, constant: -Spacing.m)
+            conditionPill.topAnchor.constraint(equalTo: conditionGlass.topAnchor),
+            conditionPill.bottomAnchor.constraint(equalTo: conditionGlass.bottomAnchor),
+            conditionPill.leadingAnchor.constraint(equalTo: conditionGlass.leadingAnchor, constant: Spacing.m),
+            conditionPill.trailingAnchor.constraint(equalTo: conditionGlass.trailingAnchor, constant: -Spacing.m)
         ])
+        view.addSubview(conditionGlass)
 
-        // Character portrait
-        portraitFallback.contentMode = .scaleAspectFit
-        characterView.translatesAutoresizingMaskIntoConstraints = false
-
-        // Right-side action chips (换装 / 语音 / 动作 / 日记) — separate tall
-        // pills, each its own floating glass button per the design board.
-        actionStack.axis = .vertical
-        actionStack.spacing = Spacing.s
-        actionStack.alignment = .fill
-        actionStack.distribution = .fillEqually
-        actionStack.translatesAutoresizingMaskIntoConstraints = false
-        for action in CharacterAction.allCases {
-            actionStack.addArrangedSubview(makeActionButton(action))
-        }
-
-        // Bubble — Liquid Glass background
+        // Speech bubble — sits below the portrait, above the bottom safe area.
         bubble.font = Typography.body(15)
         bubble.textColor = Palette.inkPrimary
         bubble.numberOfLines = 0
@@ -113,30 +73,8 @@ final class CharacterViewController: UIViewController {
         let bubbleGlass = GlassPanel(style: .regular, cornerRadius: Radius.medium)
         bubbleGlass.translatesAutoresizingMaskIntoConstraints = false
         bubbleGlass.isUserInteractionEnabled = false
-
-        // Mood section — design board uses inkPrimary (full weight) for the
-        // "心情状态" label, not the secondary tone we had. Bumping the colour
-        // also rescues legibility against the painted bedroom backdrop.
-        moodTitle.text = String(localized: "character.mood_state", defaultValue: "Mood state")
-        moodTitle.font = Typography.body(15)
-        moodTitle.textColor = Palette.inkPrimary
-        moodTitle.translatesAutoresizingMaskIntoConstraints = false
-
-        moodStack.axis = .horizontal
-        moodStack.spacing = Spacing.xs
-        moodStack.distribution = .fillEqually
-        moodStack.translatesAutoresizingMaskIntoConstraints = false
-        for mood in CharacterMood.allCases {
-            moodStack.addArrangedSubview(makeMoodButton(mood))
-        }
-
-        view.addSubview(sunshineGlass)
-        view.addSubview(characterView)
-        view.addSubview(actionStack)
         view.addSubview(bubbleGlass)
         view.addSubview(bubble)
-        view.addSubview(moodTitle)
-        view.addSubview(moodStack)
 
         NSLayoutConstraint.activate([
             backdrop.topAnchor.constraint(equalTo: view.topAnchor),
@@ -144,111 +82,47 @@ final class CharacterViewController: UIViewController {
             backdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             backdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            scrim.topAnchor.constraint(equalTo: view.topAnchor),
-            scrim.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrim.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrim.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            conditionGlass.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: Spacing.s),
+            conditionGlass.centerXAnchor.constraint(equalTo: view.centerXAnchor),
 
-            sunshineGlass.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: Spacing.s),
-            sunshineGlass.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            // Portrait fills most of the screen; full-body character anchored
+            // bottom-aligned so feet sit just above the speech bubble. Width
+            // capped so very tall devices don't blow up the figure.
+            portrait.topAnchor.constraint(equalTo: conditionGlass.bottomAnchor, constant: Spacing.s),
+            portrait.bottomAnchor.constraint(equalTo: bubble.topAnchor, constant: -Spacing.m),
+            portrait.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            portrait.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, multiplier: 0.92),
 
-            characterView.topAnchor.constraint(equalTo: sunshineGlass.bottomAnchor, constant: Spacing.s),
-            characterView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.m),
-            characterView.trailingAnchor.constraint(equalTo: actionStack.leadingAnchor, constant: -Spacing.s),
-            characterView.heightAnchor.constraint(equalToConstant: 320),
-
-            actionStack.centerYAnchor.constraint(equalTo: characterView.centerYAnchor),
-            // Use Spacing.l (24) instead of m (16) — the design board has
-            // visibly more breathing room between the chip column and the
-            // screen edge.
-            actionStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.l),
-            actionStack.widthAnchor.constraint(equalToConstant: 68),
-
-            bubble.topAnchor.constraint(equalTo: characterView.bottomAnchor, constant: Spacing.s),
             bubble.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.l),
             bubble.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.l),
+            bubble.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -Spacing.m),
             bubble.heightAnchor.constraint(greaterThanOrEqualToConstant: 56),
 
             bubbleGlass.topAnchor.constraint(equalTo: bubble.topAnchor),
             bubbleGlass.bottomAnchor.constraint(equalTo: bubble.bottomAnchor),
             bubbleGlass.leadingAnchor.constraint(equalTo: bubble.leadingAnchor),
-            bubbleGlass.trailingAnchor.constraint(equalTo: bubble.trailingAnchor),
-
-            moodTitle.topAnchor.constraint(equalTo: bubble.bottomAnchor, constant: Spacing.m),
-            moodTitle.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.l),
-
-            moodStack.topAnchor.constraint(equalTo: moodTitle.bottomAnchor, constant: Spacing.s),
-            moodStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.l),
-            moodStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.l),
-            moodStack.bottomAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -Spacing.m),
-            moodStack.heightAnchor.constraint(equalToConstant: 96)
+            bubbleGlass.trailingAnchor.constraint(equalTo: bubble.trailingAnchor)
         ])
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        scrimGradient?.frame = scrim.bounds
-    }
-
-    private func makeActionButton(_ action: CharacterAction) -> UIButton {
-        // iOS 26's `.glass()` configuration adopts Liquid Glass for the button
-        // chrome — gives the watercolor scene behind it room to read through.
-        var config: UIButton.Configuration
-        if #available(iOS 26.0, *) {
-            config = .glass()
-        } else {
-            config = .plain()
-            config.background.backgroundColor = Palette.surface.withAlphaComponent(Opacity.glassStrong)
-            config.background.cornerRadius = Radius.medium
-        }
-        config.title = localizedAction(action)
-        config.image = UIImage(systemName: action.symbol)
-        config.imagePadding = 6
-        config.imagePlacement = .top
-        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 4, bottom: 12, trailing: 4)
-        config.baseForegroundColor = Palette.inkPrimary
-        let button = UIButton(configuration: config)
-        button.titleLabel?.font = Typography.caption(12)
-        button.heightAnchor.constraint(greaterThanOrEqualToConstant: 64).isActive = true
-        return button
-    }
-
-    private func makeMoodButton(_ mood: CharacterMood) -> UIControl {
-        let button = MoodButton(
-            mood: mood,
-            title: localizedMood(mood),
-            image: MoodArt.image(forMoodRawValue: mood.rawValue)
-        )
-        button.tag = CharacterMood.allCases.firstIndex(of: mood) ?? 0
-        button.addTarget(self, action: #selector(handleMoodTap(_:)), for: .touchUpInside)
-        return button
-    }
-
-    @objc private func handleMoodTap(_ sender: UIControl) {
-        let mood = CharacterMood.allCases[sender.tag]
-        store.send(.moodSelected(mood))
-        store.send(.awardSunshine(2))
-    }
-
     private func render() {
-        // Backdrop is the cozy-room scene with the character already painted in;
-        // hide the standalone portrait overlay so we don't double-stack the figure.
+        let condition = store.condition
+
+        // Backdrop: weather scene (bg_<condition>.png). The painted scene gives
+        // Sunny a setting that matches the weather she's reacting to.
         backdrop.update(
-            conditionRawValue: store.condition.rawValue,
-            palette: palette(for: store.condition),
-            preferredAsset: "bg_character_room"
-        )
-        characterView.isHidden = true
-
-        bubble.text = encouragement(for: store.condition, mood: store.mood)
-        sunshineLabel.text = String.localizedStringWithFormat(
-            String(localized: "character.sunshine_score", defaultValue: "♥ Sunshine %d"),
-            store.sunshinePoints
+            conditionRawValue: condition.rawValue,
+            palette: palette(for: condition),
+            preferredAsset: "bg_\(condition.rawValue)",
+            animated: true
         )
 
-        for case let button as MoodButton in moodStack.arrangedSubviews {
-            button.isSelected = (button.mood == store.mood)
-        }
+        // Foreground portrait: full-body Sunny in the matching outfit.
+        portrait.image = CharacterArt.image(forConditionRawValue: condition.rawValue)
+            ?? UIImage(systemName: "person.fill")
+
+        conditionPill.text = localizedCondition(condition)
+        bubble.text = encouragement(for: condition)
     }
 
     private func palette(for condition: WeatherCondition) -> GradientPalette {
@@ -263,58 +137,27 @@ final class CharacterViewController: UIViewController {
         }
     }
 
-    private func symbolName(for mood: CharacterMood) -> String {
-        switch mood {
-        case .happy: return "face.smiling.inverse"
-        case .calm: return "moon.stars.fill"
-        case .tender: return "heart.fill"
-        case .worried: return "cloud.drizzle.fill"
-        case .excited: return "sparkles"
-        case .flustered: return "wind.snow"
+    private func localizedCondition(_ condition: WeatherCondition) -> String {
+        switch condition {
+        case .clear: return String(localized: "condition.clear", defaultValue: "Clear")
+        case .cloudy: return String(localized: "condition.cloudy", defaultValue: "Cloudy")
+        case .rain: return String(localized: "condition.rain", defaultValue: "Rain")
+        case .thunderstorm: return String(localized: "condition.thunderstorm", defaultValue: "Thunderstorms")
+        case .snow: return String(localized: "condition.snow", defaultValue: "Snow")
+        case .windy: return String(localized: "condition.windy", defaultValue: "Windy")
+        case .fog: return String(localized: "condition.fog", defaultValue: "Foggy")
         }
     }
 
-    private func localizedMood(_ mood: CharacterMood) -> String {
-        switch mood {
-        case .happy: return String(localized: "mood.happy", defaultValue: "Happy")
-        case .calm: return String(localized: "mood.calm", defaultValue: "Calm")
-        case .tender: return String(localized: "mood.tender", defaultValue: "Tender")
-        case .worried: return String(localized: "mood.worried", defaultValue: "Worried")
-        case .excited: return String(localized: "mood.excited", defaultValue: "Excited")
-        case .flustered: return String(localized: "mood.flustered", defaultValue: "Flustered")
-        }
-    }
-
-    private func localizedAction(_ action: CharacterAction) -> String {
-        switch action {
-        case .outfit: return String(localized: "character.action.outfit", defaultValue: "Outfit")
-        case .voice: return String(localized: "character.action.voice", defaultValue: "Voice")
-        case .gesture: return String(localized: "character.action.gesture", defaultValue: "Action")
-        case .diary: return String(localized: "character.action.diary", defaultValue: "Diary")
-        }
-    }
-
-    private func encouragement(for condition: WeatherCondition, mood: CharacterMood) -> String {
-        switch (mood, condition) {
-        case (.happy, _): return String(localized: "bubble.clear", defaultValue: "Beautiful day — let's go outside!")
-        case (.calm, _): return String(localized: "character.calm", defaultValue: "Take a deep breath. The world will wait.")
-        case (.tender, _): return String(localized: "character.tender", defaultValue: "Sunny is sending you warm wishes today.")
-        case (.worried, _): return String(localized: "character.worried", defaultValue: "Sunny is a little nervous. Stay close, okay?")
-        case (.excited, _): return String(localized: "character.excited", defaultValue: "Sunny found something fun! Want to play?")
-        case (.flustered, _): return String(localized: "character.flustered", defaultValue: "Sunny is a little flustered today — go gently!")
-        }
-    }
-}
-
-private enum CharacterAction: CaseIterable {
-    case outfit, voice, gesture, diary
-
-    var symbol: String {
-        switch self {
-        case .outfit: return "tshirt.fill"
-        case .voice: return "speaker.wave.2.fill"
-        case .gesture: return "hand.wave.fill"
-        case .diary: return "book.closed.fill"
+    private func encouragement(for condition: WeatherCondition) -> String {
+        switch condition {
+        case .clear: return String(localized: "bubble.clear", defaultValue: "Beautiful day — let's go outside!")
+        case .cloudy: return String(localized: "bubble.cloudy", defaultValue: "Clouds drifting by — what shape will they make next?")
+        case .rain: return String(localized: "bubble.rain", defaultValue: "Don't forget your umbrella!")
+        case .thunderstorm: return String(localized: "bubble.thunderstorm", defaultValue: "Storms incoming — stay safe indoors.")
+        case .snow: return String(localized: "bubble.snow", defaultValue: "Snowflakes! Let's build a snowman.")
+        case .windy: return String(localized: "bubble.windy", defaultValue: "Hold onto your hat — it's blustery out there!")
+        case .fog: return String(localized: "bubble.fog", defaultValue: "Misty morning — drive carefully.")
         }
     }
 }
