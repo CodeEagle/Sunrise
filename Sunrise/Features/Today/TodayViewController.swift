@@ -171,7 +171,8 @@ final class TodayViewController: UIViewController {
             backdrop.update(
                 conditionRawValue: snapshot.current.condition.rawValue,
                 palette: palette(for: snapshot.current.condition, period: snapshot.current.dayPeriod),
-                preferredAsset: "today_\(snapshot.current.condition.rawValue)"
+                preferredAsset: "today_\(snapshot.current.condition.rawValue)",
+                animated: true
             )
 
             temperatureLabel.text = formatter.temperature(snapshot.current.temperature) + "°"
