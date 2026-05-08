@@ -65,7 +65,7 @@ targets:
           - ja
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: fun.selfstudio.Sunrise
+        PRODUCT_BUNDLE_IDENTIFIER: fun.selfstudio.sunrise
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -108,7 +108,7 @@ targets:
       path: SunriseWidget/Info.plist
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: fun.selfstudio.Sunrise.Widget
+        PRODUCT_BUNDLE_IDENTIFIER: fun.selfstudio.sunrise.widget
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: SunriseWidget/SunriseWidget.entitlements
@@ -130,7 +130,7 @@ targets:
       - target: Sunrise
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: fun.selfstudio.SunriseTests
+        PRODUCT_BUNDLE_IDENTIFIER: fun.selfstudio.sunrise.tests
         GENERATE_INFOPLIST_FILE: YES
 
   SunriseUITests:
@@ -143,7 +143,7 @@ targets:
       - target: Sunrise
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: fun.selfstudio.SunriseUITests
+        PRODUCT_BUNDLE_IDENTIFIER: fun.selfstudio.sunrise.uitests
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: Sunrise
 
