@@ -5,7 +5,7 @@ import Foundation
 /// without a paid team), it gracefully falls back to standard UserDefaults so
 /// the in-app code path still works.
 public enum SharedStorage {
-    public static let appGroupIdentifier = "group.Fun.SelfStudio.Sunrise"
+    public static let appGroupIdentifier = "group.fun.selfstudio.sunrise"
 
     public static var defaults: UserDefaults {
         UserDefaults(suiteName: appGroupIdentifier) ?? .standard

@@ -26,5 +26,5 @@ let package = Package(
             dependencies: ["SunriseCore"]
         )
     ],
-    swiftLanguageVersions: [.v5]
+    swiftLanguageModes: [.v6]
 )

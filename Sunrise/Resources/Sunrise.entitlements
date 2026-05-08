@@ -6,7 +6,7 @@
     <true/>
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>group.Fun.SelfStudio.Sunrise</string>
+        <string>group.fun.selfstudio.sunrise</string>
     </array>
 </dict>
 </plist>

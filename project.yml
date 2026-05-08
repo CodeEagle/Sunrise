@@ -1,6 +1,6 @@
 name: Sunrise
 options:
-  bundleIdPrefix: Fun.SelfStudio
+  bundleIdPrefix: fun.selfstudio
   deploymentTarget:
     iOS: "26.0"
   developmentLanguage: en
@@ -56,6 +56,8 @@ targets:
               - UISceneConfigurationName: Default Configuration
                 UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
         NSLocationWhenInUseUsageDescription: "Sunrise uses your location to show local weather."
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
         ITSAppUsesNonExemptEncryption: false
         CFBundleLocalizations:
           - en
@@ -63,7 +65,7 @@ targets:
           - ja
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: Fun.SelfStudio.Sunrise
+        PRODUCT_BUNDLE_IDENTIFIER: fun.selfstudio.Sunrise
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -106,7 +108,7 @@ targets:
       path: SunriseWidget/Info.plist
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: Fun.SelfStudio.Sunrise.Widget
+        PRODUCT_BUNDLE_IDENTIFIER: fun.selfstudio.Sunrise.Widget
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: SunriseWidget/SunriseWidget.entitlements
@@ -128,7 +130,7 @@ targets:
       - target: Sunrise
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: Fun.SelfStudio.SunriseTests
+        PRODUCT_BUNDLE_IDENTIFIER: fun.selfstudio.SunriseTests
         GENERATE_INFOPLIST_FILE: YES
 
   SunriseUITests:
@@ -141,7 +143,7 @@ targets:
       - target: Sunrise
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: Fun.SelfStudio.SunriseUITests
+        PRODUCT_BUNDLE_IDENTIFIER: fun.selfstudio.SunriseUITests
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: Sunrise
 

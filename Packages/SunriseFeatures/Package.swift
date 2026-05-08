@@ -79,5 +79,5 @@ let package = Package(
             dependencies: ["CityFeature"]
         )
     ],
-    swiftLanguageVersions: [.v5]
+    swiftLanguageModes: [.v6]
 )

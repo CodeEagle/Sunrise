@@ -13,5 +13,5 @@ let package = Package(
             name: "SunriseDesignSystem"
         )
     ],
-    swiftLanguageVersions: [.v5]
+    swiftLanguageModes: [.v6]
 )
