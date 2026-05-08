@@ -108,11 +108,16 @@ final class ProfileViewController: UIViewController {
         card.addSubview(textStack)
         card.addSubview(chevron)
 
+        // .defaultHigh so this yields (instead of cascading 5 broken
+        // constraints) during UITableView's 0-width tableHeaderView sizing pass.
+        let cardTrailing = card.trailingAnchor.constraint(equalTo: outer.trailingAnchor, constant: -Spacing.m)
+        cardTrailing.priority = .defaultHigh
+
         NSLayoutConstraint.activate([
             card.topAnchor.constraint(equalTo: outer.topAnchor, constant: Spacing.s),
             card.bottomAnchor.constraint(equalTo: outer.bottomAnchor, constant: -Spacing.s),
             card.leadingAnchor.constraint(equalTo: outer.leadingAnchor, constant: Spacing.m),
-            card.trailingAnchor.constraint(equalTo: outer.trailingAnchor, constant: -Spacing.m),
+            cardTrailing,
 
             avatar.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: Spacing.m),
             avatar.centerYAnchor.constraint(equalTo: card.centerYAnchor),
