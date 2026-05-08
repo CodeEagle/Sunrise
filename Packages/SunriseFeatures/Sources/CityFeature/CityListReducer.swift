@@ -10,17 +10,25 @@ public struct CityListReducer: Sendable {
         public var selectedCityID: City.ID?
         public var search = CitySearchReducer.State()
         public var isPresentingSearch = false
+        /// Snapshot of the last `AppLanguage` we saw at language-change
+        /// time. RootReducer compares the incoming settings' language
+        /// against this to decide whether `.regeocodeAllCities` should
+        /// fire — only when the language actually flipped, not on every
+        /// settings save (units changes, etc.).
+        public var lastSeenLanguage: AppLanguage = .system
 
         public init(
             cities: [City] = [],
             selectedCityID: City.ID? = nil,
             search: CitySearchReducer.State = .init(),
-            isPresentingSearch: Bool = false
+            isPresentingSearch: Bool = false,
+            lastSeenLanguage: AppLanguage = .system
         ) {
             self.cities = cities
             self.selectedCityID = selectedCityID
             self.search = search
             self.isPresentingSearch = isPresentingSearch
+            self.lastSeenLanguage = lastSeenLanguage
         }
     }
 
@@ -34,6 +42,11 @@ public struct CityListReducer: Sendable {
         case deleteCity(City.ID)
         case moveCity(IndexSet, Int)
         case persistRequested
+        /// Re-resolve every saved city's display name in the device's
+        /// current preferred language. Triggered by RootReducer when the
+        /// user picks a new language in Settings.
+        case regeocodeAllCities
+        case cityNameRefreshed(City.ID, String)
         case delegate(Delegate)
 
         public enum Delegate: Sendable, Equatable {
@@ -42,6 +55,7 @@ public struct CityListReducer: Sendable {
     }
 
     @Dependency(\.persistenceClient) var persistence
+    @Dependency(\.searchClient) var searchClient
 
     public init() {}
 
@@ -105,6 +119,36 @@ public struct CityListReducer: Sendable {
                 return persistCities(state.cities)
 
             case .persistRequested:
+                return persistCities(state.cities)
+
+            case .regeocodeAllCities:
+                let cities = state.cities.filter { $0.name != "Current Location" }
+                guard !cities.isEmpty else { return .none }
+                let client = searchClient
+                return .run { send in
+                    for city in cities {
+                        if let updated = await client.localizedName(city.coordinate),
+                           !updated.isEmpty,
+                           updated != city.name {
+                            await send(.cityNameRefreshed(city.id, updated))
+                        }
+                    }
+                }
+
+            case let .cityNameRefreshed(id, name):
+                guard let index = state.cities.firstIndex(where: { $0.id == id }) else {
+                    return .none
+                }
+                let original = state.cities[index]
+                state.cities[index] = City(
+                    id: original.id,
+                    name: name,
+                    region: original.region,
+                    country: original.country,
+                    latitude: original.latitude,
+                    longitude: original.longitude,
+                    timeZoneIdentifier: original.timeZoneIdentifier
+                )
                 return persistCities(state.cities)
 
             case .delegate:

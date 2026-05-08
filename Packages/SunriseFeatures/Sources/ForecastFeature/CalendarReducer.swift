@@ -48,7 +48,11 @@ public struct CalendarReducer: Sendable {
     public struct FetchError: Error, Equatable, Sendable {
         public let message: String
         public init(_ error: any Error) {
-            self.message = String(describing: error)
+            // Localized description carries the WeatherKit / network
+            // failure text users can act on (e.g. "Unable to authenticate
+            // — check signing"); String(describing:) just dumps the type
+            // name and shows nothing meaningful in the empty-state cell.
+            self.message = (error as NSError).localizedDescription
         }
     }
 

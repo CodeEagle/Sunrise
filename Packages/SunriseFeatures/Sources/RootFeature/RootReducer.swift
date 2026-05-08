@@ -95,6 +95,15 @@ public struct RootReducer: Sendable {
                     selectedID: state.cityList.selectedCityID
                 )))
 
+            case .cityList(.cityNameRefreshed):
+                // A city's display name just flipped (re-geocoded under the
+                // new language); re-broadcast the updated cities list so
+                // the Today pager picks the new label up too.
+                return .send(.today(.citiesUpdated(
+                    cities: state.cityList.cities,
+                    selectedID: state.cityList.selectedCityID
+                )))
+
             case let .today(.selectCity(id)):
                 state.cityList.selectedCityID = id
                 if let page = state.today.pages[id: id] {
@@ -127,10 +136,18 @@ public struct RootReducer: Sendable {
             case let .profile(.delegate(.settingsChanged(settings))):
                 // Settings sub-pages mutate via ProfileReducer; mirror into
                 // Today and Forecast so the units / theme update everywhere.
-                return .merge(
+                // Also re-geocode every saved city so the displayed name
+                // tracks the new language.
+                let languageChanged = settings.language != state.cityList.lastSeenLanguage
+                state.cityList.lastSeenLanguage = settings.language
+                var effects: [Effect<Action>] = [
                     .send(.today(.settingsLoaded(settings))),
                     .send(.forecast(.settingsUpdated(settings)))
-                )
+                ]
+                if languageChanged {
+                    effects.append(.send(.cityList(.regeocodeAllCities)))
+                }
+                return .merge(effects)
 
             case .today, .forecast, .character, .profile, .cityList:
                 return .none

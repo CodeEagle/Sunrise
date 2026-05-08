@@ -70,6 +70,7 @@ final class CitySearchViewController: UIViewController {
         ])
 
         observeState { [weak self] in self?.render() }
+        onLanguageChange { [weak self] in self?.render() }
         searchBar.becomeFirstResponder()
     }
 

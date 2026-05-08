@@ -27,6 +27,11 @@ public struct SearchClient: Sendable {
 
     /// Resolves a search result to a fully populated City (with coordinate).
     public var resolve: @Sendable (_ result: CitySearchResult) async throws -> City
+
+    /// Reverse-geocode a coordinate to a localised display name. Used to
+    /// re-fetch saved-city names when the user picks a new language —
+    /// MapKit serves names in the device's current preferred language.
+    public var localizedName: @Sendable (_ coordinate: CLLocationCoordinate2D) async -> String?
 }
 
 extension SearchClient: DependencyKey {
@@ -35,12 +40,14 @@ extension SearchClient: DependencyKey {
         let runner = MapKitSearchRunner()
         return SearchClient(
             autocomplete: { query in runner.autocomplete(query: query) },
-            resolve: { result in try await runner.resolve(result: result) }
+            resolve: { result in try await runner.resolve(result: result) },
+            localizedName: { coordinate in await runner.localizedName(coordinate: coordinate) }
         )
         #else
         return SearchClient(
             autocomplete: { _ in .never },
-            resolve: { _ in throw SearchClientError.unsupportedPlatform }
+            resolve: { _ in throw SearchClientError.unsupportedPlatform },
+            localizedName: { _ in nil }
         )
         #endif
     }
@@ -57,7 +64,8 @@ extension SearchClient: DependencyKey {
                 continuation.finish()
             }
         },
-        resolve: { _ in .preview }
+        resolve: { _ in .preview },
+        localizedName: { _ in nil }
     )
 
     public static let testValue = SearchClient()
@@ -139,6 +147,22 @@ private final class MapKitSearchRunner: NSObject, @unchecked Sendable {
         do {
             let mapItems = try await request.mapItems
             return mapItems.first?.timeZone
+        } catch {
+            return nil
+        }
+    }
+
+    /// Pull a localised place name for the requested coordinate via
+    /// MKReverseGeocodingRequest. MapKit returns names in the device's
+    /// current preferred language (read from `AppleLanguages`), so the
+    /// result tracks whichever language the user has just picked in
+    /// Settings. Returns nil on failure or when the response is empty.
+    func localizedName(coordinate: CLLocationCoordinate2D) async -> String? {
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        guard let request = MKReverseGeocodingRequest(location: location) else { return nil }
+        do {
+            let mapItems = try await request.mapItems
+            return mapItems.first?.name
         } catch {
             return nil
         }
