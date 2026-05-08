@@ -1,11 +1,10 @@
 name: iOS
 
+# Manual-only — auto-run on push/PR was producing the screenshot artifact
+# every commit, which the operator no longer wants. Trigger from the
+# Actions tab via "Run workflow" when you actually need build / UI test
+# verification.
 on:
-  push:
-    branches:
-      - main
-      - "claude/**"
-  pull_request:
   workflow_dispatch:
 
 env:
