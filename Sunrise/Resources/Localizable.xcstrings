@@ -2722,6 +2722,37 @@
         }
       }
     },
+    "calendar.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Weather History" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "天气日历" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "天氣日曆" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "天気カレンダー" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "날씨 기록" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Historique météo" } },
+        "de": { "stringUnit": { "state": "translated", "value": "Wetterverlauf" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Historial del clima" } }
+      }
+    },
+    "calendar.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No history yet. WeatherKit serves the last 14 days only." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "暂无历史数据。WeatherKit 仅提供最近 14 天。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "暫無歷史資料。WeatherKit 僅提供最近 14 天。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "履歴はありません。WeatherKitは過去14日間のみ提供します。" } }
+      }
+    },
+    "calendar.precipitation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Precipitation %@" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "降水 %@" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "降水 %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "降水 %@" } }
+      }
+    },
     "today.current_location": {
       "extractionState": "manual",
       "localizations": {

@@ -79,6 +79,24 @@ final class ForecastViewController: UIViewController {
         stack.alignment = .center
         stack.spacing = 1
         navigationItem.titleView = stack
+
+        // Right-side calendar button — pushes the 14-day weather history.
+        let calendarButton = UIBarButtonItem(
+            image: UIImage(systemName: "calendar"),
+            style: .plain,
+            target: self,
+            action: #selector(handleCalendarTap)
+        )
+        calendarButton.tintColor = Palette.inkPrimary
+        navigationItem.rightBarButtonItem = calendarButton
+    }
+
+    @objc private func handleCalendarTap() {
+        guard let city = store.selectedCity else { return }
+        let initial = CalendarReducer.State(city: city, settings: store.settings)
+        let calendarStore = Store(initialState: initial) { CalendarReducer() }
+        let vc = CalendarViewController(store: calendarStore)
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     private func render() {
