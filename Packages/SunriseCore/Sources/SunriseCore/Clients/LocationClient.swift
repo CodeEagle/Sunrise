@@ -51,20 +51,32 @@ public enum LocationClientError: Error, Sendable {
 }
 
 private final class LocationManagerActor: NSObject, CLLocationManagerDelegate, @unchecked Sendable {
-    private let manager = CLLocationManager()
+    private let manager: CLLocationManager
     private var authorizationContinuation: CheckedContinuation<LocationAuthorizationStatus, Never>?
     private var locationContinuation: CheckedContinuation<CLLocationCoordinate2D, Error>?
     private let lock = NSLock()
 
     override init() {
+        // CLLocationManager docs (CLLocationManagerDelegate Discussion):
+        //   "All callback methods called by Core Location are received on the
+        //    run loop of the thread on which you initialised the corresponding
+        //    CLLocationManager object."
+        //
+        // TCA's `liveValue` is resolved lazily inside `.run { }` effects,
+        // which execute on a background TaskExecutor that has no run loop.
+        // If we let the manager get instantiated there, `requestLocation()`
+        // enqueues work fine but `didUpdateLocations` / `didFailWithError`
+        // never come home and the awaiting task hangs forever. Setting the
+        // delegate on main *afterwards* doesn't re-anchor the callback queue.
+        //
+        // So both the CLLocationManager() constructor AND the delegate /
+        // desiredAccuracy configuration have to hop to main here.
+        if Thread.isMainThread {
+            self.manager = CLLocationManager()
+        } else {
+            self.manager = DispatchQueue.main.sync { CLLocationManager() }
+        }
         super.init()
-        // CLLocationManager dispatches its delegate callbacks on the run loop
-        // of the thread that installed the delegate. TCA's `liveValue` is
-        // resolved lazily inside `.run { }` effects, which run on a background
-        // TaskExecutor that has no run loop — installing the delegate there
-        // would mean `didUpdateLocations` / `didFailWithError` never fire,
-        // hanging `currentLocation()` forever. Pin all manager mutations to
-        // main so callbacks come home.
         let bind = { [unowned self] in
             self.manager.delegate = self
             self.manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
