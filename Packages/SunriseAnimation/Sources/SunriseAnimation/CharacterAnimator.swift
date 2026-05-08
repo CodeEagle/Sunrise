@@ -2,7 +2,14 @@ import Foundation
 
 /// Drives the animated character. v1 ships with static art per condition;
 /// later milestones swap in Lottie / Rive state machines.
-public protocol CharacterAnimator: AnyObject, Sendable {
+///
+/// Marked `@MainActor` because every conformer (`LottieCharacterView`) is a
+/// UIView, which is itself main-actor isolated under Swift 6. Without this
+/// the conformance crosses actor isolation and the compiler refuses with
+/// "crosses into main actor-isolated code". `Sendable` is intentionally
+/// dropped — main-actor classes don't need it for in-process UI dispatch.
+@MainActor
+public protocol CharacterAnimator: AnyObject {
     func update(condition: AnimatedCondition, dayPeriod: AnimatedDayPeriod)
 }
 
