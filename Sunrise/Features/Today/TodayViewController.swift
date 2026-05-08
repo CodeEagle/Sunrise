@@ -25,6 +25,7 @@ final class TodayViewController: UIViewController {
 
     private let bubble = BubbleView()
     private let scrim = GradientView()
+    private let retryButton = UIButton(type: .system)
 
     var onMenuTapped: (() -> Void)?
 
@@ -133,7 +134,18 @@ final class TodayViewController: UIViewController {
         detailRowLabel.numberOfLines = 0
         detailRowLabel.shadow()
 
-        let infoStack = UIStackView(arrangedSubviews: [tempRow, conditionLabel, detailRowLabel, bubble])
+        var retryConfig = UIButton.Configuration.tinted()
+        retryConfig.cornerStyle = .capsule
+        retryConfig.title = String(localized: "today.retry", defaultValue: "Retry")
+        retryConfig.image = UIImage(systemName: "arrow.clockwise")
+        retryConfig.imagePadding = 6
+        retryConfig.baseBackgroundColor = Palette.canvas
+        retryConfig.baseForegroundColor = Palette.inkPrimary
+        retryButton.configuration = retryConfig
+        retryButton.addTarget(self, action: #selector(handleRetryTap), for: .touchUpInside)
+        retryButton.isHidden = true
+
+        let infoStack = UIStackView(arrangedSubviews: [tempRow, conditionLabel, detailRowLabel, retryButton, bubble])
         infoStack.axis = .vertical
         infoStack.alignment = .leading
         infoStack.spacing = Spacing.xs
@@ -224,10 +236,16 @@ final class TodayViewController: UIViewController {
             updatedLabel.text = nil
             bubble.isHidden = true
         }
+
+        retryButton.isHidden = (store.error == nil)
     }
 
     @objc private func handleMenuTap() {
         onMenuTapped?()
+    }
+
+    @objc private func handleRetryTap() {
+        store.send(.retryTapped)
     }
 
     private func palette(for condition: WeatherCondition, period: DayPeriod) -> GradientPalette {

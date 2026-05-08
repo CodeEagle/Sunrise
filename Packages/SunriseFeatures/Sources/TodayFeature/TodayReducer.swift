@@ -34,6 +34,11 @@ public struct TodayReducer: Sendable {
         case onAppear
         case refreshTapped
         case useCurrentLocationTapped
+        /// Surfaced by the error-state retry button. The first
+        /// `useCurrentLocationTapped` effect is gone by the time the user
+        /// flips Settings → Privacy → Location Services back on, so without
+        /// a manual re-trigger the screen stays stuck on the error message.
+        case retryTapped
         case citySelected(City)
         case weatherResponse(Result<WeatherSnapshot, FetchError>)
         case currentLocationResolved(Result<City, FetchError>)
@@ -64,6 +69,15 @@ public struct TodayReducer: Sendable {
 
             case .refreshTapped:
                 return refresh(for: state.selectedCity)
+
+            case .retryTapped:
+                state.error = nil
+                state.isLoading = true
+                if let city = state.selectedCity {
+                    return refresh(for: city)
+                } else {
+                    return .send(.useCurrentLocationTapped)
+                }
 
             case .useCurrentLocationTapped:
                 state.isLoading = true
