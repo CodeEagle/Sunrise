@@ -122,15 +122,33 @@ private final class MapKitSearchRunner: NSObject, @unchecked Sendable {
 }
 
 private final class Completer: NSObject, MKLocalSearchCompleterDelegate, @unchecked Sendable {
-    private let completer = MKLocalSearchCompleter()
+    private let completer: MKLocalSearchCompleter
     private let onUpdate: ([CitySearchResult]) -> Void
 
     init(query: String, onUpdate: @escaping ([CitySearchResult]) -> Void) {
+        // MKLocalSearchCompleter pins its delegate callbacks to the run loop of
+        // the thread that initialised it (same convention as CLLocationManager —
+        // see LocationClient.swift). TCA `.run` effects execute on a background
+        // TaskExecutor with no run loop, so a completer constructed there would
+        // silently never call `completerDidUpdateResults` and the autocomplete
+        // AsyncStream would never yield.
         self.onUpdate = onUpdate
+        if Thread.isMainThread {
+            self.completer = MKLocalSearchCompleter()
+        } else {
+            self.completer = DispatchQueue.main.sync { MKLocalSearchCompleter() }
+        }
         super.init()
-        completer.delegate = self
-        completer.resultTypes = [.address]
-        completer.queryFragment = query
+        let bind = { [unowned self] in
+            self.completer.delegate = self
+            self.completer.resultTypes = [.address]
+            self.completer.queryFragment = query
+        }
+        if Thread.isMainThread {
+            bind()
+        } else {
+            DispatchQueue.main.sync(execute: bind)
+        }
     }
 
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
