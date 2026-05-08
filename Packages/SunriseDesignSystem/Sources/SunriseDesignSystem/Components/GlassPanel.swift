@@ -11,6 +11,7 @@ public final class GlassPanel: UIView {
         case clear    // see-through capsule — small chips & pills
 
         @available(iOS 26.0, *)
+        @MainActor
         fileprivate var glass: UIGlassEffect {
             switch self {
             case .regular:

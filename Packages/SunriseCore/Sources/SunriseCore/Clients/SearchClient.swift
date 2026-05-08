@@ -1,4 +1,5 @@
 import Foundation
+import CoreLocation
 import Dependencies
 import DependenciesMacros
 
@@ -83,7 +84,7 @@ private final class MapKitSearchRunner: NSObject, @unchecked Sendable {
     func autocomplete(query: String) -> AsyncStream<[CitySearchResult]> {
         let id = UUID()
         return AsyncStream { continuation in
-            let completer = Completer(query: query) { [weak self] results in
+            let completer = Completer(query: query) { results in
                 continuation.yield(results)
             }
             self.lock.lock()
@@ -109,14 +110,21 @@ private final class MapKitSearchRunner: NSObject, @unchecked Sendable {
         guard let item = response.mapItems.first else {
             throw SearchClientError.noResult
         }
-        let coord = item.placemark.coordinate
+        let location = item.location
+        let coord = location.coordinate
+        // MKMapItem.placemark was deprecated in iOS 26. The replacement
+        // (`address` / `addressRepresentations`) only exposes preformatted
+        // strings, not the structured `administrativeArea` / `country` /
+        // `timeZone` we need. Reverse-geocode the location instead, which is
+        // how Apple's own samples now populate CLPlacemark fields.
+        let placemark = (try? await CLGeocoder().reverseGeocodeLocation(location))?.first
         return City(
             name: item.name ?? result.title,
-            region: item.placemark.administrativeArea,
-            country: item.placemark.country,
+            region: placemark?.administrativeArea,
+            country: placemark?.country,
             latitude: coord.latitude,
             longitude: coord.longitude,
-            timeZoneIdentifier: item.placemark.timeZone?.identifier
+            timeZoneIdentifier: placemark?.timeZone?.identifier
         )
     }
 }

@@ -128,8 +128,13 @@ final class RootTabBarController: UITabBarController, UITabBarControllerDelegate
         store.send(.dismissCityList)
     }
 
-    func tabBarController(_ tabBarController: UITabBarController, didSelect tab: UITab) {
-        guard let rootTab = RootTab(rawValue: tab.identifier) else { return }
+    // The optional protocol method's parameter type is `UIViewController`, not
+    // `UITab` — declaring it with `UITab` "nearly matches" but Swift treats it
+    // as a separate overload that UIKit never dispatches to. Use the legacy
+    // signature and resolve the active `UITab` via `selectedTab`.
+    func tabBarController(_ tabBarController: UITabBarController, didSelect viewController: UIViewController) {
+        guard let tab = tabBarController.selectedTab,
+              let rootTab = RootTab(rawValue: tab.identifier) else { return }
         store.send(.tabSelected(rootTab))
     }
 }

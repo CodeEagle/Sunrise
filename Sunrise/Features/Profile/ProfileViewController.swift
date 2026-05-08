@@ -47,7 +47,7 @@ final class ProfileViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
-        tableView.tableHeaderView = makeHeader(width: UIScreen.main.bounds.width)
+        tableView.tableHeaderView = makeHeader(width: view.bounds.width)
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),

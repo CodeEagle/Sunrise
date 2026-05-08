@@ -106,7 +106,7 @@ private extension WeatherCondition {
             self = .rain
         case .thunderstorms, .strongStorms, .isolatedThunderstorms, .scatteredThunderstorms, .hurricane:
             self = .thunderstorm
-        case .snow, .heavySnow, .flurries, .sleet, .wintryMix, .blizzard, .blowingSnow, .freezingDrizzle, .hail, .sunFlurries:
+        case .snow, .heavySnow, .flurries, .sleet, .wintryMix, .blizzard, .blowingSnow, .freezingDrizzle, .hail, .sunFlurries, .frigid:
             self = .snow
         case .breezy, .windy, .blowingDust, .tropicalStorm:
             self = .windy
