@@ -21,10 +21,14 @@ extension NotificationsClient: DependencyKey {
     public static var liveValue: NotificationsClient {
         #if canImport(UserNotifications)
         let identifier = "sunrise.daily-briefing"
-        let center = UNUserNotificationCenter.current()
+        // We can't capture UNUserNotificationCenter in `@Sendable` closures
+        // (Swift 6 sees the singleton as non-Sendable), so each closure calls
+        // `.current()` itself. It's the same singleton on every call, so this
+        // is purely a compile-time fix — no runtime behaviour change.
         return NotificationsClient(
             requestAuthorization: {
-                try await center.requestAuthorization(options: [.alert, .sound, .badge])
+                try await UNUserNotificationCenter.current()
+                    .requestAuthorization(options: [.alert, .sound, .badge])
             },
             scheduleDailyBriefing: { hour, minute, title, body in
                 let content = UNMutableNotificationContent()
@@ -38,11 +42,13 @@ extension NotificationsClient: DependencyKey {
                 let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
 
                 let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+                let center = UNUserNotificationCenter.current()
                 center.removePendingNotificationRequests(withIdentifiers: [identifier])
                 try await center.add(request)
             },
             cancelDailyBriefing: {
-                center.removePendingNotificationRequests(withIdentifiers: [identifier])
+                UNUserNotificationCenter.current()
+                    .removePendingNotificationRequests(withIdentifiers: [identifier])
             }
         )
         #else
