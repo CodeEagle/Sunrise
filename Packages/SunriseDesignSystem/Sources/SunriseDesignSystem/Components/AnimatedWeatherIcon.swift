@@ -40,19 +40,19 @@ public struct AnimatedWeatherIcon: View {
 
     // MARK: - Base
 
-    @ViewBuilder
     private func base(size: CGSize) -> some View {
-        let baseImage: Image
-        if let watercolor = WeatherIconArt.image(forConditionRawValue: conditionRawValue) {
-            baseImage = Image(uiImage: watercolor)
-        } else {
-            baseImage = Image(systemName: ConditionGlyph.symbolName(forConditionRawValue: conditionRawValue))
-        }
         baseImage
             .resizable()
             .scaledToFit()
             .modifier(BaseMotionModifier(condition: conditionRawValue, phase: phase))
             .frame(width: size.width, height: size.height)
+    }
+
+    private var baseImage: Image {
+        if let watercolor = WeatherIconArt.image(forConditionRawValue: conditionRawValue) {
+            return Image(uiImage: watercolor)
+        }
+        return Image(systemName: ConditionGlyph.symbolName(forConditionRawValue: conditionRawValue))
     }
 
     // MARK: - Overlays
