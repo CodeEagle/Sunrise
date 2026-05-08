@@ -105,7 +105,7 @@ final class TodayPageViewController: UIViewController {
 
         var retryConfig = UIButton.Configuration.tinted()
         retryConfig.cornerStyle = .capsule
-        retryConfig.title = String(localized: "today.retry", defaultValue: "Retry")
+        retryConfig.title = "today.retry".l10n("Retry")
         retryConfig.image = UIImage(systemName: "arrow.clockwise")
         retryConfig.imagePadding = 6
         retryConfig.baseBackgroundColor = Palette.canvas
@@ -165,22 +165,22 @@ final class TodayPageViewController: UIViewController {
             temperatureLabel.text = formatter.temperature(snapshot.current.temperature) + "°"
 
             apparentLabel.text = String.localizedStringWithFormat(
-                String(localized: "today.feels_like", defaultValue: "Feels like %@°"),
+                "today.feels_like".l10n("Feels like %@°"),
                 formatter.temperature(snapshot.current.apparentTemperature)
             )
 
             conditionLabel.text = localizedCondition(snapshot.current.condition)
 
             let wind = String.localizedStringWithFormat(
-                String(localized: "today.wind_inline", defaultValue: "Wind %@"),
+                "today.wind_inline".l10n("Wind %@"),
                 formatter.windSpeed(snapshot.current.wind)
             )
             let humidity = String.localizedStringWithFormat(
-                String(localized: "today.humidity_inline", defaultValue: "Humidity %@"),
+                "today.humidity_inline".l10n("Humidity %@"),
                 formatter.percent(snapshot.current.humidity)
             )
             let uv = String.localizedStringWithFormat(
-                String(localized: "today.uv_inline", defaultValue: "UV %d"),
+                "today.uv_inline".l10n("UV %d"),
                 snapshot.current.uvIndex
             )
             detailRowLabel.text = [wind, humidity, uv].joined(separator: "  ·  ")
@@ -190,7 +190,7 @@ final class TodayPageViewController: UIViewController {
             updatedFormatter.dateStyle = .none
             updatedFormatter.timeStyle = .short
             updatedLabel.text = String.localizedStringWithFormat(
-                String(localized: "today.updated_at", defaultValue: "Updated %@"),
+                "today.updated_at".l10n("Updated %@"),
                 updatedFormatter.string(from: snapshot.updatedAt)
             )
 
@@ -199,14 +199,14 @@ final class TodayPageViewController: UIViewController {
         } else if store.isLoading {
             temperatureLabel.text = "–"
             apparentLabel.text = nil
-            conditionLabel.text = String(localized: "today.loading", defaultValue: "Fetching the latest forecast…")
+            conditionLabel.text = "today.loading".l10n("Fetching the latest forecast…")
             detailRowLabel.text = nil
             updatedLabel.text = nil
             bubble.isHidden = true
         } else if let error = store.error {
             temperatureLabel.text = "–"
             apparentLabel.text = nil
-            conditionLabel.text = String(localized: "today.error", defaultValue: "Couldn't fetch weather")
+            conditionLabel.text = "today.error".l10n("Couldn't fetch weather")
             detailRowLabel.text = error
             updatedLabel.text = nil
             bubble.isHidden = true
@@ -225,8 +225,7 @@ final class TodayPageViewController: UIViewController {
     /// label flips with the active language.
     private func displayName(for city: City) -> String {
         if city.name == "Current Location" {
-            return String(localized: "today.current_location",
-                          defaultValue: "Current Location")
+            return "today.current_location".l10n("Current Location")
         }
         return city.name
     }
@@ -246,25 +245,25 @@ final class TodayPageViewController: UIViewController {
 
     private func localizedCondition(_ condition: WeatherCondition) -> String {
         switch condition {
-        case .clear: return String(localized: "condition.clear", defaultValue: "Clear")
-        case .cloudy: return String(localized: "condition.cloudy", defaultValue: "Cloudy")
-        case .rain: return String(localized: "condition.rain", defaultValue: "Rain")
-        case .thunderstorm: return String(localized: "condition.thunderstorm", defaultValue: "Thunderstorms")
-        case .snow: return String(localized: "condition.snow", defaultValue: "Snow")
-        case .windy: return String(localized: "condition.windy", defaultValue: "Windy")
-        case .fog: return String(localized: "condition.fog", defaultValue: "Foggy")
+        case .clear: return "condition.clear".l10n("Clear")
+        case .cloudy: return "condition.cloudy".l10n("Cloudy")
+        case .rain: return "condition.rain".l10n("Rain")
+        case .thunderstorm: return "condition.thunderstorm".l10n("Thunderstorms")
+        case .snow: return "condition.snow".l10n("Snow")
+        case .windy: return "condition.windy".l10n("Windy")
+        case .fog: return "condition.fog".l10n("Foggy")
         }
     }
 
     private func encouragement(for condition: WeatherCondition) -> String {
         switch condition {
-        case .clear: return String(localized: "bubble.clear", defaultValue: "Beautiful day — let's go outside!")
-        case .cloudy: return String(localized: "bubble.cloudy", defaultValue: "Clouds drifting by — what shape will they make next?")
-        case .rain: return String(localized: "bubble.rain", defaultValue: "Don't forget your umbrella!")
-        case .thunderstorm: return String(localized: "bubble.thunderstorm", defaultValue: "Storms incoming — stay safe indoors.")
-        case .snow: return String(localized: "bubble.snow", defaultValue: "Snowflakes! Let's build a snowman.")
-        case .windy: return String(localized: "bubble.windy", defaultValue: "Hold onto your hat — it's blustery out there!")
-        case .fog: return String(localized: "bubble.fog", defaultValue: "Misty morning — drive carefully.")
+        case .clear: return "bubble.clear".l10n("Beautiful day — let's go outside!")
+        case .cloudy: return "bubble.cloudy".l10n("Clouds drifting by — what shape will they make next?")
+        case .rain: return "bubble.rain".l10n("Don't forget your umbrella!")
+        case .thunderstorm: return "bubble.thunderstorm".l10n("Storms incoming — stay safe indoors.")
+        case .snow: return "bubble.snow".l10n("Snowflakes! Let's build a snowman.")
+        case .windy: return "bubble.windy".l10n("Hold onto your hat — it's blustery out there!")
+        case .fog: return "bubble.fog".l10n("Misty morning — drive carefully.")
         }
     }
 }

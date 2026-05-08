@@ -32,7 +32,7 @@ final class ForecastViewController: UIViewController {
 
         configureTitleView()
 
-        emptyLabel.text = String(localized: "forecast.empty", defaultValue: "Pick a city on the Weather tab to see the 15-day outlook.")
+        emptyLabel.text = "forecast.empty".l10n("Pick a city on the Weather tab to see the 15-day outlook.")
         emptyLabel.font = Typography.body()
         emptyLabel.textColor = Palette.inkSecondary
         emptyLabel.textAlignment = .center
@@ -48,9 +48,8 @@ final class ForecastViewController: UIViewController {
 
         observeState { [weak self] in self?.render() }
         onLanguageChange { [weak self] in
-            self?.titleLabel.text = String(localized: "forecast.nav_title", defaultValue: "15-day trend")
-            self?.emptyLabel.text = String(localized: "forecast.empty",
-                defaultValue: "Pick a city on the Weather tab to see the 15-day outlook.")
+            self?.titleLabel.text = "forecast.nav_title".l10n("15-day trend")
+            self?.emptyLabel.text = "forecast.empty".l10n("Pick a city on the Weather tab to see the 15-day outlook.")
             self?.render()
         }
     }
@@ -65,7 +64,7 @@ final class ForecastViewController: UIViewController {
     }
 
     private func configureTitleView() {
-        titleLabel.text = String(localized: "forecast.nav_title", defaultValue: "15-day trend")
+        titleLabel.text = "forecast.nav_title".l10n("15-day trend")
         titleLabel.font = Typography.title(17)
         titleLabel.textColor = Palette.inkPrimary
         titleLabel.textAlignment = .center
@@ -118,7 +117,7 @@ final class ForecastViewController: UIViewController {
     private func displayName(for city: City?) -> String? {
         guard let city else { return nil }
         if city.name == "Current Location" {
-            return String(localized: "today.current_location", defaultValue: "Current Location")
+            return "today.current_location".l10n("Current Location")
         }
         return city.name
     }

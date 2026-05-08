@@ -19,7 +19,7 @@ final class CityListViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = String(localized: "cities.title", defaultValue: "Cities")
+        title = "cities.title".l10n("Cities")
         view.backgroundColor = Palette.canvas
 
         // Bar buttons need their tint pinned to Palette.inkPrimary — without
@@ -49,7 +49,7 @@ final class CityListViewController: UIViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "CityCell")
         view.addSubview(tableView)
 
-        emptyLabel.text = String(localized: "cities.empty", defaultValue: "Tap + to add your first city")
+        emptyLabel.text = "cities.empty".l10n("Tap + to add your first city")
         emptyLabel.font = Typography.body()
         emptyLabel.textColor = Palette.inkSecondary
         emptyLabel.textAlignment = .center
@@ -71,7 +71,7 @@ final class CityListViewController: UIViewController {
 
         observeState { [weak self] in self?.render() }
         onLanguageChange { [weak self] in
-            self?.title = String(localized: "cities.title", defaultValue: "Cities")
+            self?.title = "cities.title".l10n("Cities")
             self?.tableView.reloadData()
         }
         store.send(.onAppear)

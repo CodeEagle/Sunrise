@@ -34,6 +34,7 @@ final class CalendarViewController: UIViewController {
     init(store: StoreOf<CalendarReducer>) {
         self.store = store
         super.init(nibName: nil, bundle: nil)
+        hidesBottomBarWhenPushed = true
     }
 
     @available(*, unavailable)
@@ -42,12 +43,12 @@ final class CalendarViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = Palette.canvas
-        navigationItem.title = String(localized: "calendar.title", defaultValue: "Weather History")
+        navigationItem.title = "calendar.title".l10n("Weather History")
 
         configureLayout()
         observeState { [weak self] in self?.render() }
         onLanguageChange { [weak self] in
-            self?.navigationItem.title = String(localized: "calendar.title", defaultValue: "Weather History")
+            self?.navigationItem.title = "calendar.title".l10n("Weather History")
             self?.tableView.reloadData()
             self?.render()
         }
@@ -113,8 +114,7 @@ final class CalendarViewController: UIViewController {
 
         if store.dailies.isEmpty, !store.isLoading {
             emptyLabel.text = store.error
-                ?? String(localized: "calendar.empty",
-                          defaultValue: "No history yet. WeatherKit serves the last 14 days only.")
+                ?? "calendar.empty".l10n("No history yet. WeatherKit serves the last 14 days only.")
             emptyLabel.isHidden = false
         } else {
             emptyLabel.isHidden = true
@@ -321,11 +321,11 @@ private final class DetailCard: UIView {
         lowLabel.text = "\(formatter.temperature(daily.lowTemperature))°"
         conditionLabel.text = localizedCondition(daily.condition)
         let precip = String.localizedStringWithFormat(
-            String(localized: "calendar.precipitation", defaultValue: "Precipitation %@"),
+            "calendar.precipitation".l10n("Precipitation %@"),
             formatter.percent(daily.precipitationChance)
         )
         let wind = String.localizedStringWithFormat(
-            String(localized: "today.wind_inline", defaultValue: "Wind %@"),
+            "today.wind_inline".l10n("Wind %@"),
             formatter.windSpeed(daily.wind)
         )
         detailRowLabel.text = [precip, wind].joined(separator: "  ·  ")
@@ -340,13 +340,13 @@ private final class DetailCard: UIView {
 
     private func localizedCondition(_ condition: WeatherCondition) -> String {
         switch condition {
-        case .clear: return String(localized: "condition.clear", defaultValue: "Clear")
-        case .cloudy: return String(localized: "condition.cloudy", defaultValue: "Cloudy")
-        case .rain: return String(localized: "condition.rain", defaultValue: "Rain")
-        case .thunderstorm: return String(localized: "condition.thunderstorm", defaultValue: "Thunderstorms")
-        case .snow: return String(localized: "condition.snow", defaultValue: "Snow")
-        case .windy: return String(localized: "condition.windy", defaultValue: "Windy")
-        case .fog: return String(localized: "condition.fog", defaultValue: "Foggy")
+        case .clear: return "condition.clear".l10n("Clear")
+        case .cloudy: return "condition.cloudy".l10n("Cloudy")
+        case .rain: return "condition.rain".l10n("Rain")
+        case .thunderstorm: return "condition.thunderstorm".l10n("Thunderstorms")
+        case .snow: return "condition.snow".l10n("Snow")
+        case .windy: return "condition.windy".l10n("Windy")
+        case .fog: return "condition.fog".l10n("Foggy")
         }
     }
 }

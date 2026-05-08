@@ -67,25 +67,25 @@ final class RootTabBarController: UITabBarController, UITabBarControllerDelegate
         let profileNav = UINavigationController(rootViewController: profile)
 
         let todayTab = UITab(
-            title: String(localized: "tab.today", defaultValue: "Weather"),
+            title: "tab.today".l10n("Weather"),
             image: TabIcon.image(named: "tab_weather", fallbackSF: "cloud.sun"),
             identifier: RootTab.today.rawValue,
             viewControllerProvider: { _ in todayNav }
         )
         let forecastTab = UITab(
-            title: String(localized: "tab.forecast", defaultValue: "Forecast"),
+            title: "tab.forecast".l10n("Forecast"),
             image: TabIcon.image(named: "tab_forecast", fallbackSF: "calendar"),
             identifier: RootTab.forecast.rawValue,
             viewControllerProvider: { _ in forecastNav }
         )
         let characterTab = UITab(
-            title: String(localized: "tab.character", defaultValue: "Sunny"),
+            title: "tab.character".l10n("Sunny"),
             image: TabIcon.image(named: "tab_character", fallbackSF: "face.smiling"),
             identifier: RootTab.character.rawValue,
             viewControllerProvider: { _ in characterNav }
         )
         let profileTab = UITab(
-            title: String(localized: "tab.profile", defaultValue: "Me"),
+            title: "tab.profile".l10n("Me"),
             image: TabIcon.image(named: "tab_profile", fallbackSF: "person"),
             identifier: RootTab.profile.rawValue,
             viewControllerProvider: { _ in profileNav }

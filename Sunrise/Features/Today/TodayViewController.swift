@@ -132,7 +132,7 @@ final class TodayViewController: UIViewController {
     }
 
     private func configureEmptyState() {
-        emptyLabel.text = String(localized: "today.locating", defaultValue: "Locating…")
+        emptyLabel.text = "today.locating".l10n("Locating…")
         emptyLabel.font = Typography.body()
         emptyLabel.textColor = Palette.inkSecondary
         emptyLabel.textAlignment = .center
@@ -159,9 +159,8 @@ final class TodayViewController: UIViewController {
 
         guard !ids.isEmpty else {
             emptyLabel.text = store.isResolvingLocation
-                ? String(localized: "today.locating", defaultValue: "Locating…")
-                : String(localized: "today.empty",
-                         defaultValue: "Add a city to see the weather.")
+                ? "today.locating".l10n("Locating…")
+                : "today.empty".l10n("Add a city to see the weather.")
             emptyLabel.isHidden = false
             if hasMountedInitialPage {
                 pageVC.setViewControllers([], direction: .forward, animated: false)

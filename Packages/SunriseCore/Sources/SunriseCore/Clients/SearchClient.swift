@@ -112,20 +112,36 @@ private final class MapKitSearchRunner: NSObject, @unchecked Sendable {
         }
         let location = item.location
         let coord = location.coordinate
-        // MKMapItem.placemark was deprecated in iOS 26. The replacement
-        // (`address` / `addressRepresentations`) only exposes preformatted
-        // strings, not the structured `administrativeArea` / `country` /
-        // `timeZone` we need. Reverse-geocode the location instead, which is
-        // how Apple's own samples now populate CLPlacemark fields.
-        let placemark = (try? await CLGeocoder().reverseGeocodeLocation(location))?.first
+        // Reverse-geocode for region / country / timeZone hints. iOS 26
+        // deprecates `CLGeocoder.reverseGeocodeLocation` in favour of
+        // MKReverseGeocodingRequest; that path doesn't expose
+        // administrativeArea / country on MKAddress (only `fullAddress` /
+        // `shortAddress`). Until MapKit grows the structured surface we
+        // ship `nil` for those — City already treats them as optional.
+        let timeZone = await timeZone(for: location)
         return City(
             name: item.name ?? result.title,
-            region: placemark?.administrativeArea,
-            country: placemark?.country,
+            region: nil,
+            country: nil,
             latitude: coord.latitude,
             longitude: coord.longitude,
-            timeZoneIdentifier: placemark?.timeZone?.identifier
+            timeZoneIdentifier: timeZone?.identifier
         )
+    }
+
+    /// Resolve the time zone at the requested location via the iOS 26
+    /// MKReverseGeocodingRequest path. Returns nil on failure (callers
+    /// fall back to the device-local time zone).
+    private func timeZone(for location: CLLocation) async -> TimeZone? {
+        guard let request = MKReverseGeocodingRequest(location: location) else {
+            return nil
+        }
+        do {
+            let mapItems = try await request.mapItems
+            return mapItems.first?.timeZone
+        } catch {
+            return nil
+        }
     }
 }
 

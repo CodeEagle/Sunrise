@@ -27,16 +27,16 @@ struct ForecastChartView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 fiveDayStrip
-                section(title: String(localized: "forecast.temp_trend", defaultValue: "Temperature trend")) {
+                section(title: "forecast.temp_trend".l10n("Temperature trend")) {
                     temperatureChart
                 }
-                section(title: String(localized: "forecast.precip", defaultValue: "Precipitation chance")) {
+                section(title: "forecast.precip".l10n("Precipitation chance")) {
                     VStack(alignment: .leading, spacing: 8) {
                         precipitationChart
                         windRow
                     }
                 }
-                section(title: String(localized: "forecast.daily", defaultValue: "Daily details")) {
+                section(title: "forecast.daily".l10n("Daily details")) {
                     dailyList
                 }
             }
@@ -74,8 +74,8 @@ struct ForecastChartView: View {
 
     private func dayLabel(for day: DailyForecast, index: Int) -> String {
         switch index {
-        case 0: return String(localized: "forecast.day.today", defaultValue: "Today")
-        case 1: return String(localized: "forecast.day.tomorrow", defaultValue: "Tomorrow")
+        case 0: return "forecast.day.today".l10n("Today")
+        case 1: return "forecast.day.tomorrow".l10n("Tomorrow")
         default: return dayFormatter.string(from: day.date)
         }
     }
@@ -202,21 +202,21 @@ struct ForecastChartView: View {
     private func windDirectionLabel(for wind: Wind) -> String {
         let bucket = Int(((wind.directionDegrees + 22.5).truncatingRemainder(dividingBy: 360)) / 45)
         switch bucket {
-        case 0: return String(localized: "wind.dir.n", defaultValue: "N")
-        case 1: return String(localized: "wind.dir.ne", defaultValue: "NE")
-        case 2: return String(localized: "wind.dir.e", defaultValue: "E")
-        case 3: return String(localized: "wind.dir.se", defaultValue: "SE")
-        case 4: return String(localized: "wind.dir.s", defaultValue: "S")
-        case 5: return String(localized: "wind.dir.sw", defaultValue: "SW")
-        case 6: return String(localized: "wind.dir.w", defaultValue: "W")
-        default: return String(localized: "wind.dir.nw", defaultValue: "NW")
+        case 0: return "wind.dir.n".l10n("N")
+        case 1: return "wind.dir.ne".l10n("NE")
+        case 2: return "wind.dir.e".l10n("E")
+        case 3: return "wind.dir.se".l10n("SE")
+        case 4: return "wind.dir.s".l10n("S")
+        case 5: return "wind.dir.sw".l10n("SW")
+        case 6: return "wind.dir.w".l10n("W")
+        default: return "wind.dir.nw".l10n("NW")
         }
     }
 
     private func windLevelLabel(for wind: Wind) -> String {
         let level = max(0, min(12, Int((wind.speedKPH / 6).rounded())))
         return String.localizedStringWithFormat(
-            String(localized: "wind.level", defaultValue: "Lv %d"),
+            "wind.level".l10n("Lv %d"),
             level
         )
     }

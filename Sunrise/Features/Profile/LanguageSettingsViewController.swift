@@ -16,6 +16,7 @@ final class LanguageSettingsViewController: UITableViewController {
     init(store: StoreOf<ProfileReducer>) {
         self.store = store
         super.init(style: .insetGrouped)
+        hidesBottomBarWhenPushed = true
     }
 
     @available(*, unavailable)
@@ -23,17 +24,17 @@ final class LanguageSettingsViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.title = String(localized: "settings.row.language", defaultValue: "Language")
+        navigationItem.title = "settings.row.language".l10n("Language")
         view.backgroundColor = Palette.canvas
         tableView.backgroundColor = .clear
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         observeState { [weak self] in
             self?.tableView.reloadData()
-            self?.navigationItem.title = String(localized: "settings.row.language", defaultValue: "Language")
+            self?.navigationItem.title = "settings.row.language".l10n("Language")
         }
         onLanguageChange { [weak self] in
             self?.tableView.reloadData()
-            self?.navigationItem.title = String(localized: "settings.row.language", defaultValue: "Language")
+            self?.navigationItem.title = "settings.row.language".l10n("Language")
         }
     }
 
@@ -89,7 +90,7 @@ final class LanguageSettingsViewController: UITableViewController {
 
     private func label(for language: AppLanguage) -> String {
         switch language {
-        case .system: return String(localized: "settings.language.system", defaultValue: "System")
+        case .system: return "settings.language.system".l10n("System")
         case .english: return "English"
         case .simplifiedChinese: return "简体中文"
         case .traditionalChinese: return "繁體中文"

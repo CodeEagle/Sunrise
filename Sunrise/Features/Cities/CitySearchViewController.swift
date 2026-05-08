@@ -21,7 +21,7 @@ final class CitySearchViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = String(localized: "search.title", defaultValue: "Add City")
+        title = "search.title".l10n("Add City")
         view.backgroundColor = Palette.canvas
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .cancel,
@@ -29,7 +29,7 @@ final class CitySearchViewController: UIViewController {
             action: #selector(handleCancel)
         )
 
-        searchBar.placeholder = String(localized: "search.placeholder", defaultValue: "Search city")
+        searchBar.placeholder = "search.placeholder".l10n("Search city")
         searchBar.delegate = self
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(searchBar)

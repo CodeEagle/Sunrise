@@ -66,14 +66,19 @@ public struct CalendarReducer: Sendable {
                 state.error = nil
                 let calendar = Calendar(identifier: .gregorian)
                 let now = date.now
-                guard let start = calendar.date(byAdding: .day, value: -Self.lookbackDays, to: now) else {
+                // WeatherKit's `.daily(startDate:endDate:)` rejects mixed
+                // past+present ranges (it can't fan out current + historical
+                // in one query). End the window at yesterday so every day
+                // in the range is purely historical.
+                guard let yesterday = calendar.date(byAdding: .day, value: -1, to: now),
+                      let start = calendar.date(byAdding: .day, value: -Self.lookbackDays, to: now) else {
                     state.isLoading = false
                     return .none
                 }
                 let coordinate = city.coordinate
                 return .run { send in
                     do {
-                        let dailies = try await weatherClient.fetchHistoricalDaily(coordinate, start, now)
+                        let dailies = try await weatherClient.fetchHistoricalDaily(coordinate, start, yesterday)
                         await send(.historicalResponse(.success(dailies)))
                     } catch {
                         await send(.historicalResponse(.failure(FetchError(error))))

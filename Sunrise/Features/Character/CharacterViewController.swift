@@ -29,13 +29,13 @@ final class CharacterViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.title = String(localized: "character.nav_title", defaultValue: "Sunny")
+        navigationItem.title = "character.nav_title".l10n("Sunny")
         view.backgroundColor = Palette.canvas
 
         configureLayout()
         observeState { [weak self] in self?.render() }
         onLanguageChange { [weak self] in
-            self?.navigationItem.title = String(localized: "character.nav_title", defaultValue: "Sunny")
+            self?.navigationItem.title = "character.nav_title".l10n("Sunny")
             self?.render()
         }
     }
@@ -129,25 +129,25 @@ final class CharacterViewController: UIViewController {
 
     private func localizedCondition(_ condition: WeatherCondition) -> String {
         switch condition {
-        case .clear: return String(localized: "condition.clear", defaultValue: "Clear")
-        case .cloudy: return String(localized: "condition.cloudy", defaultValue: "Cloudy")
-        case .rain: return String(localized: "condition.rain", defaultValue: "Rain")
-        case .thunderstorm: return String(localized: "condition.thunderstorm", defaultValue: "Thunderstorms")
-        case .snow: return String(localized: "condition.snow", defaultValue: "Snow")
-        case .windy: return String(localized: "condition.windy", defaultValue: "Windy")
-        case .fog: return String(localized: "condition.fog", defaultValue: "Foggy")
+        case .clear: return "condition.clear".l10n("Clear")
+        case .cloudy: return "condition.cloudy".l10n("Cloudy")
+        case .rain: return "condition.rain".l10n("Rain")
+        case .thunderstorm: return "condition.thunderstorm".l10n("Thunderstorms")
+        case .snow: return "condition.snow".l10n("Snow")
+        case .windy: return "condition.windy".l10n("Windy")
+        case .fog: return "condition.fog".l10n("Foggy")
         }
     }
 
     private func encouragement(for condition: WeatherCondition) -> String {
         switch condition {
-        case .clear: return String(localized: "bubble.clear", defaultValue: "Beautiful day — let's go outside!")
-        case .cloudy: return String(localized: "bubble.cloudy", defaultValue: "Clouds drifting by — what shape will they make next?")
-        case .rain: return String(localized: "bubble.rain", defaultValue: "Don't forget your umbrella!")
-        case .thunderstorm: return String(localized: "bubble.thunderstorm", defaultValue: "Storms incoming — stay safe indoors.")
-        case .snow: return String(localized: "bubble.snow", defaultValue: "Snowflakes! Let's build a snowman.")
-        case .windy: return String(localized: "bubble.windy", defaultValue: "Hold onto your hat — it's blustery out there!")
-        case .fog: return String(localized: "bubble.fog", defaultValue: "Misty morning — drive carefully.")
+        case .clear: return "bubble.clear".l10n("Beautiful day — let's go outside!")
+        case .cloudy: return "bubble.cloudy".l10n("Clouds drifting by — what shape will they make next?")
+        case .rain: return "bubble.rain".l10n("Don't forget your umbrella!")
+        case .thunderstorm: return "bubble.thunderstorm".l10n("Storms incoming — stay safe indoors.")
+        case .snow: return "bubble.snow".l10n("Snowflakes! Let's build a snowman.")
+        case .windy: return "bubble.windy".l10n("Hold onto your hat — it's blustery out there!")
+        case .fog: return "bubble.fog".l10n("Misty morning — drive carefully.")
         }
     }
 }

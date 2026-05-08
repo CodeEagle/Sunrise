@@ -40,9 +40,9 @@ final class ProfileViewController: UIViewController {
 
         var title: String {
             switch self {
-            case .appearance: return String(localized: "settings.section.appearance", defaultValue: "Appearance")
-            case .data: return String(localized: "settings.section.data", defaultValue: "Data")
-            case .about: return String(localized: "settings.section.about", defaultValue: "About")
+            case .appearance: return "settings.section.appearance".l10n("Appearance")
+            case .data: return "settings.section.data".l10n("Data")
+            case .about: return "settings.section.about".l10n("About")
             }
         }
     }
@@ -64,7 +64,7 @@ final class ProfileViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.title = String(localized: "settings.title", defaultValue: "Settings")
+        navigationItem.title = "settings.title".l10n("Settings")
         view.backgroundColor = Palette.canvas
 
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -82,7 +82,7 @@ final class ProfileViewController: UIViewController {
 
         observeState { [weak self] in self?.tableView.reloadData() }
         onLanguageChange { [weak self] in
-            self?.navigationItem.title = String(localized: "settings.title", defaultValue: "Settings")
+            self?.navigationItem.title = "settings.title".l10n("Settings")
             self?.tableView.reloadData()
         }
         store.send(.onAppear)
@@ -116,22 +116,22 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
 
         switch row {
         case .theme:
-            content.text = String(localized: "settings.row.theme", defaultValue: "Theme")
+            content.text = "settings.row.theme".l10n("Theme")
             content.secondaryText = themeSummary(store.settings.theme)
         case .language:
-            content.text = String(localized: "settings.row.language", defaultValue: "Language")
+            content.text = "settings.row.language".l10n("Language")
             content.secondaryText = languageSummary(store.settings.language)
         case .cities:
-            content.text = String(localized: "profile.row.cities", defaultValue: "City management")
+            content.text = "profile.row.cities".l10n("City management")
             content.secondaryText = String.localizedStringWithFormat(
-                String(localized: "profile.row.cities_value", defaultValue: "%d cities"),
+                "profile.row.cities_value".l10n("%d cities"),
                 store.managedCities.count
             )
         case .units:
-            content.text = String(localized: "profile.row.units", defaultValue: "Unit settings")
+            content.text = "profile.row.units".l10n("Unit settings")
             content.secondaryText = unitsSummary()
         case .notifications:
-            content.text = String(localized: "profile.row.notifications", defaultValue: "Notifications")
+            content.text = "profile.row.notifications".l10n("Notifications")
             content.secondaryText = nil
             cell.accessoryType = .none
             let toggle = UISwitch()
@@ -139,10 +139,10 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
             toggle.addTarget(self, action: #selector(handleNotifToggle(_:)), for: .valueChanged)
             cell.accessoryView = toggle
         case .about:
-            content.text = String(localized: "profile.row.about", defaultValue: "About Sunny weather")
+            content.text = "profile.row.about".l10n("About Sunny weather")
             let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.0"
             content.secondaryText = String.localizedStringWithFormat(
-                String(localized: "profile.version_value", defaultValue: "Version %@"),
+                "profile.version_value".l10n("Version %@"),
                 version
             )
         }
@@ -171,8 +171,8 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
     }
 
     @objc private func handleNotifToggle(_ sender: UISwitch) {
-        let title = String(localized: "notif.title", defaultValue: "Good morning")
-        let body = String(localized: "notif.body", defaultValue: "Sunny is checking the weather for you. Have a great day!")
+        let title = "notif.title".l10n("Good morning")
+        let body = "notif.body".l10n("Sunny is checking the weather for you. Have a great day!")
         store.send(.notificationsToggled(sender.isOn, dailyTitle: title, dailyBody: body))
     }
 
@@ -189,15 +189,15 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
 
     private func themeSummary(_ pref: ThemePreference) -> String {
         switch pref {
-        case .system: return String(localized: "settings.theme.system", defaultValue: "System")
-        case .light: return String(localized: "settings.theme.light", defaultValue: "Light")
-        case .dark: return String(localized: "settings.theme.dark", defaultValue: "Dark")
+        case .system: return "settings.theme.system".l10n("System")
+        case .light: return "settings.theme.light".l10n("Light")
+        case .dark: return "settings.theme.dark".l10n("Dark")
         }
     }
 
     private func languageSummary(_ language: AppLanguage) -> String {
         switch language {
-        case .system: return String(localized: "settings.language.system", defaultValue: "System")
+        case .system: return "settings.language.system".l10n("System")
         case .english: return "English"
         case .simplifiedChinese: return "简体中文"
         case .traditionalChinese: return "繁體中文"
@@ -236,7 +236,7 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
 
     private func presentUnitsPicker() {
         let alert = UIAlertController(
-            title: String(localized: "profile.row.units", defaultValue: "Unit settings"),
+            title: "profile.row.units".l10n("Unit settings"),
             message: nil,
             preferredStyle: .actionSheet
         )
@@ -258,7 +258,7 @@ extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
             })
         }
         alert.addAction(UIAlertAction(
-            title: String(localized: "common.cancel", defaultValue: "Cancel"),
+            title: "common.cancel".l10n("Cancel"),
             style: .cancel
         ))
         present(alert, animated: true)

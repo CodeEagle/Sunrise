@@ -14,6 +14,7 @@ final class ThemeSettingsViewController: UITableViewController {
     init(store: StoreOf<ProfileReducer>) {
         self.store = store
         super.init(style: .insetGrouped)
+        hidesBottomBarWhenPushed = true
     }
 
     @available(*, unavailable)
@@ -21,13 +22,13 @@ final class ThemeSettingsViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.title = String(localized: "settings.row.theme", defaultValue: "Theme")
+        navigationItem.title = "settings.row.theme".l10n("Theme")
         view.backgroundColor = Palette.canvas
         tableView.backgroundColor = .clear
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         observeState { [weak self] in self?.tableView.reloadData() }
         onLanguageChange { [weak self] in
-            self?.navigationItem.title = String(localized: "settings.row.theme", defaultValue: "Theme")
+            self?.navigationItem.title = "settings.row.theme".l10n("Theme")
             self?.tableView.reloadData()
         }
     }
@@ -55,9 +56,9 @@ final class ThemeSettingsViewController: UITableViewController {
 
     private func label(for preference: ThemePreference) -> String {
         switch preference {
-        case .system: return String(localized: "settings.theme.system", defaultValue: "System")
-        case .light: return String(localized: "settings.theme.light", defaultValue: "Light")
-        case .dark: return String(localized: "settings.theme.dark", defaultValue: "Dark")
+        case .system: return "settings.theme.system".l10n("System")
+        case .light: return "settings.theme.light".l10n("Light")
+        case .dark: return "settings.theme.dark".l10n("Dark")
         }
     }
 }
