@@ -18,9 +18,9 @@ final class TodayViewController: UIViewController {
     private let manageButton = UIButton(type: .system)
     private let emptyLabel = UILabel()
 
-    private var children: [City.ID: TodayPageViewController] = [:]
+    private var pageCache: [City.ID: TodayPageViewController] = [:]
     /// Snapshot of the most recent ordered city ids the pager rendered. Lets
-    /// us detect whether `pages` mutated and rebuild the children map without
+    /// us detect whether `pages` mutated and rebuild the cache without
     /// re-syncing on every observation.
     private var orderedIDs: [City.ID] = []
     /// Tracks whether the page-vc has any controller mounted at all — guard
@@ -179,19 +179,19 @@ final class TodayViewController: UIViewController {
     }
 
     private func childController(for id: City.ID) -> TodayPageViewController? {
-        if let existing = children[id] { return existing }
+        if let existing = pageCache[id] { return existing }
         guard let pageStore = store.scope(state: \.pages[id: id], action: \.page[id: id]) else {
             return nil
         }
         let vc = TodayPageViewController(store: pageStore)
         vc.cityID = id
-        children[id] = vc
+        pageCache[id] = vc
         return vc
     }
 
     private func pruneOrphans() {
         let live = Set(orderedIDs)
-        children = children.filter { live.contains($0.key) }
+        pageCache = pageCache.filter { live.contains($0.key) }
     }
 
     @objc private func handleManageTap() {
@@ -232,7 +232,12 @@ extension TodayViewController: UIPageViewControllerDataSource, UIPageViewControl
     }
 }
 
-private var cityIDAssociation: UInt8 = 0
+/// objc_*Association needs a stable address — the value is never read,
+/// only its pointer is used as the key. `nonisolated(unsafe)` lets Swift 6
+/// strict concurrency accept the global; the byte is never mutated.
+private enum CityIDAssociation {
+    nonisolated(unsafe) static var key: UInt8 = 0
+}
 
 extension TodayPageViewController {
     /// Stash the page's city id on the view controller so the data-source
@@ -240,7 +245,7 @@ extension TodayPageViewController {
     /// hands us back UIViewController in its delegate, and we need a way
     /// from that VC instance back to its position in the ordered list.
     var cityID: City.ID? {
-        get { objc_getAssociatedObject(self, &cityIDAssociation) as? City.ID }
-        set { objc_setAssociatedObject(self, &cityIDAssociation, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+        get { objc_getAssociatedObject(self, &CityIDAssociation.key) as? City.ID }
+        set { objc_setAssociatedObject(self, &CityIDAssociation.key, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
 }
