@@ -58,8 +58,22 @@ private final class LocationManagerActor: NSObject, CLLocationManagerDelegate, @
 
     override init() {
         super.init()
-        manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        // CLLocationManager dispatches its delegate callbacks on the run loop
+        // of the thread that installed the delegate. TCA's `liveValue` is
+        // resolved lazily inside `.run { }` effects, which run on a background
+        // TaskExecutor that has no run loop — installing the delegate there
+        // would mean `didUpdateLocations` / `didFailWithError` never fire,
+        // hanging `currentLocation()` forever. Pin all manager mutations to
+        // main so callbacks come home.
+        let bind = { [unowned self] in
+            self.manager.delegate = self
+            self.manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        }
+        if Thread.isMainThread {
+            bind()
+        } else {
+            DispatchQueue.main.sync(execute: bind)
+        }
     }
 
     func currentAuthorizationStatus() -> LocationAuthorizationStatus {
@@ -75,7 +89,9 @@ private final class LocationManagerActor: NSObject, CLLocationManagerDelegate, @
             lock.lock()
             authorizationContinuation = continuation
             lock.unlock()
-            manager.requestWhenInUseAuthorization()
+            DispatchQueue.main.async { [manager] in
+                manager.requestWhenInUseAuthorization()
+            }
         }
     }
 
@@ -93,7 +109,9 @@ private final class LocationManagerActor: NSObject, CLLocationManagerDelegate, @
             lock.lock()
             locationContinuation = continuation
             lock.unlock()
-            manager.requestLocation()
+            DispatchQueue.main.async { [manager] in
+                manager.requestLocation()
+            }
         }
     }
 
