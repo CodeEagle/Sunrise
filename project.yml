@@ -28,6 +28,9 @@ packages:
     path: Packages/SunriseDesignSystem
   SunriseAnimation:
     path: Packages/SunriseAnimation
+  Localize_Swift:
+    url: https://github.com/CodeEagle/Localize-Swift
+    branch: master
 
 targets:
   Sunrise:
@@ -62,7 +65,37 @@ targets:
         CFBundleLocalizations:
           - en
           - zh-Hans
+          - zh-Hant
           - ja
+          - ko
+          - fr
+          - de
+          - es
+          - it
+          - pt-BR
+          - ru
+          - ar
+          - vi
+          - th
+          - id
+          - tr
+          - pl
+          - nl
+          - sv
+          - da
+          - nb
+          - fi
+          - hi
+          - ms
+          - cs
+          - hu
+          - ro
+          - el
+          - he
+          - uk
+          - ca
+          - hr
+          - sk
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: fun.selfstudio.sunrise
@@ -89,6 +122,8 @@ targets:
         product: CityFeature
       - package: SunriseDesignSystem
       - package: SunriseAnimation
+      - package: Localize_Swift
+        product: Localize_Swift
       # NOTE: widget extension is built as a standalone target. Re-add this
       # dependency (or copy the .appex into Sunrise.app/PlugIns) once you
       # have a signing identity that can grant WeatherKit + App Group

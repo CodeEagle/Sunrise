@@ -3,10 +3,13 @@ import ComposableArchitecture
 import ProfileFeature
 import SunriseCore
 import SunriseDesignSystem
+import Localize_Swift
 
-/// Settings → Language. Picks the per-app language and writes it through to
-/// `AppleLanguages` in user defaults. iOS reads that key on next launch to
-/// pick string tables / locale formatters, so we surface a relaunch prompt.
+/// Settings → Language. Dispatches the new selection through Localize-Swift
+/// (`Localize.setCurrentLanguage(_:)`) so every `String(localized:)` lookup
+/// flips live via the package's bundle swizzle — no relaunch needed. The
+/// preference is also persisted into UserSettings so it survives a cold
+/// launch.
 final class LanguageSettingsViewController: UITableViewController {
     private let store: StoreOf<ProfileReducer>
 
@@ -24,16 +27,18 @@ final class LanguageSettingsViewController: UITableViewController {
         view.backgroundColor = Palette.canvas
         tableView.backgroundColor = .clear
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
-        observeState { [weak self] in self?.tableView.reloadData() }
+        observeState { [weak self] in
+            self?.tableView.reloadData()
+            self?.navigationItem.title = String(localized: "settings.row.language", defaultValue: "Language")
+        }
+        onLanguageChange { [weak self] in
+            self?.tableView.reloadData()
+            self?.navigationItem.title = String(localized: "settings.row.language", defaultValue: "Language")
+        }
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         AppLanguage.allCases.count
-    }
-
-    override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        String(localized: "settings.language.footer",
-               defaultValue: "Language changes take effect after relaunching Sunrise.")
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -52,37 +57,34 @@ final class LanguageSettingsViewController: UITableViewController {
         let language = AppLanguage.allCases[indexPath.row]
         guard language != store.settings.language else { return }
         store.send(.languageChanged(language))
-        applyLanguageToAppleLanguages(language)
-        promptRelaunch()
+        applyLanguage(language)
     }
 
-    /// Writes the user's language preference into the `AppleLanguages` user
-    /// default so the next launch picks the right string table. iOS-13+ also
-    /// honours this for the per-app Settings page; setting `nil` falls back
-    /// to the system language.
-    private func applyLanguageToAppleLanguages(_ language: AppLanguage) {
+    /// Hands the picked language to Localize-Swift so all currently-mounted
+    /// views can observe `LCLLanguageChangeNotification` and re-render with
+    /// the new strings. Also writes through to AppleLanguages so the next
+    /// cold launch starts in the right language even before this VC mounts.
+    private func applyLanguage(_ language: AppLanguage) {
         let defaults = UserDefaults.standard
         switch language {
         case .system:
             defaults.removeObject(forKey: "AppleLanguages")
-        case .english, .simplifiedChinese, .japanese:
+            // Localize-Swift falls back to the system language when the
+            // override matches the device locale; setting to the device
+            // language explicitly is the closest API call we have.
+            if let device = Locale.preferredLanguages.first?.split(separator: "-").first.map(String.init) {
+                Localize.setCurrentLanguage(device)
+            }
+        case .english, .simplifiedChinese, .japanese,
+             .traditionalChinese, .korean, .french, .german, .spanish,
+             .italian, .portuguese, .russian, .arabic, .vietnamese,
+             .thai, .indonesian, .turkish, .polish, .dutch, .swedish,
+             .danish, .norwegian, .finnish, .hindi, .malay, .czech,
+             .hungarian, .romanian, .greek, .hebrew, .ukrainian, .catalan,
+             .croatian, .slovak:
             defaults.set([language.rawValue], forKey: "AppleLanguages")
+            Localize.setCurrentLanguage(language.rawValue)
         }
-    }
-
-    private func promptRelaunch() {
-        let alert = UIAlertController(
-            title: String(localized: "settings.language.relaunch_title",
-                          defaultValue: "Relaunch required"),
-            message: String(localized: "settings.language.relaunch_body",
-                            defaultValue: "Quit and reopen Sunrise to apply the new language."),
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(
-            title: String(localized: "common.ok", defaultValue: "OK"),
-            style: .default
-        ))
-        present(alert, animated: true)
     }
 
     private func label(for language: AppLanguage) -> String {
@@ -90,7 +92,37 @@ final class LanguageSettingsViewController: UITableViewController {
         case .system: return String(localized: "settings.language.system", defaultValue: "System")
         case .english: return "English"
         case .simplifiedChinese: return "简体中文"
+        case .traditionalChinese: return "繁體中文"
         case .japanese: return "日本語"
+        case .korean: return "한국어"
+        case .french: return "Français"
+        case .german: return "Deutsch"
+        case .spanish: return "Español"
+        case .italian: return "Italiano"
+        case .portuguese: return "Português"
+        case .russian: return "Русский"
+        case .arabic: return "العربية"
+        case .vietnamese: return "Tiếng Việt"
+        case .thai: return "ไทย"
+        case .indonesian: return "Bahasa Indonesia"
+        case .turkish: return "Türkçe"
+        case .polish: return "Polski"
+        case .dutch: return "Nederlands"
+        case .swedish: return "Svenska"
+        case .danish: return "Dansk"
+        case .norwegian: return "Norsk"
+        case .finnish: return "Suomi"
+        case .hindi: return "हिन्दी"
+        case .malay: return "Bahasa Melayu"
+        case .czech: return "Čeština"
+        case .hungarian: return "Magyar"
+        case .romanian: return "Română"
+        case .greek: return "Ελληνικά"
+        case .hebrew: return "עברית"
+        case .ukrainian: return "Українська"
+        case .catalan: return "Català"
+        case .croatian: return "Hrvatski"
+        case .slovak: return "Slovenčina"
         }
     }
 }

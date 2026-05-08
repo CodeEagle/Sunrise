@@ -26,6 +26,10 @@ final class ThemeSettingsViewController: UITableViewController {
         tableView.backgroundColor = .clear
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         observeState { [weak self] in self?.tableView.reloadData() }
+        onLanguageChange { [weak self] in
+            self?.navigationItem.title = String(localized: "settings.row.theme", defaultValue: "Theme")
+            self?.tableView.reloadData()
+        }
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

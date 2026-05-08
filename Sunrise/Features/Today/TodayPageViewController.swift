@@ -40,6 +40,7 @@ final class TodayPageViewController: UIViewController {
         view.backgroundColor = Palette.canvas
         configureLayout()
         observeState { [weak self] in self?.render() }
+        onLanguageChange { [weak self] in self?.render() }
         store.send(.onAppear)
     }
 

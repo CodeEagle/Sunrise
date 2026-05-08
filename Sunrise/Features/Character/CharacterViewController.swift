@@ -4,16 +4,18 @@ import CharacterFeature
 import SunriseCore
 import SunriseDesignSystem
 
-/// Character tab — Sunny's standing portrait layered over the live weather
-/// scene. The mood / outfit / voice chips are gone; this screen now reads as
-/// a character poster with a small speech bubble. Will host a Seedance 2.0
-/// generated video loop in a follow-up — for now the static portrait sits in
-/// for the video player.
+/// Sunny tab — a single composite watercolor of the character + scene
+/// (`portrait_<condition>.png`). No separate layered character on top of
+/// the backdrop — that "pasted-over" reading was what the design
+/// feedback flagged. The pose has Sunny looking at the camera, waving,
+/// like she's greeting the viewer through the screen. Future iteration:
+/// drop in a Seedance 2.0 generated video loop on top of (or in place
+/// of) the static composite.
 final class CharacterViewController: UIViewController {
     private let store: StoreOf<CharacterReducer>
 
-    private let backdrop = SceneBackgroundView()
     private let portrait = UIImageView()
+    private let scrim = GradientView()
     private let conditionPill = UILabel()
     private let bubble = PaddedLabel()
 
@@ -32,18 +34,33 @@ final class CharacterViewController: UIViewController {
 
         configureLayout()
         observeState { [weak self] in self?.render() }
+        onLanguageChange { [weak self] in
+            self?.navigationItem.title = String(localized: "character.nav_title", defaultValue: "Sunny")
+            self?.render()
+        }
     }
 
     private func configureLayout() {
-        backdrop.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(backdrop)
-
-        portrait.contentMode = .scaleAspectFit
+        // The composite is the full visual — fill the entire view and let
+        // the painted scene reach into the safe-area edges.
+        portrait.contentMode = .scaleAspectFill
+        portrait.clipsToBounds = true
         portrait.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(portrait)
 
-        // Floating glass pill that names the current weather condition —
-        // pinned top-center so the user reads "what is Sunny standing in".
+        // Subtle bottom scrim so the speech bubble has cream contrast even
+        // when the painted ground is busy.
+        scrim.translatesAutoresizingMaskIntoConstraints = false
+        scrim.colors = [
+            UIColor.clear,
+            Palette.canvas.withAlphaComponent(0.0),
+            Palette.canvas.withAlphaComponent(Opacity.glassStrong)
+        ]
+        scrim.locations = [0.0, 0.55, 1.0]
+        scrim.isUserInteractionEnabled = false
+        view.addSubview(scrim)
+
+        // Condition pill — top-center.
         let conditionGlass = GlassPanel(style: .clear, cornerRadius: 18)
         conditionGlass.translatesAutoresizingMaskIntoConstraints = false
         conditionGlass.isUserInteractionEnabled = false
@@ -62,7 +79,7 @@ final class CharacterViewController: UIViewController {
         ])
         view.addSubview(conditionGlass)
 
-        // Speech bubble — sits below the portrait, above the bottom safe area.
+        // Speech bubble — bottom.
         bubble.font = Typography.body(15)
         bubble.textColor = Palette.inkPrimary
         bubble.numberOfLines = 0
@@ -77,21 +94,18 @@ final class CharacterViewController: UIViewController {
         view.addSubview(bubble)
 
         NSLayoutConstraint.activate([
-            backdrop.topAnchor.constraint(equalTo: view.topAnchor),
-            backdrop.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            backdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            backdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            portrait.topAnchor.constraint(equalTo: view.topAnchor),
+            portrait.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            portrait.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            portrait.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            scrim.topAnchor.constraint(equalTo: view.topAnchor),
+            scrim.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrim.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrim.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
             conditionGlass.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: Spacing.s),
             conditionGlass.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-
-            // Portrait fills most of the screen; full-body character anchored
-            // bottom-aligned so feet sit just above the speech bubble. Width
-            // capped so very tall devices don't blow up the figure.
-            portrait.topAnchor.constraint(equalTo: conditionGlass.bottomAnchor, constant: Spacing.s),
-            portrait.bottomAnchor.constraint(equalTo: bubble.topAnchor, constant: -Spacing.m),
-            portrait.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            portrait.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, multiplier: 0.92),
 
             bubble.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.l),
             bubble.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Spacing.l),
@@ -107,34 +121,10 @@ final class CharacterViewController: UIViewController {
 
     private func render() {
         let condition = store.condition
-
-        // Backdrop: weather scene (bg_<condition>.png). The painted scene gives
-        // Sunny a setting that matches the weather she's reacting to.
-        backdrop.update(
-            conditionRawValue: condition.rawValue,
-            palette: palette(for: condition),
-            preferredAsset: "bg_\(condition.rawValue)",
-            animated: true
-        )
-
-        // Foreground portrait: full-body Sunny in the matching outfit.
-        portrait.image = CharacterArt.image(forConditionRawValue: condition.rawValue)
+        portrait.image = PortraitArt.image(forConditionRawValue: condition.rawValue)
             ?? UIImage(systemName: "person.fill")
-
         conditionPill.text = localizedCondition(condition)
         bubble.text = encouragement(for: condition)
-    }
-
-    private func palette(for condition: WeatherCondition) -> GradientPalette {
-        switch condition {
-        case .clear: return .clearDay
-        case .cloudy: return .cloudy
-        case .rain: return .rain
-        case .thunderstorm: return .thunderstorm
-        case .snow: return .snow
-        case .windy: return .windy
-        case .fog: return .fog
-        }
     }
 
     private func localizedCondition(_ condition: WeatherCondition) -> String {
@@ -173,5 +163,30 @@ private final class PaddedLabel: UILabel {
         let size = super.intrinsicContentSize
         return CGSize(width: size.width + insets.left + insets.right,
                       height: size.height + insets.top + insets.bottom)
+    }
+}
+
+/// CAGradientLayer-backed view used by the bottom scrim. Adapts to the
+/// system theme via `bindAdaptiveColors`.
+private final class GradientView: UIView {
+    var colors: [UIColor] = [] { didSet { sync() } }
+    var locations: [NSNumber] = [] { didSet { sync() } }
+
+    override class var layerClass: AnyClass { CAGradientLayer.self }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        bindAdaptiveColors { [weak self] _ in self?.sync() }
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    private func sync() {
+        guard let layer = layer as? CAGradientLayer else { return }
+        layer.colors = colors.map { $0.resolvedColor(with: traitCollection).cgColor }
+        layer.locations = locations
+        layer.startPoint = CGPoint(x: 0.5, y: 0)
+        layer.endPoint = CGPoint(x: 0.5, y: 1)
     }
 }

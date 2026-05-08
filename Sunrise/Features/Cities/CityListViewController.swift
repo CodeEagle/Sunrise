@@ -70,6 +70,10 @@ final class CityListViewController: UIViewController {
         ])
 
         observeState { [weak self] in self?.render() }
+        onLanguageChange { [weak self] in
+            self?.title = String(localized: "cities.title", defaultValue: "Cities")
+            self?.tableView.reloadData()
+        }
         store.send(.onAppear)
     }
 

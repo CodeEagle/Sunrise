@@ -47,6 +47,12 @@ final class ForecastViewController: UIViewController {
         ])
 
         observeState { [weak self] in self?.render() }
+        onLanguageChange { [weak self] in
+            self?.titleLabel.text = String(localized: "forecast.nav_title", defaultValue: "15-day trend")
+            self?.emptyLabel.text = String(localized: "forecast.empty",
+                defaultValue: "Pick a city on the Weather tab to see the 15-day outlook.")
+            self?.render()
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {

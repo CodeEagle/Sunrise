@@ -3,6 +3,7 @@ import ComposableArchitecture
 import Dependencies
 import RootFeature
 import SunriseCore
+import Localize_Swift
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
@@ -15,6 +16,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene else { return }
 
         applyLaunchArgumentOverrides()
+        applyPersistedLanguage()
 
         let store = Store(initialState: initialRootState()) {
             RootReducer()
@@ -67,6 +69,23 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         case .system: return .unspecified
         case .light: return .light
         case .dark: return .dark
+        }
+    }
+
+    /// Push the persisted AppLanguage into Localize-Swift so the very first
+    /// frame of the UI uses the right strings — without waiting for the
+    /// user to re-pick the language in Settings. Localize-Swift's bundle
+    /// swizzle then redirects every `String(localized:)` lookup.
+    private func applyPersistedLanguage() {
+        guard let data = UserDefaults.standard.data(forKey: "sunrise.settings"),
+              let settings = try? JSONDecoder().decode(UserSettings.self, from: data) else {
+            return
+        }
+        switch settings.language {
+        case .system:
+            return
+        default:
+            Localize.setCurrentLanguage(settings.language.rawValue)
         }
     }
 }

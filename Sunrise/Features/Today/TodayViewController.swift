@@ -68,6 +68,7 @@ final class TodayViewController: UIViewController {
         configureEmptyState()
 
         observeState { [weak self] in self?.render() }
+        onLanguageChange { [weak self] in self?.render() }
     }
 
     override func viewWillAppear(_ animated: Bool) {

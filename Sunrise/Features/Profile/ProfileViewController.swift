@@ -81,6 +81,10 @@ final class ProfileViewController: UIViewController {
         ])
 
         observeState { [weak self] in self?.tableView.reloadData() }
+        onLanguageChange { [weak self] in
+            self?.navigationItem.title = String(localized: "settings.title", defaultValue: "Settings")
+            self?.tableView.reloadData()
+        }
         store.send(.onAppear)
     }
 }

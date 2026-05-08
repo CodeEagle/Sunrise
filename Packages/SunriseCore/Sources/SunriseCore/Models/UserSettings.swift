@@ -24,15 +24,46 @@ public enum ThemePreference: String, Codable, Sendable, CaseIterable {
     case dark
 }
 
-/// In-app language override. Applied via the per-app `AppleLanguages`
-/// UserDefaults key — iOS reads it on launch to pick string tables and
-/// numeric / date formats. Switching at runtime requires an app relaunch
-/// (we surface that to the user in Settings).
+/// In-app language override. The picker dispatches both
+/// `Localize.setCurrentLanguage(_:)` (live string swap via the package's
+/// bundle swizzle) and the per-app `AppleLanguages` UserDefaults key (so
+/// the next cold launch starts in the chosen language). Cases mirror the
+/// iOS App Store default-language set.
 public enum AppLanguage: String, Codable, Sendable, CaseIterable {
     case system
     case english = "en"
     case simplifiedChinese = "zh-Hans"
+    case traditionalChinese = "zh-Hant"
     case japanese = "ja"
+    case korean = "ko"
+    case french = "fr"
+    case german = "de"
+    case spanish = "es"
+    case italian = "it"
+    case portuguese = "pt-BR"
+    case russian = "ru"
+    case arabic = "ar"
+    case vietnamese = "vi"
+    case thai = "th"
+    case indonesian = "id"
+    case turkish = "tr"
+    case polish = "pl"
+    case dutch = "nl"
+    case swedish = "sv"
+    case danish = "da"
+    case norwegian = "nb"
+    case finnish = "fi"
+    case hindi = "hi"
+    case malay = "ms"
+    case czech = "cs"
+    case hungarian = "hu"
+    case romanian = "ro"
+    case greek = "el"
+    case hebrew = "he"
+    case ukrainian = "uk"
+    case catalan = "ca"
+    case croatian = "hr"
+    case slovak = "sk"
 }
 
 public struct UserSettings: Codable, Hashable, Sendable {
