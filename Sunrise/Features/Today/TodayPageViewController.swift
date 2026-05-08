@@ -58,33 +58,27 @@ final class TodayPageViewController: UIViewController {
         view.addSubview(scrim)
 
         // City header — pin glyph + name + caret + updated time, stacked.
-        // Pinned to the safe-area top so it floats above the painted scene
-        // exactly like iOS Weather.
+        // Lives at the TOP of the bottom info stack (not as a separate top
+        // banner) so the painted scene's character / sky stay fully visible
+        // and we don't double up two text columns at top + bottom.
         cityPin.tintColor = Palette.sunYellow
         cityPin.contentMode = .scaleAspectFit
         cityPin.translatesAutoresizingMaskIntoConstraints = false
-        cityPin.widthAnchor.constraint(equalToConstant: 16).isActive = true
-        cityPin.heightAnchor.constraint(equalToConstant: 16).isActive = true
+        cityPin.widthAnchor.constraint(equalToConstant: 14).isActive = true
+        cityPin.heightAnchor.constraint(equalToConstant: 14).isActive = true
 
-        cityLabel.font = Typography.title(28)
+        cityLabel.font = Typography.title(20)
         cityLabel.textColor = Palette.inkPrimary
         cityLabel.shadow()
 
         let cityRow = UIStackView(arrangedSubviews: [cityPin, cityLabel])
         cityRow.axis = .horizontal
         cityRow.alignment = .center
-        cityRow.spacing = 6
+        cityRow.spacing = 4
 
-        updatedLabel.font = Typography.caption(12)
+        updatedLabel.font = Typography.caption(11)
         updatedLabel.textColor = Palette.inkPrimary.withAlphaComponent(0.7)
         updatedLabel.shadow(opacity: 0.4, radius: 2)
-
-        let headerStack = UIStackView(arrangedSubviews: [cityRow, updatedLabel])
-        headerStack.axis = .vertical
-        headerStack.alignment = .leading
-        headerStack.spacing = 2
-        headerStack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(headerStack)
 
         temperatureLabel.font = Typography.numeric(96)
         temperatureLabel.textColor = Palette.inkPrimary
@@ -119,10 +113,13 @@ final class TodayPageViewController: UIViewController {
         retryButton.addTarget(self, action: #selector(handleRetryTap), for: .touchUpInside)
         retryButton.isHidden = true
 
-        let infoStack = UIStackView(arrangedSubviews: [tempRow, conditionLabel, detailRowLabel, retryButton, bubble])
+        let infoStack = UIStackView(arrangedSubviews: [
+            cityRow, updatedLabel, tempRow, conditionLabel, detailRowLabel, retryButton, bubble
+        ])
         infoStack.axis = .vertical
         infoStack.alignment = .leading
         infoStack.spacing = Spacing.xs
+        infoStack.setCustomSpacing(Spacing.s, after: updatedLabel)
         infoStack.setCustomSpacing(Spacing.m, after: detailRowLabel)
         infoStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(infoStack)
@@ -138,15 +135,13 @@ final class TodayPageViewController: UIViewController {
             scrim.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrim.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            headerStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: Spacing.s),
-            headerStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.l),
-            headerStack.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -Spacing.l),
-
             infoStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Spacing.l),
             infoStack.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -Spacing.l),
-            // Lift the info stack a bit so it doesn't crash into the bottom
-            // page-control overlay drawn by the pager.
-            infoStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -Spacing.xl),
+            // safeAreaLayoutGuide.bottom already has the pager's footer
+            // reserved (see TodayViewController setting additionalSafeAreaInsets
+            // on each child), so a small extra m gap here just clears the
+            // glass capsule visually.
+            infoStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -Spacing.s),
 
             bubble.widthAnchor.constraint(equalTo: infoStack.widthAnchor)
         ])
@@ -156,7 +151,7 @@ final class TodayPageViewController: UIViewController {
         let snapshot = store.snapshot
         let formatter = WeatherFormatter(settings: store.settings)
 
-        cityLabel.text = store.city.name
+        cityLabel.text = displayName(for: store.city)
 
         if let snapshot {
             backdrop.update(
@@ -221,6 +216,18 @@ final class TodayPageViewController: UIViewController {
 
     @objc private func handleRetryTap() {
         store.send(.retryTapped)
+    }
+
+    /// Localised display name for a city. The synthesised "current location"
+    /// city carries a fixed English `name` (City has no kind enum so the
+    /// pager and persistence stay simple) — translate it on the fly so the
+    /// label flips with the active language.
+    private func displayName(for city: City) -> String {
+        if city.name == "Current Location" {
+            return String(localized: "today.current_location",
+                          defaultValue: "Current Location")
+        }
+        return city.name
     }
 
     private func palette(for condition: WeatherCondition, period: DayPeriod) -> GradientPalette {

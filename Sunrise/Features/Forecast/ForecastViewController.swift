@@ -11,6 +11,12 @@ final class ForecastViewController: UIViewController {
     private let emptyLabel = UILabel()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
+    /// Don't mount the heavy SwiftUI Charts hosting controller until the tab
+    /// has actually appeared — otherwise the very first tap on the Forecast
+    /// tab stalls the tab-transition animation while the chart rasterises
+    /// (~250ms hitch). Render keeps tracking state, but actual host install
+    /// is deferred to `viewDidAppear`.
+    private var hasAppeared = false
 
     init(store: StoreOf<ForecastReducer>) {
         self.store = store
@@ -43,6 +49,15 @@ final class ForecastViewController: UIViewController {
         observeState { [weak self] in self?.render() }
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard !hasAppeared else { return }
+        hasAppeared = true
+        // Now that the tab transition is finished, do the (potentially
+        // expensive) initial chart mount.
+        render()
+    }
+
     private func configureTitleView() {
         titleLabel.text = String(localized: "forecast.nav_title", defaultValue: "15-day trend")
         titleLabel.font = Typography.title(17)
@@ -61,7 +76,7 @@ final class ForecastViewController: UIViewController {
     }
 
     private func render() {
-        subtitleLabel.text = store.selectedCity?.name
+        subtitleLabel.text = displayName(for: store.selectedCity)
         subtitleLabel.isHidden = (subtitleLabel.text ?? "").isEmpty
         guard let snapshot = store.snapshot else {
             emptyLabel.isHidden = false
@@ -69,7 +84,19 @@ final class ForecastViewController: UIViewController {
             return
         }
         emptyLabel.isHidden = true
+        // Hold off on building the SwiftUI host until the tab is actually on
+        // screen so the first tab tap stays smooth. observeState will call
+        // back through here once `hasAppeared` flips and the chart pops in.
+        guard hasAppeared else { return }
         installOrUpdateHosting(snapshot: snapshot, settings: store.settings)
+    }
+
+    private func displayName(for city: City?) -> String? {
+        guard let city else { return nil }
+        if city.name == "Current Location" {
+            return String(localized: "today.current_location", defaultValue: "Current Location")
+        }
+        return city.name
     }
 
     private func installOrUpdateHosting(snapshot: WeatherSnapshot, settings: UserSettings) {

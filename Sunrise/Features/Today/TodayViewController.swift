@@ -27,6 +27,18 @@ final class TodayViewController: UIViewController {
     /// against the first `setViewControllers` racing with a still-empty store
     /// (the initial render before `citiesUpdated` arrives).
     private var hasMountedInitialPage = false
+    /// True between `willTransitionTo` and `didFinishAnimating`. While set,
+    /// `render()` won't call `setViewControllers` — that interrupts the
+    /// gesture and leaves the scrollview parked mid-page (the "switching
+    /// incomplete, slow drift" symptom).
+    private var isTransitioning = false
+    /// If render() wants to change pages while a swipe is mid-flight, defer
+    /// the update to didFinishAnimating so the gesture can complete clean.
+    private var pendingTargetID: City.ID?
+    /// Fixed reserved height for the bottom page-control glass; mirrored
+    /// into each child page's `additionalSafeAreaInsets.bottom` so the page
+    /// content (bubble, retry button) doesn't tuck under the capsule.
+    private static let bottomBarReservedHeight: CGFloat = 60
 
     var onMenuTapped: (() -> Void)?
 
@@ -61,6 +73,11 @@ final class TodayViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        // Today is the root of its nav stack — the interactive pop gesture
+        // has nothing to fall back to and would only fight the page swipe
+        // (the "switch incomplete, drifts slowly" symptom often traces to
+        // this conflicting recogniser on the leading screen edge).
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
     }
 
     private func configureChildPager() {
@@ -159,18 +176,37 @@ final class TodayViewController: UIViewController {
 
         guard let target = childController(for: targetID) else { return }
         let visibleID = currentlyVisibleID()
-        if !hasMountedInitialPage || visibleID != targetID {
-            let direction: UIPageViewController.NavigationDirection
-            if let visibleID,
-               let from = ids.firstIndex(of: visibleID),
-               from < targetIndex {
-                direction = .forward
-            } else {
-                direction = .reverse
-            }
-            pageVC.setViewControllers([target], direction: direction, animated: hasMountedInitialPage)
-            hasMountedInitialPage = true
+        guard !hasMountedInitialPage || visibleID != targetID else { return }
+
+        // Mid-swipe: queue the update; didFinishAnimating will flush it.
+        // setViewControllers during the transition stalls the scroll view
+        // halfway and leaves the user with a sliver of the next page
+        // visible — the exact "switch incomplete" bug reported.
+        if isTransitioning {
+            pendingTargetID = targetID
+            return
         }
+
+        applyPage(target: target, targetID: targetID, visibleID: visibleID, ids: ids)
+    }
+
+    private func applyPage(
+        target: TodayPageViewController,
+        targetID: City.ID,
+        visibleID: City.ID?,
+        ids: [City.ID]
+    ) {
+        let direction: UIPageViewController.NavigationDirection
+        if let visibleID,
+           let from = ids.firstIndex(of: visibleID),
+           let to = ids.firstIndex(of: targetID),
+           from < to {
+            direction = .forward
+        } else {
+            direction = .reverse
+        }
+        pageVC.setViewControllers([target], direction: direction, animated: hasMountedInitialPage)
+        hasMountedInitialPage = true
     }
 
     private func currentlyVisibleID() -> City.ID? {
@@ -185,6 +221,11 @@ final class TodayViewController: UIViewController {
         }
         let vc = TodayPageViewController(store: pageStore)
         vc.cityID = id
+        // Tell the page how much bottom space the pager's footer reserves so
+        // the page's safeAreaLayoutGuide already excludes the glass capsule.
+        vc.additionalSafeAreaInsets = UIEdgeInsets(
+            top: 0, left: 0, bottom: Self.bottomBarReservedHeight, right: 0
+        )
         pageCache[id] = vc
         return vc
     }
@@ -222,12 +263,24 @@ extension TodayViewController: UIPageViewControllerDataSource, UIPageViewControl
         return childController(for: orderedIDs[index + 1]) as UIViewController?
     }
 
+    func pageViewController(_ pageViewController: UIPageViewController, willTransitionTo pendingViewControllers: [UIViewController]) {
+        isTransitioning = true
+    }
+
     func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
-        guard completed,
-              let visible = pageViewController.viewControllers?.first as? TodayPageViewController,
-              let id = visible.cityID else { return }
-        if id != store.selectedCityID {
+        isTransitioning = false
+        if completed,
+           let visible = pageViewController.viewControllers?.first as? TodayPageViewController,
+           let id = visible.cityID,
+           id != store.selectedCityID {
             store.send(.selectCity(id))
+        }
+
+        // Flush a queued page change requested while a swipe was mid-flight.
+        if let pendingID = pendingTargetID, let target = childController(for: pendingID) {
+            pendingTargetID = nil
+            let visibleID = currentlyVisibleID()
+            applyPage(target: target, targetID: pendingID, visibleID: visibleID, ids: orderedIDs)
         }
     }
 }
