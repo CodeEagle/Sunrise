@@ -10,18 +10,10 @@ import SunriseCore
 /// returns HTTP 400 from the JWT issuer. So the entire calendar
 /// surface runs off a local rolling history that the Today tab fills
 /// in opportunistically (`PersistenceClient.recordHistoricalDay`)
-/// every time the user fetches weather.
-///
-/// First-time empty state explains "open Weather a few times to fill
-/// the calendar in"; once at least one Today fetch has landed for a
-/// city, the calendar starts populating.
+/// every time the user fetches weather. Entries are kept forever so
+/// users can scroll back through their full personal history.
 @Reducer
 public struct CalendarReducer: Sendable {
-    /// Display-window cap. The local cache itself retains ~35 days
-    /// (see PersistenceClient) but we only render the most recent
-    /// 14 to keep the list scannable.
-    public static let lookbackDays = 14
-
     @ObservableState
     public struct State: Equatable, Sendable {
         public var city: City?
@@ -52,7 +44,6 @@ public struct CalendarReducer: Sendable {
     }
 
     @Dependency(\.persistenceClient) var persistenceClient
-    @Dependency(\.date) var date
 
     public init() {}
 
@@ -62,18 +53,9 @@ public struct CalendarReducer: Sendable {
             case .onAppear:
                 guard let city = state.city, !state.isLoading else { return .none }
                 state.isLoading = true
-                var calendar = Calendar(identifier: .gregorian)
-                calendar.timeZone = TimeZone(identifier: "UTC") ?? .gmt
-                let now = date.now
-                let startOfTodayUTC = calendar.startOfDay(for: now)
-                guard let endDate = calendar.date(byAdding: .day, value: -1, to: startOfTodayUTC),
-                      let startDate = calendar.date(byAdding: .day, value: -Self.lookbackDays, to: endDate) else {
-                    state.isLoading = false
-                    return .none
-                }
                 let cityID = city.id
                 return .run { send in
-                    let entries = await persistenceClient.loadHistoricalRange(cityID, startDate, endDate)
+                    let entries = await persistenceClient.loadAllHistorical(cityID)
                     await send(.historyLoaded(entries))
                 }
 
