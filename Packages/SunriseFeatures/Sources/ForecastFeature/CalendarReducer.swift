@@ -9,9 +9,10 @@ import SunriseCore
 /// is for narrowing the future window; calling it with past dates
 /// returns HTTP 400 from the JWT issuer. So the entire calendar
 /// surface runs off a local rolling history that the Today tab fills
-/// in opportunistically (`PersistenceClient.recordHistoricalDay`)
-/// every time the user fetches weather. Entries are kept forever so
-/// users can scroll back through their full personal history.
+/// in opportunistically (`PersistenceClient.recordHistoricalDay` +
+/// `recordHistoricalHours`) every time the user fetches weather.
+/// Entries are kept forever so users can scroll back through their
+/// full personal history.
 @Reducer
 public struct CalendarReducer: Sendable {
     @ObservableState
@@ -20,6 +21,12 @@ public struct CalendarReducer: Sendable {
         public var settings: UserSettings = .default
         public var dailies: [DailyForecast] = []
         public var selectedDate: Date?
+        /// Hourly entries cached for the currently-selected day, sorted
+        /// ascending. The Today snapshot's hourly array is forward-
+        /// looking from the moment of fetch, so the breakdown is
+        /// usually partial — empty if the user only ever opened the
+        /// app at the very end of that day.
+        public var selectedHours: [HourlyForecast] = []
         public var isLoading: Bool = false
 
         public init(
@@ -27,12 +34,14 @@ public struct CalendarReducer: Sendable {
             settings: UserSettings = .default,
             dailies: [DailyForecast] = [],
             selectedDate: Date? = nil,
+            selectedHours: [HourlyForecast] = [],
             isLoading: Bool = false
         ) {
             self.city = city
             self.settings = settings
             self.dailies = dailies
             self.selectedDate = selectedDate
+            self.selectedHours = selectedHours
             self.isLoading = isLoading
         }
     }
@@ -41,6 +50,7 @@ public struct CalendarReducer: Sendable {
         case onAppear
         case selectDate(Date?)
         case historyLoaded([DailyForecast])
+        case hoursLoaded(Date, [HourlyForecast])
     }
 
     @Dependency(\.persistenceClient) var persistenceClient
@@ -61,14 +71,45 @@ public struct CalendarReducer: Sendable {
 
             case let .selectDate(date):
                 state.selectedDate = date
-                return .none
+                state.selectedHours = []
+                guard let date, let cityID = state.city?.id else { return .none }
+                return .run { send in
+                    let hours = await persistenceClient.loadHistoricalHours(cityID, date)
+                    await send(.hoursLoaded(date, hours))
+                }
 
             case let .historyLoaded(dailies):
                 state.isLoading = false
                 state.dailies = dailies.sorted { $0.date > $1.date }
-                state.selectedDate = state.dailies.first?.date
+                let firstDate = state.dailies.first?.date
+                state.selectedDate = firstDate
+                guard let firstDate, let cityID = state.city?.id else {
+                    state.selectedHours = []
+                    return .none
+                }
+                return .run { send in
+                    let hours = await persistenceClient.loadHistoricalHours(cityID, firstDate)
+                    await send(.hoursLoaded(firstDate, hours))
+                }
+
+            case let .hoursLoaded(date, hours):
+                // Guard: user might have flipped to another day before
+                // this load completed.
+                guard let selected = state.selectedDate,
+                      Calendar.utc.isDate(selected, inSameDayAs: date) else {
+                    return .none
+                }
+                state.selectedHours = hours
                 return .none
             }
         }
     }
+}
+
+private extension Calendar {
+    static let utc: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC") ?? .gmt
+        return calendar
+    }()
 }

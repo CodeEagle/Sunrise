@@ -25,6 +25,53 @@ public enum WeatherIconSpritesheet {
         public var frameCount: Int { columns * rows }
     }
 
+    /// Applies the animated spritesheet (or static fallback) for a
+    /// weather condition to an existing `UIImageView` — the UIKit
+    /// twin of the SwiftUI `AnimatedWeatherIcon`. Use from list cells
+    /// where embedding SwiftUI per row would be overkill.
+    @MainActor
+    public static func apply(
+        to imageView: UIImageView,
+        conditionRawValue: String,
+        targetEdge: CGFloat = 96
+    ) {
+        let frames = loadFrames(
+            named: "icon_\(conditionRawValue)_sheet",
+            grid: Grid(columns: 8, rows: 8),
+            targetEdge: targetEdge
+        )
+        if let frames, !frames.isEmpty {
+            imageView.animationImages = frames
+            imageView.animationDuration = animationDuration(for: conditionRawValue)
+            imageView.animationRepeatCount = 0
+            imageView.image = frames.first
+            imageView.tintColor = nil
+            imageView.startAnimating()
+        } else {
+            imageView.stopAnimating()
+            imageView.animationImages = nil
+            if let asset = WeatherIconArt.image(forConditionRawValue: conditionRawValue) {
+                imageView.image = asset
+                imageView.tintColor = nil
+            } else {
+                imageView.image = UIImage(systemName: ConditionGlyph.symbolName(forConditionRawValue: conditionRawValue))
+                imageView.tintColor = ConditionGlyph.tint(forConditionRawValue: conditionRawValue)
+            }
+        }
+    }
+
+    private static func animationDuration(for condition: String) -> TimeInterval {
+        switch condition {
+        case "clear": return 4.0
+        case "cloudy", "fog": return 5.0
+        case "rain": return 2.0
+        case "snow": return 3.0
+        case "thunderstorm": return 3.0
+        case "windy": return 3.0
+        default: return 3.0
+        }
+    }
+
     /// Slices `name` into `grid.frameCount` frames downsampled to
     /// `targetEdge` × `targetEdge` points (rendered at the screen scale
     /// for crispness). Returns nil when the asset is missing or the
