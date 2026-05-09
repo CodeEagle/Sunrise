@@ -19,6 +19,10 @@ public struct PersistenceClient: Sendable {
     /// inclusive on both ends. Returns an empty array when no entries
     /// have accumulated yet.
     public var loadHistoricalRange: @Sendable (_ cityID: City.ID, _ start: Date, _ end: Date) async -> [DailyForecast] = { _, _, _ in [] }
+    /// Loads every cached daily-forecast entry for a city. Returned
+    /// sorted ascending by date. Used by the calendar tab so users can
+    /// scroll back through their entire personal history.
+    public var loadAllHistorical: @Sendable (_ cityID: City.ID) async -> [DailyForecast] = { _ in [] }
 }
 
 extension PersistenceClient: DependencyKey {
@@ -34,6 +38,9 @@ extension PersistenceClient: DependencyKey {
             },
             loadHistoricalRange: { cityID, start, end in
                 store.loadHistoricalRange(cityID: cityID, start: start, end: end)
+            },
+            loadAllHistorical: { cityID in
+                store.loadAllHistorical(cityID: cityID)
             }
         )
     }
@@ -44,7 +51,8 @@ extension PersistenceClient: DependencyKey {
         loadSettings: { .default },
         saveSettings: { _ in },
         recordHistoricalDay: { _, _ in },
-        loadHistoricalRange: { _, _, _ in [] }
+        loadHistoricalRange: { _, _, _ in [] },
+        loadAllHistorical: { _ in [] }
     )
 
     public static let testValue = PersistenceClient()
@@ -78,18 +86,16 @@ private struct UserDefaultsStore: Sendable {
         UserDefaults.standard.set(data, forKey: key.rawValue)
     }
 
-    /// Per-city history is keyed by `sunrise.history.<uuid>` and stores an
-    /// array of DailyForecast entries deduped by start-of-day timestamp.
+    /// Per-city history is keyed by `sunrise.history.<uuid>` and stores
+    /// an array of DailyForecast entries deduped by start-of-day
+    /// timestamp. Entries are kept *forever* — the user can scroll
+    /// back as far as their own usage history goes.
     func recordHistoricalDay(cityID: City.ID, entry: DailyForecast) {
         let key = historyKey(cityID)
         var existing = (load([DailyForecast].self, rawKey: key) ?? [])
         let dayStart = startOfUTCDay(entry.date)
         existing.removeAll { startOfUTCDay($0.date) == dayStart }
         existing.append(entry)
-        // Keep at most 35 days (extra slack beyond the calendar's 14-day
-        // window so prior weeks remain available if we ever extend the UI).
-        let cutoff = Calendar.utc.date(byAdding: .day, value: -35, to: dayStart) ?? dayStart
-        existing.removeAll { $0.date < cutoff }
         existing.sort { $0.date < $1.date }
         save(existing, rawKey: key)
     }
@@ -101,6 +107,12 @@ private struct UserDefaultsStore: Sendable {
             let day = startOfUTCDay(entry.date)
             return day >= start && day < end
         }
+    }
+
+    func loadAllHistorical(cityID: City.ID) -> [DailyForecast] {
+        let key = historyKey(cityID)
+        return (load([DailyForecast].self, rawKey: key) ?? [])
+            .sorted { $0.date < $1.date }
     }
 
     private func historyKey(_ cityID: City.ID) -> String {
