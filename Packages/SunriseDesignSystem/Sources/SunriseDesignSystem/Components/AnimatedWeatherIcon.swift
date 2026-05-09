@@ -1,20 +1,21 @@
 #if canImport(SwiftUI)
 import SwiftUI
 
-/// Lively weather glyph — composes the bundled base icon
-/// (`icon_<condition>.png`) with one or more codex-generated transparent
-/// overlay PNGs (raindrop, snowflake, lightning, wind streak), each
-/// animated via Core Animation transforms.
+/// Lively weather glyph with two render paths:
 ///
-/// Why this shape: gpt-image-2 sequence frames flicker because each call
-/// drifts visual style (the gotcha noted in CLAUDE.md). Decomposing the
-/// scene into a stable static base + one isolated motion element keeps
-/// the look consistent — only the overlay moves, the base never redraws.
+/// 1. **Spritesheet** — when `icon_<condition>_sheet.png` ships in the
+///    bundle, slice it into frames and play through a `UIImageView`
+///    animation. One codex call per spritesheet keeps every frame in
+///    the same gen pass, so character / palette / texture stay locked
+///    across the loop (sidesteps the per-call drift gotcha noted in
+///    CLAUDE.md).
+/// 2. **CA-overlay fallback** — when the spritesheet isn't bundled yet,
+///    composite the static base icon with one or more codex-generated
+///    overlay PNGs (raindrop, snowflake, lightning, wind streak), each
+///    transformed via SwiftUI motion modifiers.
 public struct AnimatedWeatherIcon: View {
     public let conditionRawValue: String
     public let isAnimating: Bool
-
-    @State private var phase: CGFloat = 0
 
     public init(conditionRawValue: String, isAnimating: Bool = true) {
         self.conditionRawValue = conditionRawValue
@@ -22,6 +23,81 @@ public struct AnimatedWeatherIcon: View {
     }
 
     public var body: some View {
+        if let frames = spritesheetFrames {
+            SpritesheetPlayer(frames: frames, duration: spritesheetDuration, isAnimating: isAnimating)
+                .aspectRatio(1, contentMode: .fit)
+        } else {
+            FallbackOverlayIcon(conditionRawValue: conditionRawValue, isAnimating: isAnimating)
+        }
+    }
+
+    private var spritesheetFrames: [UIImage]? {
+        WeatherIconSpritesheet.loadFrames(
+            named: "icon_\(conditionRawValue)_sheet",
+            grid: WeatherIconSpritesheet.Grid(columns: 4, rows: 4)
+        )
+    }
+
+    private var spritesheetDuration: TimeInterval {
+        switch conditionRawValue {
+        case "clear": return 4.0           // slow sun rotation
+        case "cloudy", "fog": return 6.0   // drift cycle
+        case "rain": return 1.6
+        case "snow": return 2.4
+        case "thunderstorm": return 3.0    // flash cycle
+        case "windy": return 2.4
+        default: return 4.0
+        }
+    }
+}
+
+/// `UIImageView` wrapper that plays a frame array via
+/// `animationImages` / `startAnimating`. SwiftUI's `Image` only takes a
+/// single frame; UIImageView is the path to native frame animation.
+private struct SpritesheetPlayer: UIViewRepresentable {
+    let frames: [UIImage]
+    let duration: TimeInterval
+    let isAnimating: Bool
+
+    func makeUIView(context: Context) -> UIImageView {
+        let view = UIImageView()
+        view.contentMode = .scaleAspectFit
+        view.animationImages = frames
+        view.animationDuration = duration
+        view.animationRepeatCount = 0
+        view.image = frames.first
+        if isAnimating {
+            view.startAnimating()
+        }
+        return view
+    }
+
+    func updateUIView(_ view: UIImageView, context: Context) {
+        // Re-bind frames on update so a condition change refreshes the
+        // playing loop instead of stranding the previous condition's
+        // frames.
+        if view.animationImages?.count != frames.count {
+            view.animationImages = frames
+            view.animationDuration = duration
+            view.image = frames.first
+        }
+        if isAnimating, !view.isAnimating {
+            view.startAnimating()
+        } else if !isAnimating, view.isAnimating {
+            view.stopAnimating()
+        }
+    }
+}
+
+// MARK: - Fallback (Core Animation overlays)
+
+private struct FallbackOverlayIcon: View {
+    let conditionRawValue: String
+    let isAnimating: Bool
+
+    @State private var phase: CGFloat = 0
+
+    var body: some View {
         GeometryReader { proxy in
             ZStack {
                 base(size: proxy.size)
@@ -38,8 +114,6 @@ public struct AnimatedWeatherIcon: View {
         }
     }
 
-    // MARK: - Base
-
     private func base(size: CGSize) -> some View {
         baseImage
             .resizable()
@@ -55,12 +129,6 @@ public struct AnimatedWeatherIcon: View {
         return Image(systemName: ConditionGlyph.symbolName(forConditionRawValue: conditionRawValue))
     }
 
-    // MARK: - Overlays
-
-    /// Spec for one animated overlay layer. `xFraction`/`yFraction` are
-    /// where the layer's centre sits in the canvas (0–1). `size` is the
-    /// layer's edge length as a fraction of the canvas. `delay` shifts
-    /// the layer's animation phase so multiple layers don't move in lockstep.
     private struct OverlaySpec {
         let id: String
         let assetName: String
@@ -121,8 +189,6 @@ public struct AnimatedWeatherIcon: View {
         return nil
     }
 
-    // MARK: - Animation driver
-
     private func startAnimation() {
         guard isAnimating else { return }
         phase = 0
@@ -133,19 +199,17 @@ public struct AnimatedWeatherIcon: View {
 
     private var animationDuration: Double {
         switch conditionRawValue {
-        case "clear": return 12          // slow sun rotation
-        case "cloudy", "fog": return 8   // gentle drift
-        case "rain": return 1.6          // looping drops
-        case "snow": return 2.4          // tumbling flakes
-        case "thunderstorm": return 3    // flash cycle
-        case "windy": return 2.4         // sway + streaks
+        case "clear": return 12
+        case "cloudy", "fog": return 8
+        case "rain": return 1.6
+        case "snow": return 2.4
+        case "thunderstorm": return 3
+        case "windy": return 2.4
         default: return 6
         }
     }
 }
 
-/// Motion applied to the base icon. Movements here are kept subtle so the
-/// overlay layers carry most of the personality.
 private struct BaseMotionModifier: ViewModifier {
     let condition: String
     let phase: CGFloat
@@ -157,7 +221,6 @@ private struct BaseMotionModifier: ViewModifier {
         case "cloudy", "fog":
             content.offset(x: sin(Double(phase) * 2 * .pi) * 4)
         case "rain", "snow":
-            // Cloud bobs gently while drops/flakes fall below it.
             content.offset(y: sin(Double(phase) * 2 * .pi) * 2)
         case "thunderstorm":
             content.opacity(1 - max(0, sin(Double(phase) * 2 * .pi) * 0.25))
@@ -169,18 +232,12 @@ private struct BaseMotionModifier: ViewModifier {
     }
 }
 
-/// Motion applied per overlay layer. Different per condition:
-/// - rain: drops translate down + fade in/out for a rainfall illusion.
-/// - snow: flakes translate down with rotation.
-/// - thunderstorm: bolt flashes by toggling opacity at peak phase.
-/// - windy: streaks slide left → right and fade.
 private struct OverlayMotionModifier: ViewModifier {
     let condition: String
     let phase: CGFloat
     let delay: CGFloat
 
     private var local: CGFloat {
-        // Loop-shifted phase that keeps each layer at its own offset.
         var p = phase + delay
         if p >= 1 { p -= 1 }
         return p
@@ -198,7 +255,6 @@ private struct OverlayMotionModifier: ViewModifier {
                 .rotationEffect(.degrees(Double(local) * 360))
                 .opacity(1 - abs(local - 0.5) * 1.2)
         case "thunderstorm":
-            // Sharp flash at the peak of the cycle.
             let flash = pow(max(0, sin(Double(local) * 2 * .pi)), 8)
             content.opacity(0.2 + flash)
         case "windy":
