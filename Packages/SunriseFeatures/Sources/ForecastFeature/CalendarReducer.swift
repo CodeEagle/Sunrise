@@ -11,11 +11,10 @@ import SunriseCore
 /// as disabled cells.
 @Reducer
 public struct CalendarReducer: Sendable {
-    /// Apple's WeatherKit historical endpoint accepts up to ~14 days but
-    /// some accounts return 400 for the full window — keep this at 10 to
-    /// stay inside the conservative quota and shrink the surface for
-    /// "range too long" rejections.
-    public static let lookbackDays = 10
+    /// WeatherKit historical accepts ~14 days back. The fetched range
+    /// `[startDate, endDate)` is half-open, so a 14-day window translates
+    /// to `start = today - 14`, `end = today` (UTC midnights).
+    public static let lookbackDays = 14
 
     @ObservableState
     public struct State: Equatable, Sendable {
@@ -72,19 +71,17 @@ public struct CalendarReducer: Sendable {
                 guard let city = state.city, !state.isLoading else { return .none }
                 state.isLoading = true
                 state.error = nil
-                // WeatherKit's historical query is fussy about timestamps:
-                // - Both start and end need to land on whole-day boundaries
-                //   (the JWT issuer normalises arbitrary clock times to UTC
-                //   midnight and rejects ranges that don't already align).
-                // - End must be strictly *before* "now" — yesterday at the
-                //   beginning of UTC day is the safest pick.
-                // - Start must trail end by at least one full day.
+                // WeatherKit's historical range `[startDate, endDate)` is
+                // half-open: end is exclusive, so use start of today (UTC)
+                // as the end and start of (today - lookbackDays) as the
+                // start to fetch exactly `lookbackDays` whole days. UTC
+                // alignment is required — the JWT issuer rejects 400 when
+                // timestamps don't land on whole-day UTC boundaries.
                 var calendar = Calendar(identifier: .gregorian)
                 calendar.timeZone = TimeZone(identifier: "UTC") ?? .gmt
                 let now = date.now
-                let startOfTodayUTC = calendar.startOfDay(for: now)
-                guard let endDate = calendar.date(byAdding: .day, value: -1, to: startOfTodayUTC),
-                      let startDate = calendar.date(byAdding: .day, value: -Self.lookbackDays, to: startOfTodayUTC) else {
+                let endDate = calendar.startOfDay(for: now)
+                guard let startDate = calendar.date(byAdding: .day, value: -Self.lookbackDays, to: endDate) else {
                     state.isLoading = false
                     return .none
                 }
