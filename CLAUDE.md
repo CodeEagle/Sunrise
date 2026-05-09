@@ -52,6 +52,14 @@ Don't waste cycles retrying `git push origin <branch>:main` — it stays 403 for
 
 Reference: PR #1 (`fix(icons): clamp spritesheet player size`) used this path after direct main pushes started failing mid-session.
 
+## WeatherKit doesn't ship historical observations
+
+`WeatherKit` only exposes **current + 10-day forecast**. There is **no** way to fetch a past day's actual weather from `WeatherService.weather(for:including:)`. `WeatherQuery.daily(startDate:endDate:)` only narrows the *future* window — calling it with both dates in the past returns HTTP 400 from the JWT issuer ("`Unable to authenticate`" wrapper around a malformed-request rejection).
+
+Don't waste cycles spelunking for a hidden historical API or tweaking date math — there isn't one. The calendar tab fills in via a local rolling cache (`PersistenceClient.recordHistoricalDay`) that the Today tab writes to on every successful `weatherClient.fetch`. Over time this accumulates one row per day per city; that's the entire data source for the history calendar.
+
+Reference: PR #6 + #8 (local-cache fallback after WeatherKit historical attempts kept 400'ing).
+
 ## Image-gen agent (codex CLI)
 
 - Install: `npm i -g @openai/codex` (the operator authorises ChatGPT once the device code is printed).

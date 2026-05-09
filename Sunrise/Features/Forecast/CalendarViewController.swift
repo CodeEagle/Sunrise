@@ -113,8 +113,9 @@ final class CalendarViewController: UIViewController {
         }
 
         if store.dailies.isEmpty, !store.isLoading {
-            emptyLabel.text = store.error
-                ?? "calendar.empty".l10n("No history yet. WeatherKit serves the last 14 days only.")
+            emptyLabel.text = "calendar.empty".l10n(
+                "No history yet — open Weather a few times for the calendar to fill in."
+            )
             emptyLabel.isHidden = false
         } else {
             emptyLabel.isHidden = true
