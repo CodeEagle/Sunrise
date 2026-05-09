@@ -110,8 +110,8 @@ private extension WeatherSnapshot {
                         moonrise: entry.moon.moonrise,
                         moonset: entry.moon.moonset
                     ),
-                    precipitationAmountMillimetres: entry.precipitationAmount.converted(to: .millimeters).value,
-                    snowfallAmountMillimetres: entry.snowfallAmount.converted(to: .millimeters).value,
+                    precipitationAmountMillimetres: totalPrecipitationMM(entry),
+                    snowfallAmountMillimetres: snowfallMM(entry),
                     uvIndex: entry.uvIndex.value
                 )
             },
@@ -131,6 +131,20 @@ private extension WeatherSnapshot {
             }
         )
     }
+}
+
+/// Sum every precipitation type (rain + snow + mixed + hail …) into a
+/// single mm value. Replaces the deprecated `DayWeather.precipitationAmount`.
+private func totalPrecipitationMM(_ entry: DayWeather) -> Double {
+    entry.precipitationAmountByType.values.reduce(0) { acc, measurement in
+        acc + measurement.converted(to: .millimeters).value
+    }
+}
+
+/// Pull just the snow component from the per-type breakdown. Replaces
+/// the deprecated `DayWeather.snowfallAmount`.
+private func snowfallMM(_ entry: DayWeather) -> Double {
+    entry.precipitationAmountByType[.snow]?.converted(to: .millimeters).value ?? 0
 }
 
 private extension WeatherSnapshot {
