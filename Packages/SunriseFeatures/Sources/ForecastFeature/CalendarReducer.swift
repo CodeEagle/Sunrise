@@ -2,18 +2,19 @@ import Foundation
 import ComposableArchitecture
 import SunriseCore
 
-/// Backs the weather-history calendar pushed from the Forecast tab. Owns
-/// the past-14-day daily forecast set fetched from
-/// `WeatherClient.fetchHistoricalDaily(...)`.
+/// Backs the weather-history calendar pushed from the Forecast tab.
 ///
-/// WeatherKit only serves historical data within roughly the last 14 days,
-/// so the calendar caps itself at that window; older dates are rendered
-/// as disabled cells.
+/// Tries WeatherKit's `fetchHistoricalDaily` first, then merges in any
+/// locally cached entries (`PersistenceClient.loadHistoricalRange`)
+/// the Today tab has accumulated over previous launches. The local
+/// cache is the safety net: WeatherKit's historical query 400s in our
+/// account setup, so the cache may end up being the only data we
+/// actually display.
 @Reducer
 public struct CalendarReducer: Sendable {
     /// WeatherKit historical accepts ~14 days back. The fetched range
-    /// `[startDate, endDate)` is half-open, so a 14-day window translates
-    /// to `start = today - 14`, `end = today` (UTC midnights).
+    /// `[startDate, endDate)` is half-open; the local-cache lookup uses
+    /// the same window so the merge stays consistent.
     public static let lookbackDays = 14
 
     @ObservableState
@@ -45,21 +46,11 @@ public struct CalendarReducer: Sendable {
     public enum Action: Sendable {
         case onAppear
         case selectDate(Date?)
-        case historicalResponse(Result<[DailyForecast], FetchError>)
-    }
-
-    public struct FetchError: Error, Equatable, Sendable {
-        public let message: String
-        public init(_ error: any Error) {
-            // Localized description carries the WeatherKit / network
-            // failure text users can act on (e.g. "Unable to authenticate
-            // — check signing"); String(describing:) just dumps the type
-            // name and shows nothing meaningful in the empty-state cell.
-            self.message = (error as NSError).localizedDescription
-        }
+        case historicalResponse([DailyForecast], remoteError: String?)
     }
 
     @Dependency(\.weatherClient) var weatherClient
+    @Dependency(\.persistenceClient) var persistenceClient
     @Dependency(\.date) var date
 
     public init() {}
@@ -74,9 +65,8 @@ public struct CalendarReducer: Sendable {
                 // WeatherKit's historical query rejects an `endDate` of
                 // today's UTC midnight with a 400 — the JWT issuer treats
                 // "today" as not-yet-historical even though the timestamp
-                // is technically in the past relative to the device clock.
-                // Use yesterday's UTC midnight as the end and trail
-                // `lookbackDays` further back from there.
+                // is technically past. End at yesterday's UTC midnight
+                // and trail back `lookbackDays` from there.
                 var calendar = Calendar(identifier: .gregorian)
                 calendar.timeZone = TimeZone(identifier: "UTC") ?? .gmt
                 let now = date.now
@@ -87,30 +77,58 @@ public struct CalendarReducer: Sendable {
                     return .none
                 }
                 let coordinate = city.coordinate
+                let cityID = city.id
                 return .run { send in
-                    do {
-                        let dailies = try await weatherClient.fetchHistoricalDaily(coordinate, startDate, endDate)
-                        await send(.historicalResponse(.success(dailies)))
-                    } catch {
-                        await send(.historicalResponse(.failure(FetchError(error))))
-                    }
+                    // Run the remote fetch and the local cache load in
+                    // parallel; merge results favouring remote when both
+                    // cover the same date.
+                    async let remote: [DailyForecast]? = {
+                        do {
+                            return try await weatherClient.fetchHistoricalDaily(coordinate, startDate, endDate)
+                        } catch {
+                            return nil
+                        }
+                    }()
+                    async let cached = persistenceClient.loadHistoricalRange(cityID, startDate, endDate)
+                    let remoteResult = await remote
+                    let cachedResult = await cached
+                    let merged = mergeByDay(remote: remoteResult ?? [], cached: cachedResult)
+                    let remoteFailureMessage = remoteResult == nil
+                        ? String(localized: "calendar.remote_unavailable",
+                                 defaultValue: "WeatherKit historical unavailable — showing locally cached days only.")
+                        : nil
+                    await send(.historicalResponse(merged, remoteError: remoteFailureMessage))
                 }
 
             case let .selectDate(date):
                 state.selectedDate = date
                 return .none
 
-            case let .historicalResponse(.success(dailies)):
+            case let .historicalResponse(dailies, remoteError):
                 state.isLoading = false
                 state.dailies = dailies.sorted { $0.date > $1.date }
                 state.selectedDate = state.dailies.first?.date
-                return .none
-
-            case let .historicalResponse(.failure(error)):
-                state.isLoading = false
-                state.error = error.message
+                state.error = state.dailies.isEmpty ? remoteError : nil
                 return .none
             }
         }
     }
+}
+
+/// Combine remote daily forecasts with the locally cached set. Entries
+/// are deduped by start-of-day UTC; the remote value wins when both
+/// sources cover the same date (WeatherKit's record is closer to the
+/// actual observation than the daily-forecast snapshot we cache from
+/// the Today tab).
+private func mergeByDay(remote: [DailyForecast], cached: [DailyForecast]) -> [DailyForecast] {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: "UTC") ?? .gmt
+    var byDay: [Date: DailyForecast] = [:]
+    for entry in cached {
+        byDay[calendar.startOfDay(for: entry.date)] = entry
+    }
+    for entry in remote {
+        byDay[calendar.startOfDay(for: entry.date)] = entry
+    }
+    return Array(byDay.values)
 }
