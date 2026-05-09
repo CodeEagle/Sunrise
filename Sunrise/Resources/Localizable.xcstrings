@@ -2771,6 +2771,132 @@
         "ja": { "stringUnit": { "state": "translated", "value": "時間別" } }
       }
     },
+    "today.pressure_inline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Pressure %.0f hPa%@" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "气压 %.0f hPa%@" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "氣壓 %.0f hPa%@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "気圧 %.0f hPa%@" } }
+      }
+    },
+    "today.dewpoint_inline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Dew %@°" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "露点 %@°" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "露點 %@°" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "露点 %@°" } }
+      }
+    },
+    "today.visibility_inline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Vis %.0f km" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "能见度 %.0f km" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "能見度 %.0f km" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "視程 %.0f km" } }
+      }
+    },
+    "today.sun_inline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "☀ %@ → %@" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "☀ %@ → %@" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "☀ %@ → %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "☀ %@ → %@" } }
+      }
+    },
+    "bubble.alert.template": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "⚠️ %@ — stay safe and check official sources." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "⚠️ %@ — 注意安全，关注官方信息。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "⚠️ %@ — 注意安全，關注官方資訊。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "⚠️ %@ — 安全を最優先に、公式情報を確認してください。" } }
+      }
+    },
+    "bubble.dawn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "🌅 Sunrise at %@ — Sunny is up early." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "🌅 %@ 日出 — 小晴起得很早。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "🌅 %@ 日出 — 小晴起得很早。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "🌅 %@ に日の出 — ハルは早起きです。" } }
+      }
+    },
+    "bubble.dawn.city": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "🌅 Sunrise at %@ in %@ — Sunny is up early." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "🌅 %@ 是 %@ 的日出时刻 — 小晴起得很早。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "🌅 %@ 是 %@ 的日出時刻 — 小晴起得很早。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "🌅 %@ は %@ の日の出 — ハルは早起きです。" } }
+      }
+    },
+    "bubble.morning.full": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Good morning, %@! It's %@° outside." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "%@ 早上好！外面 %@°。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "%@ 早安！外面 %@°。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@、おはよう！外は %@° です。" } }
+      }
+    },
+    "bubble.morning.city": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Good morning, %@!" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "%@ 早上好！" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "%@ 早安！" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@、おはよう！" } }
+      }
+    },
+    "bubble.noon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bright noon — drink water, stay cool." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "正午阳光正好 — 多喝水，注意防晒。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "正午陽光正好 — 多喝水，注意防曬。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "明るい昼下がり — 水分補給を忘れずに。" } }
+      }
+    },
+    "bubble.afternoon.city": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Afternoon in %@ — Sunny is enjoying the breeze." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "%@ 的下午 — 小晴在享受微风。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "%@ 的午後 — 小晴在享受微風。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@ の午後 — ハルはそよ風を感じています。" } }
+      }
+    },
+    "bubble.dusk": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "🌇 Sunset at %@ — chase the colours." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "🌇 %@ 日落 — 别错过晚霞。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "🌇 %@ 日落 — 別錯過晚霞。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "🌇 %@ に日の入り — 夕焼けを追いかけよう。" } }
+      }
+    },
+    "bubble.night": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Quiet night — Sunny is curled up with a book." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "安静的夜晚 — 小晴正窝在沙发上看书。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "安靜的夜晚 — 小晴正窩在沙發上看書。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "静かな夜 — ハルは本を読んでいます。" } }
+      }
+    },
+    "bubble.night.city": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Quiet night in %@." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "%@ 的夜晚很安静。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "%@ 的夜晚很安靜。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "%@ の夜は静かです。" } }
+      }
+    },
     "today.current_location": {
       "extractionState": "manual",
       "localizations": {

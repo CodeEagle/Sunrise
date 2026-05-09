@@ -68,14 +68,20 @@ private extension WeatherSnapshot {
                     directionDegrees: current.wind.direction.converted(to: .degrees).value
                 ),
                 uvIndex: current.uvIndex.value,
-                dayPeriod: dayPeriod
+                dayPeriod: dayPeriod,
+                dewPoint: Temperature(celsius: current.dewPoint.converted(to: .celsius).value),
+                pressure: Pressure(hPa: current.pressure.converted(to: .hectopascals).value),
+                pressureTrend: PressureTrend(weatherKit: current.pressureTrend),
+                cloudCover: Percent(value: current.cloudCover),
+                visibilityKilometers: current.visibility.converted(to: .kilometers).value
             ),
-            hourly: weather.hourlyForecast.forecast.prefix(24).map { entry in
+            hourly: weather.hourlyForecast.forecast.prefix(48).map { entry in
                 HourlyForecast(
                     date: entry.date,
                     temperature: Temperature(celsius: entry.temperature.converted(to: .celsius).value),
                     condition: WeatherCondition(weatherKit: entry.condition),
-                    precipitationChance: Percent(value: entry.precipitationChance)
+                    precipitationChance: Percent(value: entry.precipitationChance),
+                    precipitationAmountMillimetres: entry.precipitationAmount.converted(to: .millimeters).value
                 )
             },
             daily: weather.dailyForecast.forecast.prefix(15).map { entry in
@@ -88,9 +94,85 @@ private extension WeatherSnapshot {
                     wind: Wind(
                         speedKPH: entry.wind.speed.converted(to: .kilometersPerHour).value,
                         directionDegrees: entry.wind.direction.converted(to: .degrees).value
-                    )
+                    ),
+                    apparentHigh: Temperature(celsius: entry.highTemperature.converted(to: .celsius).value),
+                    apparentLow: Temperature(celsius: entry.lowTemperature.converted(to: .celsius).value),
+                    sun: SunEvents(
+                        sunrise: entry.sun.sunrise,
+                        sunset: entry.sun.sunset,
+                        civilDawn: entry.sun.civilDawn,
+                        civilDusk: entry.sun.civilDusk,
+                        solarNoon: entry.sun.solarNoon
+                    ),
+                    moon: MoonInfo(
+                        phase: MoonPhase(weatherKit: entry.moon.phase),
+                        moonrise: entry.moon.moonrise,
+                        moonset: entry.moon.moonset
+                    ),
+                    precipitationAmountMillimetres: entry.precipitationAmount.converted(to: .millimeters).value,
+                    snowfallAmountMillimetres: entry.snowfallAmount.converted(to: .millimeters).value,
+                    uvIndex: entry.uvIndex.value
+                )
+            },
+            alerts: (weather.weatherAlerts ?? []).map(WeatherAlert.init(weatherKit:)),
+            minute: weather.minuteForecast?.forecast.prefix(60).map { entry in
+                MinuteForecast(
+                    date: entry.date,
+                    precipitationChance: Percent(value: entry.precipitationChance),
+                    precipitationIntensity: entry.precipitationIntensity.converted(to: .millimetersPerHour).value
                 )
             }
+        )
+    }
+}
+
+private extension PressureTrend {
+    init(weatherKit trend: WeatherKit.PressureTrend) {
+        switch trend {
+        case .rising: self = .rising
+        case .falling: self = .falling
+        case .steady: self = .steady
+        @unknown default: self = .steady
+        }
+    }
+}
+
+private extension MoonPhase {
+    init(weatherKit phase: WeatherKit.MoonPhase) {
+        switch phase {
+        case .new: self = .new
+        case .waxingCrescent: self = .waxingCrescent
+        case .firstQuarter: self = .firstQuarter
+        case .waxingGibbous: self = .waxingGibbous
+        case .full: self = .full
+        case .waningGibbous: self = .waningGibbous
+        case .lastQuarter: self = .lastQuarter
+        case .waningCrescent: self = .waningCrescent
+        @unknown default: self = .new
+        }
+    }
+}
+
+private extension WeatherAlert {
+    init(weatherKit alert: WeatherKit.WeatherAlert) {
+        let severity: Severity
+        switch alert.severity {
+        case .minor: severity = .minor
+        case .moderate: severity = .moderate
+        case .severe: severity = .severe
+        case .extreme: severity = .extreme
+        case .unknown: severity = .unknown
+        @unknown default: severity = .unknown
+        }
+        self.init(
+            id: alert.id.uuidString,
+            summary: alert.summary,
+            severity: severity,
+            region: alert.region,
+            source: alert.source,
+            detailsURL: alert.detailsURL,
+            issuedAt: alert.metadata.date,
+            expiresAt: alert.metadata.expirationDate
         )
     }
 }

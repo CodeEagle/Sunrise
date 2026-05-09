@@ -183,7 +183,42 @@ final class TodayPageViewController: UIViewController {
                 "today.uv_inline".l10n("UV %d"),
                 snapshot.current.uvIndex
             )
-            detailRowLabel.text = [wind, humidity, uv].joined(separator: "  ·  ")
+            var detailParts = [wind, humidity, uv]
+            // Optional WeatherKit fields — surfaced when present.
+            if let pressure = snapshot.current.pressure {
+                let trend = pressureTrendArrow(snapshot.current.pressureTrend)
+                detailParts.append(String.localizedStringWithFormat(
+                    "today.pressure_inline".l10n("Pressure %.0f hPa%@"),
+                    pressure.hPa,
+                    trend
+                ))
+            }
+            if let dewPoint = snapshot.current.dewPoint {
+                detailParts.append(String.localizedStringWithFormat(
+                    "today.dewpoint_inline".l10n("Dew %@°"),
+                    formatter.temperature(dewPoint)
+                ))
+            }
+            if let visibility = snapshot.current.visibilityKilometers {
+                detailParts.append(String.localizedStringWithFormat(
+                    "today.visibility_inline".l10n("Vis %.0f km"),
+                    visibility
+                ))
+            }
+            if let today = snapshot.daily.first, let sun = today.sun {
+                let sunFmt = DateFormatter()
+                sunFmt.locale = formatter.locale
+                sunFmt.dateStyle = .none
+                sunFmt.timeStyle = .short
+                if let sunrise = sun.sunrise, let sunset = sun.sunset {
+                    detailParts.append(String.localizedStringWithFormat(
+                        "today.sun_inline".l10n("☀ %@ → %@"),
+                        sunFmt.string(from: sunrise),
+                        sunFmt.string(from: sunset)
+                    ))
+                }
+            }
+            detailRowLabel.text = detailParts.joined(separator: "  ·  ")
 
             let updatedFormatter = DateFormatter()
             updatedFormatter.locale = formatter.locale
@@ -194,7 +229,18 @@ final class TodayPageViewController: UIViewController {
                 updatedFormatter.string(from: snapshot.updatedAt)
             )
 
-            bubble.text = encouragement(for: snapshot.current.condition)
+            let today = snapshot.daily.first
+            let context = Greeting.Context(
+                condition: snapshot.current.condition,
+                dayPeriod: snapshot.current.dayPeriod,
+                cityName: store.city.name,
+                temperature: snapshot.current.temperature,
+                now: Date(),
+                sunrise: today?.sun?.sunrise,
+                sunset: today?.sun?.sunset,
+                alerts: snapshot.alerts
+            )
+            bubble.text = Greeting.line(for: context, locale: formatter.locale)
             bubble.isHidden = false
         } else if store.isLoading {
             temperatureLabel.text = "–"
@@ -255,15 +301,11 @@ final class TodayPageViewController: UIViewController {
         }
     }
 
-    private func encouragement(for condition: WeatherCondition) -> String {
-        switch condition {
-        case .clear: return "bubble.clear".l10n("Beautiful day — let's go outside!")
-        case .cloudy: return "bubble.cloudy".l10n("Clouds drifting by — what shape will they make next?")
-        case .rain: return "bubble.rain".l10n("Don't forget your umbrella!")
-        case .thunderstorm: return "bubble.thunderstorm".l10n("Storms incoming — stay safe indoors.")
-        case .snow: return "bubble.snow".l10n("Snowflakes! Let's build a snowman.")
-        case .windy: return "bubble.windy".l10n("Hold onto your hat — it's blustery out there!")
-        case .fog: return "bubble.fog".l10n("Misty morning — drive carefully.")
+    private func pressureTrendArrow(_ trend: PressureTrend?) -> String {
+        switch trend {
+        case .rising: return " ↑"
+        case .falling: return " ↓"
+        case .steady, .none: return ""
         }
     }
 }

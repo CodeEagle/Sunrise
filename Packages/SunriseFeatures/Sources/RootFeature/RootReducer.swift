@@ -110,7 +110,7 @@ public struct RootReducer: Sendable {
                     state.forecast.snapshot = page.snapshot
                     state.forecast.selectedCity = page.city
                     if let snapshot = page.snapshot {
-                        state.character.condition = snapshot.current.condition
+                        applyCharacterContext(state: &state, city: page.city, snapshot: snapshot)
                     }
                 }
                 return .none
@@ -118,7 +118,9 @@ public struct RootReducer: Sendable {
             case let .today(.page(.element(id, .weatherResponse(.success(snapshot))))):
                 guard id == state.today.selectedCityID else { return .none }
                 state.forecast.snapshot = snapshot
-                state.character.condition = snapshot.current.condition
+                if let city = state.today.pages[id: id]?.city {
+                    applyCharacterContext(state: &state, city: city, snapshot: snapshot)
+                }
                 return .none
 
             case let .today(.settingsLoaded(settings)):
@@ -153,5 +155,23 @@ public struct RootReducer: Sendable {
                 return .none
             }
         }
+    }
+
+    /// Funnels the selected city's snapshot into CharacterReducer so
+    /// the Sunny tab gets the same temperature, sun events, and active
+    /// alerts the Today tab uses to compose its dynamic bubble line.
+    private func applyCharacterContext(
+        state: inout State,
+        city: City,
+        snapshot: WeatherSnapshot
+    ) {
+        let today = snapshot.daily.first
+        state.character.condition = snapshot.current.condition
+        state.character.dayPeriod = snapshot.current.dayPeriod
+        state.character.cityName = city.name
+        state.character.temperature = snapshot.current.temperature
+        state.character.sunrise = today?.sun?.sunrise
+        state.character.sunset = today?.sun?.sunset
+        state.character.alerts = snapshot.alerts
     }
 }
