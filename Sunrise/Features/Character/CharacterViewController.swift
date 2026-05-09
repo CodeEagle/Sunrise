@@ -121,10 +121,22 @@ final class CharacterViewController: UIViewController {
 
     private func render() {
         let condition = store.condition
-        portrait.image = PortraitArt.image(forConditionRawValue: condition.rawValue)
-            ?? UIImage(systemName: "person.fill")
+        portrait.image = PortraitArt.image(
+            forConditionRawValue: condition.rawValue,
+            periodRawValue: store.dayPeriod.rawValue
+        ) ?? UIImage(systemName: "person.fill")
         conditionPill.text = localizedCondition(condition)
-        bubble.text = encouragement(for: condition)
+        let context = Greeting.Context(
+            condition: condition,
+            dayPeriod: store.dayPeriod,
+            cityName: store.cityName,
+            temperature: store.temperature,
+            now: Date(),
+            sunrise: store.sunrise,
+            sunset: store.sunset,
+            alerts: store.alerts
+        )
+        bubble.text = Greeting.line(for: context)
     }
 
     private func localizedCondition(_ condition: WeatherCondition) -> String {
@@ -136,18 +148,6 @@ final class CharacterViewController: UIViewController {
         case .snow: return "condition.snow".l10n("Snow")
         case .windy: return "condition.windy".l10n("Windy")
         case .fog: return "condition.fog".l10n("Foggy")
-        }
-    }
-
-    private func encouragement(for condition: WeatherCondition) -> String {
-        switch condition {
-        case .clear: return "bubble.clear".l10n("Beautiful day — let's go outside!")
-        case .cloudy: return "bubble.cloudy".l10n("Clouds drifting by — what shape will they make next?")
-        case .rain: return "bubble.rain".l10n("Don't forget your umbrella!")
-        case .thunderstorm: return "bubble.thunderstorm".l10n("Storms incoming — stay safe indoors.")
-        case .snow: return "bubble.snow".l10n("Snowflakes! Let's build a snowman.")
-        case .windy: return "bubble.windy".l10n("Hold onto your hat — it's blustery out there!")
-        case .fog: return "bubble.fog".l10n("Misty morning — drive carefully.")
         }
     }
 }
