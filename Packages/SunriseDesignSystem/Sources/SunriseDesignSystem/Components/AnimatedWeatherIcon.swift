@@ -34,24 +34,24 @@ public struct AnimatedWeatherIcon: View {
     private var spritesheetFrames: [UIImage]? {
         WeatherIconSpritesheet.loadFrames(
             named: "icon_\(conditionRawValue)_sheet",
-            grid: WeatherIconSpritesheet.Grid(columns: 4, rows: 4)
+            grid: WeatherIconSpritesheet.Grid(columns: 8, rows: 8)
         )
     }
 
-    /// Tuned so each (16-frame) loop runs at a frame rate that reads as
-    /// fluid motion instead of discrete jumps — UIImageView allocates
-    /// `duration / count` per frame, so 16 frames at 1.0–1.6s gives 10–16
-    /// fps which is the sweet spot for our motion deltas (rotation,
-    /// drift, drop fall, flash). Longer durations made the steps obvious.
+    /// 64-frame loops driven by 8×8 spritesheets. UIImageView splits
+    /// `duration / count` per frame, so a 2.5s loop @ 64 frames = 25.6
+    /// fps which is comfortably inside the smooth-motion threshold —
+    /// individual rotation / drop / drift deltas (5.6° per frame for
+    /// the sun) are too small to read as discrete steps.
     private var spritesheetDuration: TimeInterval {
         switch conditionRawValue {
-        case "clear": return 1.6           // sun rotation, ~10 fps
-        case "cloudy", "fog": return 2.0   // drift cycle, 8 fps
-        case "rain": return 1.0            // drops fall, 16 fps
-        case "snow": return 1.6            // tumble, 10 fps
-        case "thunderstorm": return 1.6    // flash cycle, 10 fps
-        case "windy": return 1.4           // streak slide, ~11 fps
-        default: return 1.6
+        case "clear": return 4.0           // sun rotation, ~16 fps
+        case "cloudy", "fog": return 5.0   // drift cycle, ~13 fps
+        case "rain": return 2.0            // drops fall, 32 fps
+        case "snow": return 3.0            // tumble, ~21 fps
+        case "thunderstorm": return 3.0    // flash cycle, ~21 fps
+        case "windy": return 3.0           // streak slide, ~21 fps
+        default: return 3.0
         }
     }
 }
