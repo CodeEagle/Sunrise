@@ -48,6 +48,7 @@ public struct TodayPageReducer: Sendable {
     }
 
     @Dependency(\.weatherClient) var weatherClient
+    @Dependency(\.persistenceClient) var persistenceClient
 
     public init() {}
 
@@ -69,7 +70,17 @@ public struct TodayPageReducer: Sendable {
                 state.isLoading = false
                 state.snapshot = snapshot
                 state.error = nil
-                return .none
+                // Roll today's daily forecast into the local history cache
+                // so the Calendar can show *something* even when the
+                // WeatherKit historical query 400s. Over time this fills
+                // in a real running record of what the user saw each day.
+                let cityID = state.city.id
+                let today = snapshot.daily.first
+                return .run { _ in
+                    if let today {
+                        await persistenceClient.recordHistoricalDay(cityID, today)
+                    }
+                }
 
             case let .weatherResponse(.failure(error)):
                 state.isLoading = false

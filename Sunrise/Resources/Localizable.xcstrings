@@ -2738,10 +2738,19 @@
     "calendar.empty": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No history yet. WeatherKit serves the last 14 days only." } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "暂无历史数据。WeatherKit 仅提供最近 14 天。" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "暫無歷史資料。WeatherKit 僅提供最近 14 天。" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "履歴はありません。WeatherKitは過去14日間のみ提供します。" } }
+        "en": { "stringUnit": { "state": "translated", "value": "No history yet — open Weather a few times for the calendar to fill in." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "暂无历史数据——多打开几次天气标签页，日历会自动累积。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "暫無歷史資料——多開幾次天氣標籤，日曆會自動累積。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "履歴はまだありません — 天気タブを何度か開くとカレンダーに記録されます。" } }
+      }
+    },
+    "calendar.remote_unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "WeatherKit historical unavailable — showing locally cached days only." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "WeatherKit 历史接口不可用——仅显示本地缓存的日期。" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "WeatherKit 歷史介面不可用——僅顯示本地快取的日期。" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "WeatherKitの履歴は利用できません — ローカルにキャッシュされた日のみ表示します。" } }
       }
     },
     "calendar.precipitation": {
