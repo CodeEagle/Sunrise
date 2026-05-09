@@ -127,7 +127,8 @@ final class CalendarViewController: UIViewController {
         detailCard.update(daily: selected,
                           dayLabel: selected.map { weekdayFormatter.string(from: $0.date) },
                           dateLabel: selected.map { dateFormatter.string(from: $0.date) },
-                          settings: store.settings)
+                          settings: store.settings,
+                          hours: store.selectedHours)
         detailCard.isHidden = (selected == nil)
 
         tableView.reloadData()
@@ -216,20 +217,15 @@ private final class DayCell: UITableViewCell {
         dateLabel.text = date
         let formatter = WeatherFormatter(settings: settings)
         highLowLabel.text = "\(formatter.temperature(day.lowTemperature))° / \(formatter.temperature(day.highTemperature))°"
-        if let icon = WeatherIconArt.image(forConditionRawValue: day.condition.rawValue) {
-            iconView.image = icon
-            iconView.tintColor = nil
-        } else {
-            iconView.image = UIImage(systemName: ConditionGlyph.symbolName(forConditionRawValue: day.condition.rawValue))
-            iconView.tintColor = ConditionGlyph.tint(forConditionRawValue: day.condition.rawValue)
-        }
+        WeatherIconSpritesheet.apply(to: iconView, conditionRawValue: day.condition.rawValue, targetEdge: 64)
         accessoryType = isSelected ? .checkmark : .none
     }
 }
 
 /// Top-of-screen detail card showing the selected day's full breakdown.
 /// Lives outside the table so the user always sees the focused day even
-/// while scrolling the rest of the history.
+/// while scrolling the rest of the history. Includes a horizontal strip
+/// of cached hourly entries for the focused day when any are available.
 private final class DetailCard: UIView {
     private let glass = GlassPanel(style: .regular, cornerRadius: Radius.medium)
     private let dayLabel = UILabel()
@@ -239,6 +235,14 @@ private final class DetailCard: UIView {
     private let lowLabel = UILabel()
     private let conditionLabel = UILabel()
     private let detailRowLabel = UILabel()
+    private let hourlyHeader = UILabel()
+    private let hourlyScroll = UIScrollView()
+    private let hourlyStack = UIStackView()
+    private let hourFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateFormat = "HH"
+        return df
+    }()
 
     init() {
         super.init(frame: .zero)
@@ -277,6 +281,28 @@ private final class DetailCard: UIView {
         detailRowLabel.textColor = Palette.inkSecondary
         detailRowLabel.numberOfLines = 0
 
+        hourlyHeader.font = Typography.caption(12)
+        hourlyHeader.textColor = Palette.inkSecondary
+        hourlyHeader.text = "calendar.hourly".l10n("By hour")
+        hourlyHeader.isHidden = true
+
+        hourlyScroll.showsHorizontalScrollIndicator = false
+        hourlyScroll.translatesAutoresizingMaskIntoConstraints = false
+        hourlyScroll.isHidden = true
+
+        hourlyStack.axis = .horizontal
+        hourlyStack.alignment = .center
+        hourlyStack.spacing = Spacing.xs
+        hourlyStack.translatesAutoresizingMaskIntoConstraints = false
+        hourlyScroll.addSubview(hourlyStack)
+        NSLayoutConstraint.activate([
+            hourlyStack.topAnchor.constraint(equalTo: hourlyScroll.contentLayoutGuide.topAnchor),
+            hourlyStack.bottomAnchor.constraint(equalTo: hourlyScroll.contentLayoutGuide.bottomAnchor),
+            hourlyStack.leadingAnchor.constraint(equalTo: hourlyScroll.contentLayoutGuide.leadingAnchor),
+            hourlyStack.trailingAnchor.constraint(equalTo: hourlyScroll.contentLayoutGuide.trailingAnchor),
+            hourlyStack.heightAnchor.constraint(equalTo: hourlyScroll.frameLayoutGuide.heightAnchor)
+        ])
+
         let titleStack = UIStackView(arrangedSubviews: [dayLabel, dateLabel])
         titleStack.axis = .vertical
         titleStack.spacing = 2
@@ -292,10 +318,14 @@ private final class DetailCard: UIView {
         topRow.alignment = .center
         topRow.spacing = Spacing.s
 
-        let stack = UIStackView(arrangedSubviews: [topRow, tempStack, conditionLabel, detailRowLabel])
+        let stack = UIStackView(arrangedSubviews: [
+            topRow, tempStack, conditionLabel, detailRowLabel,
+            hourlyHeader, hourlyScroll
+        ])
         stack.axis = .vertical
         stack.alignment = .leading
         stack.spacing = Spacing.xs
+        stack.setCustomSpacing(Spacing.s, after: detailRowLabel)
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
 
@@ -309,11 +339,19 @@ private final class DetailCard: UIView {
             stack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -Spacing.m),
             stack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Spacing.m),
             stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Spacing.m),
-            topRow.widthAnchor.constraint(equalTo: stack.widthAnchor)
+            topRow.widthAnchor.constraint(equalTo: stack.widthAnchor),
+            hourlyScroll.widthAnchor.constraint(equalTo: stack.widthAnchor),
+            hourlyScroll.heightAnchor.constraint(equalToConstant: 84)
         ])
     }
 
-    func update(daily: DailyForecast?, dayLabel: String?, dateLabel: String?, settings: UserSettings) {
+    func update(
+        daily: DailyForecast?,
+        dayLabel: String?,
+        dateLabel: String?,
+        settings: UserSettings,
+        hours: [HourlyForecast]
+    ) {
         guard let daily else { return }
         self.dayLabel.text = dayLabel
         self.dateLabel.text = dateLabel
@@ -330,13 +368,17 @@ private final class DetailCard: UIView {
             formatter.windSpeed(daily.wind)
         )
         detailRowLabel.text = [precip, wind].joined(separator: "  ·  ")
-        if let icon = WeatherIconArt.image(forConditionRawValue: daily.condition.rawValue) {
-            iconView.image = icon
-            iconView.tintColor = nil
-        } else {
-            iconView.image = UIImage(systemName: ConditionGlyph.symbolName(forConditionRawValue: daily.condition.rawValue))
-            iconView.tintColor = ConditionGlyph.tint(forConditionRawValue: daily.condition.rawValue)
+        WeatherIconSpritesheet.apply(to: iconView, conditionRawValue: daily.condition.rawValue, targetEdge: 96)
+
+        // Rebuild hourly strip: each hour cell is time + animated icon + temp.
+        hourlyStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        for hour in hours {
+            let cell = HourCell(hour: hour, formatter: formatter, hourFormatter: hourFormatter)
+            hourlyStack.addArrangedSubview(cell)
         }
+        let hasHours = !hours.isEmpty
+        hourlyHeader.isHidden = !hasHours
+        hourlyScroll.isHidden = !hasHours
     }
 
     private func localizedCondition(_ condition: WeatherCondition) -> String {
@@ -350,4 +392,46 @@ private final class DetailCard: UIView {
         case .fog: return "condition.fog".l10n("Foggy")
         }
     }
+}
+
+/// One column of the hourly strip — hour label, animated icon, temp.
+private final class HourCell: UIView {
+    init(hour: HourlyForecast, formatter: WeatherFormatter, hourFormatter: DateFormatter) {
+        super.init(frame: .zero)
+        let timeLabel = UILabel()
+        timeLabel.font = Typography.caption(11)
+        timeLabel.textColor = Palette.inkSecondary
+        timeLabel.textAlignment = .center
+        timeLabel.text = hourFormatter.string(from: hour.date)
+
+        let icon = UIImageView()
+        icon.contentMode = .scaleAspectFit
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        icon.widthAnchor.constraint(equalToConstant: 28).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        WeatherIconSpritesheet.apply(to: icon, conditionRawValue: hour.condition.rawValue, targetEdge: 56)
+
+        let tempLabel = UILabel()
+        tempLabel.font = Typography.body(13)
+        tempLabel.textColor = Palette.inkPrimary
+        tempLabel.textAlignment = .center
+        tempLabel.text = "\(formatter.temperature(hour.temperature))°"
+
+        let stack = UIStackView(arrangedSubviews: [timeLabel, icon, tempLabel])
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = 2
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: topAnchor),
+            stack.bottomAnchor.constraint(equalTo: bottomAnchor),
+            stack.leadingAnchor.constraint(equalTo: leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: trailingAnchor),
+            widthAnchor.constraint(equalToConstant: 44)
+        ])
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
 }

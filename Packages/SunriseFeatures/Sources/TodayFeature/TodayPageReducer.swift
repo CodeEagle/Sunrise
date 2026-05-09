@@ -70,15 +70,20 @@ public struct TodayPageReducer: Sendable {
                 state.isLoading = false
                 state.snapshot = snapshot
                 state.error = nil
-                // Roll today's daily forecast into the local history cache
-                // so the Calendar can show *something* even when the
-                // WeatherKit historical query 400s. Over time this fills
-                // in a real running record of what the user saw each day.
+                // Fill the local history cache so the Calendar tab has
+                // data going back as far as the user has been using the
+                // app. Both daily-aggregate and hourly entries get
+                // written — the hourly path lets the Calendar show a
+                // by-hour strip when the user taps a past day.
                 let cityID = state.city.id
                 let today = snapshot.daily.first
+                let hours = snapshot.hourly
                 return .run { _ in
                     if let today {
                         await persistenceClient.recordHistoricalDay(cityID, today)
+                    }
+                    if !hours.isEmpty {
+                        await persistenceClient.recordHistoricalHours(cityID, hours)
                     }
                 }
 

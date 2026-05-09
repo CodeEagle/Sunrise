@@ -2762,6 +2762,15 @@
         "ja": { "stringUnit": { "state": "translated", "value": "降水 %@" } }
       }
     },
+    "calendar.hourly": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "By hour" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "按小时" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "按小時" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "時間別" } }
+      }
+    },
     "today.current_location": {
       "extractionState": "manual",
       "localizations": {
