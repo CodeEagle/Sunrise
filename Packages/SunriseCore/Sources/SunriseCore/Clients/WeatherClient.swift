@@ -120,7 +120,13 @@ private extension WeatherSnapshot {
                 MinuteForecast(
                     date: entry.date,
                     precipitationChance: Percent(value: entry.precipitationChance),
-                    precipitationIntensity: entry.precipitationIntensity.converted(to: .millimetersPerHour).value
+                    // WeatherKit reports precipitationIntensity in
+                    // `Measurement<UnitSpeed>` whose default unit is
+                    // millimetres-per-hour despite UnitSpeed not exposing
+                    // `.millimetersPerHour` publicly. `.value` returns
+                    // the figure in that native unit, which is exactly
+                    // what we want to store.
+                    precipitationIntensity: entry.precipitationIntensity.value
                 )
             }
         )
@@ -189,8 +195,14 @@ private extension WeatherAlert {
         case .unknown: severity = .unknown
         @unknown default: severity = .unknown
         }
+        // WeatherKit's WeatherAlert doesn't expose a stable `id` —
+        // synthesise one from the metadata + summary so duplicates
+        // dedup by content rather than by reference.
+        let issued = alert.metadata.date.timeIntervalSince1970
+        let expires = alert.metadata.expirationDate.timeIntervalSince1970
+        let synthesised = "\(Int(issued))-\(Int(expires))-\(alert.summary.prefix(64))"
         self.init(
-            id: alert.id.uuidString,
+            id: synthesised,
             summary: alert.summary,
             severity: severity,
             region: alert.region,
