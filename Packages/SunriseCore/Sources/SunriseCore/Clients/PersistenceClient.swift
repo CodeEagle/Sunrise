@@ -14,11 +14,11 @@ public struct PersistenceClient: Sendable {
     /// historical observation we can produce locally without the
     /// WeatherKit historical query (which 400s in our setup). The cache
     /// keeps up to ~30 days per city; older entries are pruned.
-    public var recordHistoricalDay: @Sendable (_ cityID: City.ID, _ entry: DailyForecast) async -> Void
+    public var recordHistoricalDay: @Sendable (_ cityID: City.ID, _ entry: DailyForecast) async -> Void = { _, _ in }
     /// Loads the rolling history for a city in the requested date range,
     /// inclusive on both ends. Returns an empty array when no entries
     /// have accumulated yet.
-    public var loadHistoricalRange: @Sendable (_ cityID: City.ID, _ start: Date, _ end: Date) async -> [DailyForecast]
+    public var loadHistoricalRange: @Sendable (_ cityID: City.ID, _ start: Date, _ end: Date) async -> [DailyForecast] = { _, _, _ in [] }
 }
 
 extension PersistenceClient: DependencyKey {
