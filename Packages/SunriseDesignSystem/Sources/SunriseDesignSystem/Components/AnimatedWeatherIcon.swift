@@ -54,6 +54,16 @@ public struct AnimatedWeatherIcon: View {
 /// `UIImageView` wrapper that plays a frame array via
 /// `animationImages` / `startAnimating`. SwiftUI's `Image` only takes a
 /// single frame; UIImageView is the path to native frame animation.
+///
+/// The wrapped UIImageView's `intrinsicContentSize` is the source PNG's
+/// pixel size (512×512 from the sliced spritesheet). Without
+/// `sizeThatFits` SwiftUI inherits that as the natural width, so a
+/// caller's `.frame(width: 32, height: 32)` only gets honoured if the
+/// parent layout pre-clamps the proposal — many SwiftUI hosts don't,
+/// which is what lets the icons "blow up" to fill the row. Returning
+/// `proposal.replacingUnspecifiedDimensions(by:)` forces the
+/// representable to honour whatever the parent proposes (clamped to
+/// 32×32 when the parent leaves both axes unspecified).
 private struct SpritesheetPlayer: UIViewRepresentable {
     let frames: [UIImage]
     let duration: TimeInterval
@@ -66,10 +76,21 @@ private struct SpritesheetPlayer: UIViewRepresentable {
         view.animationDuration = duration
         view.animationRepeatCount = 0
         view.image = frames.first
+        // Don't let UIImageView's huge intrinsic size leak into the
+        // SwiftUI layout pass — the parent's `.frame` is the source of
+        // truth for the displayed size.
+        view.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        view.setContentHuggingPriority(.defaultLow, for: .vertical)
+        view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        view.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         if isAnimating {
             view.startAnimating()
         }
         return view
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UIImageView, context: Context) -> CGSize? {
+        proposal.replacingUnspecifiedDimensions(by: CGSize(width: 32, height: 32))
     }
 
     func updateUIView(_ view: UIImageView, context: Context) {
