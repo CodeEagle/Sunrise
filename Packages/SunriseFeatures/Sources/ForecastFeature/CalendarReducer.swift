@@ -71,17 +71,18 @@ public struct CalendarReducer: Sendable {
                 guard let city = state.city, !state.isLoading else { return .none }
                 state.isLoading = true
                 state.error = nil
-                // WeatherKit's historical range `[startDate, endDate)` is
-                // half-open: end is exclusive, so use start of today (UTC)
-                // as the end and start of (today - lookbackDays) as the
-                // start to fetch exactly `lookbackDays` whole days. UTC
-                // alignment is required — the JWT issuer rejects 400 when
-                // timestamps don't land on whole-day UTC boundaries.
+                // WeatherKit's historical query rejects an `endDate` of
+                // today's UTC midnight with a 400 — the JWT issuer treats
+                // "today" as not-yet-historical even though the timestamp
+                // is technically in the past relative to the device clock.
+                // Use yesterday's UTC midnight as the end and trail
+                // `lookbackDays` further back from there.
                 var calendar = Calendar(identifier: .gregorian)
                 calendar.timeZone = TimeZone(identifier: "UTC") ?? .gmt
                 let now = date.now
-                let endDate = calendar.startOfDay(for: now)
-                guard let startDate = calendar.date(byAdding: .day, value: -Self.lookbackDays, to: endDate) else {
+                let startOfTodayUTC = calendar.startOfDay(for: now)
+                guard let endDate = calendar.date(byAdding: .day, value: -1, to: startOfTodayUTC),
+                      let startDate = calendar.date(byAdding: .day, value: -Self.lookbackDays, to: endDate) else {
                     state.isLoading = false
                     return .none
                 }
