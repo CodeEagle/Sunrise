@@ -1,14 +1,19 @@
 #if canImport(UIKit)
 import UIKit
 
-/// Loads a single PNG arranged as an N×M grid of frames and slices it
-/// into individual `UIImage` frames suitable for `UIImage.animatedImage`.
+/// Loads a single PNG arranged as an N×M grid of frames, slices each
+/// frame, and pre-downsamples them to a target edge size before handing
+/// the result to `UIImageView.animationImages`.
 ///
-/// One codex call → one spritesheet → consistent visual style across all
-/// frames (every frame is painted in the same gen pass, so character /
-/// palette / texture stay locked). The runtime then plays the slices via
-/// `UIImageView.animationImages` for a smooth loop. Falls back to the
-/// static base icon when no spritesheet is bundled.
+/// Why pre-downsample: the source spritesheet is 2048×2048 (16 frames at
+/// 512×512). Display sites are 32–44pt — keeping frames at the source
+/// resolution forces the GPU to scale a 1MB texture every tick, which
+/// reads as choppy on lower-end devices. Re-rendering each frame into
+/// a 96-128pt canvas at first load trades a one-shot decode cost for
+/// silky-smooth playback afterwards.
+///
+/// Result frames stay cached per `(name, targetEdge)` so the same icon
+/// reused across the day strip + daily list doesn't decode twice.
 public enum WeatherIconSpritesheet {
     public struct Grid: Sendable, Hashable {
         public let columns: Int
@@ -20,18 +25,17 @@ public enum WeatherIconSpritesheet {
         public var frameCount: Int { columns * rows }
     }
 
-    /// Slices `name` into `grid.columns * grid.rows` `UIImage` frames in
-    /// row-major reading order (top-left → top-right → next row…).
-    /// Frames are cached per-name so repeated lookups (e.g. one icon per
-    /// row in the daily list) don't re-decode the source PNG.
-    /// Returns nil when the asset is missing or the dimensions don't
-    /// divide evenly.
+    /// Slices `name` into `grid.frameCount` frames downsampled to
+    /// `targetEdge` × `targetEdge` points (rendered at the screen scale
+    /// for crispness). Returns nil when the asset is missing or the
+    /// source dimensions don't divide evenly.
     public static func loadFrames(
         named name: String,
         grid: Grid,
+        targetEdge: CGFloat = 128,
         in bundle: Bundle = .main
     ) -> [UIImage]? {
-        Cache.shared.frames(named: name, grid: grid, bundle: bundle)
+        Cache.shared.frames(named: name, grid: grid, targetEdge: targetEdge, bundle: bundle)
     }
 
     private final class Cache: @unchecked Sendable {
@@ -39,18 +43,19 @@ public enum WeatherIconSpritesheet {
         private let lock = NSLock()
         private var store: [String: [UIImage]] = [:]
 
-        func frames(named name: String, grid: Grid, bundle: Bundle) -> [UIImage]? {
+        func frames(named name: String, grid: Grid, targetEdge: CGFloat, bundle: Bundle) -> [UIImage]? {
+            let key = "\(name)#\(Int(targetEdge.rounded()))"
             lock.lock()
             defer { lock.unlock() }
-            if let cached = store[name] { return cached }
-            let frames = Self.slice(name: name, grid: grid, bundle: bundle)
+            if let cached = store[key] { return cached }
+            let frames = Self.slice(name: name, grid: grid, targetEdge: targetEdge, bundle: bundle)
             if let frames {
-                store[name] = frames
+                store[key] = frames
             }
             return frames
         }
 
-        private static func slice(name: String, grid: Grid, bundle: Bundle) -> [UIImage]? {
+        private static func slice(name: String, grid: Grid, targetEdge: CGFloat, bundle: Bundle) -> [UIImage]? {
             let sheet: UIImage? = {
                 if let asset = UIImage(named: name, in: bundle, with: nil) { return asset }
                 if let path = bundle.path(forResource: name, ofType: "png") {
@@ -62,6 +67,14 @@ public enum WeatherIconSpritesheet {
             let frameW = cg.width / grid.columns
             let frameH = cg.height / grid.rows
             guard frameW > 0, frameH > 0 else { return nil }
+
+            let renderSize = CGSize(width: targetEdge, height: targetEdge)
+            let format = UIGraphicsImageRendererFormat.default()
+            format.opaque = false
+            // Use the screen scale so the resampled image stays crisp on
+            // 2x / 3x displays without ballooning memory back to 512px.
+            let renderer = UIGraphicsImageRenderer(size: renderSize, format: format)
+
             var frames: [UIImage] = []
             frames.reserveCapacity(grid.frameCount)
             for row in 0..<grid.rows {
@@ -72,13 +85,12 @@ public enum WeatherIconSpritesheet {
                         width: frameW,
                         height: frameH
                     )
-                    if let cropped = cg.cropping(to: rect) {
-                        frames.append(UIImage(
-                            cgImage: cropped,
-                            scale: sheet?.scale ?? 1,
-                            orientation: .up
-                        ))
+                    guard let cropped = cg.cropping(to: rect) else { continue }
+                    let croppedImage = UIImage(cgImage: cropped, scale: 1, orientation: .up)
+                    let resized = renderer.image { _ in
+                        croppedImage.draw(in: CGRect(origin: .zero, size: renderSize))
                     }
+                    frames.append(resized)
                 }
             }
             return frames.isEmpty ? nil : frames

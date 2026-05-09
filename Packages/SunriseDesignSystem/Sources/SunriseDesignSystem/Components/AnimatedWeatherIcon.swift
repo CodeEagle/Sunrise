@@ -38,15 +38,20 @@ public struct AnimatedWeatherIcon: View {
         )
     }
 
+    /// Tuned so each (16-frame) loop runs at a frame rate that reads as
+    /// fluid motion instead of discrete jumps — UIImageView allocates
+    /// `duration / count` per frame, so 16 frames at 1.0–1.6s gives 10–16
+    /// fps which is the sweet spot for our motion deltas (rotation,
+    /// drift, drop fall, flash). Longer durations made the steps obvious.
     private var spritesheetDuration: TimeInterval {
         switch conditionRawValue {
-        case "clear": return 4.0           // slow sun rotation
-        case "cloudy", "fog": return 6.0   // drift cycle
-        case "rain": return 1.6
-        case "snow": return 2.4
-        case "thunderstorm": return 3.0    // flash cycle
-        case "windy": return 2.4
-        default: return 4.0
+        case "clear": return 1.6           // sun rotation, ~10 fps
+        case "cloudy", "fog": return 2.0   // drift cycle, 8 fps
+        case "rain": return 1.0            // drops fall, 16 fps
+        case "snow": return 1.6            // tumble, 10 fps
+        case "thunderstorm": return 1.6    // flash cycle, 10 fps
+        case "windy": return 1.4           // streak slide, ~11 fps
+        default: return 1.6
         }
     }
 }
