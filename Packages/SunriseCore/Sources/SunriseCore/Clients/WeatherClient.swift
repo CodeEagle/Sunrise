@@ -54,7 +54,8 @@ public extension DependencyValues {
 private extension WeatherSnapshot {
     init(weatherKit weather: Weather) {
         let current = weather.currentWeather
-        let dayPeriod: DayPeriod = current.isDaylight ? .day : .night
+        let todaySun = weather.dailyForecast.forecast.first?.sun
+        let dayPeriod = Self.dayPeriod(at: current.date, sun: todaySun, isDaylight: current.isDaylight)
 
         self.init(
             updatedAt: current.date,
@@ -123,6 +124,30 @@ private extension WeatherSnapshot {
                 )
             }
         )
+    }
+}
+
+private extension WeatherSnapshot {
+    /// Resolve the day-period bucket for art/copy from the current
+    /// timestamp + today's sun events. Without sun data we fall back to
+    /// WeatherKit's `isDaylight` (day or night only).
+    static func dayPeriod(
+        at now: Date,
+        sun: WeatherKit.SunEvents?,
+        isDaylight: Bool
+    ) -> DayPeriod {
+        guard let sun else { return isDaylight ? .day : .night }
+        if let civilDawn = sun.civilDawn,
+           let sunrise = sun.sunrise,
+           now >= civilDawn, now < sunrise {
+            return .dawn
+        }
+        if let sunset = sun.sunset,
+           let civilDusk = sun.civilDusk,
+           now >= sunset, now < civilDusk {
+            return .dusk
+        }
+        return isDaylight ? .day : .night
     }
 }
 
